@@ -1,6 +1,16 @@
 # Žilet identity
 
-Selected: study B. A typographic wordmark with an asymmetric tapered caron; the caron is the quiet feather reference. It remains a readable Ž. The drawing is original geometry created for this commission, not a trace or a raster wrapper. Editable source: `scripts/identity.mjs`.
+Current identity (September 2026 refresh): a lowercase `žilet` wordmark outlined
+from Adobe Source Serif 4 at weight 620 and optical size 60, with tightened tracking.
+The continuous lowercase rhythm replaces the first hand-constructed mixed-case
+mark. Its restrained caron and high-contrast letterforms sit within a lighter ruled
+masthead. Source Serif 4's SIL OFL 1.1 license remains alongside the font provenance.
+The lettering is distributed as paths, not a font or raster wrapper.
+
+Editable outline data and construction parameters: `docs/design/wordmark-paths.json`.
+Regenerate the asset variants with `node scripts/identity.mjs`, then the social
+preview with `node scripts/social-preview.mjs`. The historical A/B studies below
+record the initial design, not the current mark.
 
 Assets in `public/identity`: wordmark and monogram in green, monochrome and reversed versions; circular avatar; 1200 × 630 social fallback. `public/icon.svg` is a simplified small-size Ž. All final logo SVGs consist of vector paths, clean viewBoxes and no runtime font, image or script dependency. The descriptor is set as ordinary accessible HTML next to the logo.
 

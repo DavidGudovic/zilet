@@ -27,7 +27,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         </Link>
         <span className="desk-name">Redakcija</span>
         <div>
-          <span>{user.name}</span>
+          <Link href="/redakcija/nalog">Moj nalog</Link>
           <SignOut />
         </div>
       </header>
@@ -35,7 +35,9 @@ export default async function Layout({ children }: { children: React.ReactNode }
         <Link href="/redakcija">Tekstovi</Link>
         <Link href="/redakcija/fotografije">Fotografije</Link>
         <Link href="/redakcija/komentari">Komentari</Link>
+        <Link href="/redakcija/autori">Autori</Link>
         <Link href="/redakcija/statistika">Statistika</Link>
+        <Link href="/redakcija/pomoc">Pomoć</Link>
         <Link className="button" href="/redakcija/novi">
           + Novi tekst
         </Link>

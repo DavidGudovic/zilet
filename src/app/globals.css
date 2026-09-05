@@ -2512,3 +2512,344 @@ td:last-child {
     font-size: 28px;
   }
 }
+
+/* The masthead is a quiet typographic signature; fine rules echo a marked page. */
+.masthead {
+  min-height: 190px;
+  padding-block: 26px;
+}
+.brand {
+  width: 256px;
+}
+.brand img {
+  width: 100%;
+}
+.descriptor {
+  font-size: 14px;
+  letter-spacing: 0.015em;
+  border-left: 1px solid var(--green);
+  padding-left: 18px;
+}
+.masthead-right {
+  font-size: 14px;
+}
+.nav-rule {
+  position: relative;
+  border-top: 0;
+}
+.nav-rule::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--green);
+  transform-origin: left;
+}
+.section-rule {
+  position: relative;
+}
+.section-rule::after {
+  content: '';
+  position: absolute;
+  width: 34px;
+  height: 1px;
+  background: var(--burgundy);
+  bottom: -1px;
+  left: 0;
+}
+.read-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+.read-link span {
+  transition: transform 220ms ease;
+}
+.read-link:hover span {
+  transform: translate(3px, -3px);
+}
+.front-art-feature {
+  position: relative;
+  border-top: 1px solid var(--green);
+  padding-top: 18px;
+}
+.front-art-feature figure {
+  padding: 22px;
+  border: 1px solid var(--rule);
+  background: #efebdf;
+}
+.front-art-feature figcaption {
+  font-size: 13px;
+  margin-top: 14px;
+}
+.front-art-feature article {
+  padding-inline: 12px;
+}
+.front-art-feature article::before {
+  content: '';
+  display: block;
+  width: 38px;
+  height: 58px;
+  background: linear-gradient(
+    115deg,
+    transparent 48%,
+    var(--burgundy) 49%,
+    var(--burgundy) 50%,
+    transparent 51%
+  );
+  margin-bottom: 22px;
+}
+.front-art-feature article h2 {
+  font-size: clamp(42px, 5vw, 72px);
+  font-style: italic;
+  font-weight: 450;
+}
+.author-bio {
+  max-width: 65ch;
+  margin-top: 26px;
+  font: 22px/1.65 var(--serif);
+}
+.editor-people {
+  display: grid;
+  gap: 18px;
+  margin-block: 20px 32px;
+}
+.editor-people a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 18px;
+}
+.editor-people span {
+  font: 15px var(--sans);
+}
+.desk-nav {
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.desk-header > div {
+  font-size: 15px;
+}
+.desk-welcome {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 32px;
+  padding-bottom: 18px;
+  font-size: 16px;
+}
+.desk-welcome > p {
+  font-family: var(--serif);
+  font-size: 21px;
+}
+.composer-hint {
+  border-left: 2px solid var(--green);
+  padding: 8px 18px;
+  max-width: 65ch;
+  color: var(--muted);
+  font-size: 16px;
+}
+.editor-fields .verse-input {
+  field-sizing: content;
+  min-height: 360px;
+}
+.profile-list {
+  max-width: 850px;
+  display: grid;
+  gap: 30px;
+  margin-top: 30px;
+}
+.profile-form {
+  padding: 26px;
+  border: 1px solid var(--rule);
+  background: #fffdf7;
+  display: grid;
+  gap: 18px;
+}
+.profile-form-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  justify-content: space-between;
+}
+.profile-form h2 {
+  font-size: 27px;
+}
+.profile-form label {
+  display: grid;
+  gap: 10px;
+}
+.profile-form textarea {
+  width: 100%;
+  padding: 14px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  resize: vertical;
+  font: 19px/1.6 var(--serif);
+}
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.desk-account {
+  max-width: 620px;
+}
+.password-panel {
+  margin-top: 35px;
+  padding-top: 26px;
+  border-top: 1px solid var(--rule);
+}
+.password-panel h2 {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+.editor-help {
+  max-width: 760px;
+  margin: auto;
+}
+.editor-help h1 {
+  font-size: clamp(36px, 5vw, 58px);
+  margin-block: 15px 24px;
+}
+.help-steps {
+  list-style: decimal-leading-zero;
+  padding-left: 34px;
+  margin-block: 40px;
+}
+.help-steps li {
+  padding: 0 0 24px 16px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--rule);
+}
+.help-steps li::marker {
+  color: var(--burgundy);
+  font: italic 22px var(--serif);
+}
+.editor-help h2 {
+  font-size: 27px;
+  margin-bottom: 10px;
+}
+.help-notes h2 {
+  margin-top: 28px;
+}
+.help-notes a {
+  text-decoration: underline;
+}
+.editor-help > .button {
+  margin-top: 32px;
+}
+.desk-intro {
+  max-width: 65ch;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .nav-rule::before {
+    animation: rule-draw 900ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+  }
+  .brand {
+    animation: ink-in 650ms ease-out both;
+  }
+  @supports (animation-timeline: view()) {
+    .front-art-feature article::before {
+      animation: ink-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 90%;
+    }
+  }
+}
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes ink-in {
+  from {
+    opacity: 0.25;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-width: 767px) {
+  .masthead {
+    min-height: 132px;
+    padding-block: 22px;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .brand {
+    width: 160px;
+  }
+  .descriptor {
+    font-size: 12px;
+    padding-left: 12px;
+  }
+  .front-art-feature figure {
+    padding: 12px;
+  }
+  .front-art-feature article {
+    padding: 0;
+  }
+  .front-art-feature article::before {
+    margin-bottom: 0;
+    font-size: 36px;
+  }
+  .front-art-feature article h2 {
+    margin-block: 8px 18px;
+  }
+  .author-bio {
+    font-size: 20px;
+  }
+  .profile-form {
+    padding: 18px;
+  }
+  .desk-header {
+    flex-wrap: wrap;
+  }
+  .desk-header > div {
+    gap: 18px;
+  }
+  .desk-nav {
+    gap: 0 22px;
+  }
+  .composer-hint {
+    font-size: 15px;
+    padding-left: 12px;
+  }
+}
+@media (max-width: 359px) {
+  .brand {
+    width: 133px;
+  }
+  .masthead {
+    gap: 13px;
+    min-height: 120px;
+  }
+  .descriptor {
+    font-size: 11px;
+  }
+}
+@media print {
+  .nav-rule::before,
+  .front-art-feature article::before {
+    display: none;
+  }
+  .brand {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

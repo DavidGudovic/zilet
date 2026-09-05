@@ -22,7 +22,7 @@ export default async function Page({
   return (
     <div className="wrap archive-page">
       <header className="archive-heading">
-        <span className="eyebrow">Autor</span>
+        <span className="eyebrow">{author.isEditor ? 'Redakcija / O meni' : 'Autor'}</span>
         <h1>{author.name}</h1>
         {portrait && (
           <figure className="author-portrait">
@@ -35,7 +35,13 @@ export default async function Page({
             <figcaption>{portrait.credit}</figcaption>
           </figure>
         )}
-        {author.bio && <p className="intro">{author.bio}</p>}
+        {author.bio && (
+          <div className="author-bio">
+            {author.bio.split('\n\n').map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
+        )}
       </header>
       <div className="section-rule">
         <span>Objavljeni tekstovi</span>

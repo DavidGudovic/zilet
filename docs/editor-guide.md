@@ -21,3 +21,17 @@ Ako vidite **Nije sačuvano**, ostavite prozor otvoren, provjerite vezu i pokuš
 **Statistika** pokazuje prikaze i procijenjene posjetioce za sedam ili trideset dana, kada je usluga povezana. Prikaz stranice ne znači da je tekst pročitan do kraja. Poruka da statistika nije povezana nije prepreka za objavljivanje.
 
 Na zajedničkom uređaju završite rad dugmetom **Odjavi se**.
+
+
+## Novi urednički alati (septembar 2026)
+
+Prijava je na https://zilet.me/redakcija. Koristite podatke koje je vlasnik dao
+za vaš nalog. Lozinke se ne čuvaju u ovom vodiču. U **Moj nalog** možete promijeniti
+lozinku bez e-pošte; nova lozinka ima najmanje 12 znakova.
+
+**Autori** otvara biografije autora i urednika. Upišite tekst i pritisnite
+**Sačuvaj biografiju**; promjena je odmah javna za objavljene autore i urednike.
+Biografije urednika mogu postojati i prije njihove prve objave.
+
+**Pomoć** je kratki vodič unutar same redakcije: napišite ili nalijepite tekst,
+dodajte sliku, provjerite Pregled i pritisnite Objavi.

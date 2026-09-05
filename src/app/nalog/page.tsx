@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { auth, registrationEnabled } from '@/lib/auth';
 import { safeReturn } from '@/lib/content';
 import { AccountForm, SignOut } from '@/components/account-form';
+import { PasswordForm } from '@/components/password-form';
 export const metadata = { title: 'Čitalački nalog', robots: { index: false, follow: false } };
 export default async function Page({
   searchParams,
@@ -18,7 +19,7 @@ export default async function Page({
         <section className="account-panel">
           <span className="eyebrow">Vaš nalog</span>
           <h1>{session.user.name}</h1>
-          <p>Vaša adresa ostaje privatna. Nalog služi za komentarisanje.</p>
+          <p>Vaša adresa ostaje privatna.</p>
           <div className="account-links">
             <Link href={safeReturn(q.returnTo)}>Nastavite sa čitanjem ↗</Link>
             {['editor', 'maintainer'].includes(session.user.role || '') && (
@@ -26,6 +27,7 @@ export default async function Page({
             )}
             <SignOut />
           </div>
+          <PasswordForm />
         </section>
       ) : (
         <AccountForm

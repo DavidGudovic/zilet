@@ -85,20 +85,23 @@ export function AccountForm({
         : view === 'recover'
           ? 'Obnovite lozinku'
           : 'Nova lozinka';
+  const editorial = returnTo.startsWith('/redakcija');
   return (
     <section className="account-panel">
-      <span className="eyebrow">Čitalački nalog</span>
+      <span className="eyebrow">{editorial ? 'Žilet / Redakcija' : 'Čitalački nalog'}</span>
       <h1>{title}</h1>
       <p>
         {view === 'login'
-          ? 'Nalog vam je potreban samo za komentarisanje. Čitanje je uvijek otvoreno.'
+          ? editorial
+            ? 'Dobro došli u redakciju. Prijavite se da pišete, dodajete fotografije i objavljujete tekstove.'
+            : 'Nalog vam je potreban samo za komentarisanje. Čitanje je uvijek otvoreno.'
           : view === 'register'
             ? 'Vaša adresa e-pošte ostaje privatna. Uz komentar se prikazuje ime koje izaberete.'
             : view === 'reset'
               ? 'Izaberite novu lozinku za svoj nalog.'
               : 'Poslaćemo vam bezbjedan link za obnovu pristupa.'}
       </p>
-      {view === 'login' && (
+      {view === 'login' && !editorial && (
         <div className="account-tabs">
           <button aria-pressed="true">Prijava</button>
           <button
@@ -112,7 +115,7 @@ export function AccountForm({
           </button>
         </div>
       )}
-      {!registration && (view === 'login' || view === 'register') && (
+      {!registration && !editorial && (view === 'login' || view === 'register') && (
         <p className="notice">Otvaranje novih naloga trenutno nije dostupno.</p>
       )}
       <form onSubmit={submit}>

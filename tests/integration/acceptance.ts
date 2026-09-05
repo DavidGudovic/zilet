@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { writeFile, readFile } from 'node:fs/promises';
 import { db, sql } from '../../src/db';
-import { user, limits, rateLimit, posts, comments } from '../../src/db/schema';
+import { user, limits, rateLimit, posts, comments, authors } from '../../src/db/schema';
 import { eq } from 'drizzle-orm';
 import poem from '../../fixtures/poem.json';
 const base = process.env.APP_URL || 'http://localhost:3000';
+const mailBase = process.env.MAILPIT_URL || 'http://localhost:8025';
 assert.ok(
   ['localhost', '127.0.0.1'].includes(new URL(base).hostname),
   'Local-only acceptance suite',
@@ -49,7 +50,7 @@ async function signup(prefix: string, role = 'reader') {
   assert.equal(signup.r.status, 200, JSON.stringify(signup.data));
   let messageId = '';
   for (let tries = 0; tries < 15; tries++) {
-    const messages = await (await fetch('http://localhost:8025/api/v1/messages')).json();
+    const messages = await (await fetch(`${mailBase}/api/v1/messages`)).json();
     messageId = messages.messages?.find((m: { To: { Address: string }[] }) =>
       m.To?.some((to) => to.Address === email),
     )?.ID;
@@ -57,7 +58,7 @@ async function signup(prefix: string, role = 'reader') {
     await new Promise((r) => setTimeout(r, 200));
   }
   assert.ok(messageId, 'Verification mail delivered to local mail sink');
-  const mail = await (await fetch(`http://localhost:8025/api/v1/message/${messageId}`)).json();
+  const mail = await (await fetch(`${mailBase}/api/v1/message/${messageId}`)).json();
   const url = mail.Text.match(/https?:\/\/[^\s]+\/api\/auth\/verify-email\?[^\s]+/)?.[0];
   assert.ok(url, mail.Text);
   const verification = await fetch(url, { redirect: 'manual' });
@@ -282,12 +283,12 @@ try {
   });
   assert.equal(recovery.r.status, 200);
   ok('Password recovery request succeeds through configured local mail path');
-  const inbox = await (await fetch('http://localhost:8025/api/v1/messages')).json();
+  const inbox = await (await fetch(`${mailBase}/api/v1/messages`)).json();
   let resetURL = '';
   for (const msg of inbox.messages.filter((m: any) =>
     m.To?.some((to: any) => to.Address === reader.email),
   )) {
-    const mail = await (await fetch(`http://localhost:8025/api/v1/message/${msg.ID}`)).json();
+    const mail = await (await fetch(`${mailBase}/api/v1/message/${msg.ID}`)).json();
     resetURL = mail.Text.match(/https?:\/\/[^\s]+\/api\/auth\/reset-password\/[^\s]+/)?.[0] || '';
     if (resetURL) break;
   }
@@ -410,6 +411,104 @@ try {
   assert.equal((await request(`/tekst/${post.slug}`)).r.status, 404);
   assert.equal((await request(`/media/${media.id}`)).r.status, 404);
   ok('Unpublishing removes article and formerly public media without stale caches');
+  await db.delete(rateLimit);
+  await db.delete(limits);
+  const profilePath = `/api/authors/${testAuthor.data.id}`;
+  const update = { bio: 'Biografija za provjeru.\n\nDrugi pasus.', previousBio: '' };
+  assert.equal((await request(profilePath, 'PUT', update)).r.status, 401);
+  assert.equal((await request(profilePath, 'PUT', update, reader.cookie)).r.status, 403);
+  assert.equal(
+    (await request(profilePath, 'PUT', update, editor.cookie, 'https://foreign.test')).r.status,
+    403,
+  );
+  assert.equal(
+    (await request(profilePath, 'PUT', { ...update, isEditor: true }, editor.cookie)).r.status,
+    400,
+  );
+  assert.equal((await request(profilePath, 'PUT', update, editor.cookie)).r.status, 200);
+  assert.equal(
+    (await request(profilePath, 'PUT', { ...update, bio: 'Stari prozor' }, editor.cookie)).r.status,
+    409,
+  );
+  assert.equal((await request(`/autor/${testAuthor.data.slug}`)).r.status, 404);
+  await db.update(authors).set({ isEditor: true }).where(eq(authors.id, testAuthor.data.id));
+  const publicProfile = await request(`/autor/${testAuthor.data.slug}`);
+  assert.equal(publicProfile.r.status, 200);
+  assert.ok(publicProfile.text.includes('Biografija za provjeru.'));
+  assert.ok((await request('/o-casopisu')).text.includes(testAuthor.data.name));
+  assert.equal((await request('/redakcija/autori', 'GET', undefined, editor.cookie)).r.status, 200);
+  assert.equal((await request('/redakcija/pomoc', 'GET', undefined, editor.cookie)).r.status, 200);
+  ok(
+    'Editor profiles are public without posts; biography writes enforce roles, origin, allowed fields and stale-write conflicts',
+  );
+  const secondSession = await request('/api/auth/sign-in/email', 'POST', {
+    email: editor.email,
+    password,
+  });
+  assert.equal(secondSession.r.status, 200);
+  const secondCookie = secondSession.r.headers
+    .getSetCookie()
+    .map((s) => s.split(';')[0])
+    .join('; ');
+  const changedPassword = randomBytes(20).toString('base64url');
+  assert.notEqual(
+    (
+      await request(
+        '/api/auth/change-password',
+        'POST',
+        { currentPassword: 'wrong-password', newPassword: changedPassword },
+        editor.cookie,
+      )
+    ).r.status,
+    200,
+  );
+  assert.notEqual(
+    (
+      await request(
+        '/api/auth/change-password',
+        'POST',
+        { currentPassword: password, newPassword: 'short' },
+        editor.cookie,
+      )
+    ).r.status,
+    200,
+  );
+  assert.equal(
+    (
+      await request(
+        '/api/auth/change-password',
+        'POST',
+        { currentPassword: password, newPassword: changedPassword, revokeOtherSessions: true },
+        editor.cookie,
+      )
+    ).r.status,
+    200,
+  );
+  assert.equal(
+    (await request(`/api/posts/${post.id}`, 'GET', undefined, secondCookie)).r.status,
+    401,
+  );
+  assert.notEqual(
+    (await request('/api/auth/sign-in/email', 'POST', { email: editor.email, password })).r.status,
+    200,
+  );
+  assert.equal(
+    (
+      await request('/api/auth/sign-in/email', 'POST', {
+        email: editor.email,
+        password: changedPassword,
+      })
+    ).r.status,
+    200,
+  );
+  await writeFile(
+    '/tmp/zilet-browser-account.json',
+    JSON.stringify({ email: editor.email, password: changedPassword }),
+    { mode: 0o600 },
+  );
+  ok(
+    'Authenticated password change checks current password and length, rejects old credentials and revokes other sessions',
+  );
   await writeFile(
     'docs/verification/api-acceptance.json',
     JSON.stringify({ date: new Date().toISOString(), base, checks: evidence }, null, 2),

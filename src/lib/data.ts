@@ -145,7 +145,7 @@ export async function getAuthors() {
     .select()
     .from(authors)
     .where(
-      dsql`exists (select 1 from ${posts} inner join ${revisions} on ${posts.publishedRevisionId} = ${revisions.id} where ${posts.status} = 'published' and ${revisions.content}->>'authorId' = ${authors.id})`,
+      dsql`${authors.isEditor} or exists (select 1 from ${posts} inner join ${revisions} on ${posts.publishedRevisionId} = ${revisions.id} where ${posts.status} = 'published' and ${revisions.content}->>'authorId' = ${authors.id})`,
     )
     .orderBy(asc(authors.name));
 }

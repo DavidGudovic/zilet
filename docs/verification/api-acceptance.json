@@ -1,6 +1,6 @@
 {
-  "date": "2026-09-05T22:02:04.851Z",
-  "base": "http://localhost:3000",
+  "date": "2026-09-05T23:32:15.328Z",
+  "base": "http://localhost:3002",
   "checks": [
     "Registration, real sink mail, verification, sign-in; client role escalation rejected",
     "Anonymous and reader cannot read editorial drafts",
@@ -19,6 +19,8 @@
     "Suspension revokes sessions and prevents login; access can be restored",
     "Reader can delete their comment; editors cannot undo an author deletion",
     "Slug change permanently redirects old route; published comment closure is enforced",
-    "Unpublishing removes article and formerly public media without stale caches"
+    "Unpublishing removes article and formerly public media without stale caches",
+    "Editor profiles are public without posts; biography writes enforce roles, origin, allowed fields and stale-write conflicts",
+    "Authenticated password change checks current password and length, rejects old credentials and revokes other sessions"
   ]
 }

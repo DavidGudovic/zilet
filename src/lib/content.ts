@@ -143,6 +143,7 @@ export const dateLabel = (s: string | Date) =>
     timeZone: 'Europe/Podgorica',
   }).format(new Date(s));
 export type Author = {
+  isEditor?: boolean;
   id: string;
   name: string;
   slug: string;

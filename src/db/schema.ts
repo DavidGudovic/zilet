@@ -76,6 +76,7 @@ export const authors = pgTable('authors', {
   name: text('name').notNull(),
   bio: text('bio'),
   portraitId: text('portrait_id'),
+  isEditor: boolean('is_editor').notNull().default(false),
 });
 export type ImageRef = {
   id: string;

@@ -247,6 +247,10 @@ export function Editor({
         </fieldset>
       )}
       <div className="editor-fields">
+        <p className="composer-hint">
+          Napišite ili nalijepite tekst, kao objavu na Facebooku. Nacrt se čuva automatski. Dugme
+          „Objavi” ga otvara čitaocima.
+        </p>
         <label className="title-field">
           Naslov
           <textarea
@@ -346,6 +350,7 @@ export function Editor({
                 className="verse-input"
                 ref={verse}
                 aria-label="Sadržaj pjesme"
+                placeholder="Ovdje napišite ili nalijepite pjesmu…"
                 spellCheck={false}
                 autoCorrect="off"
                 autoCapitalize="off"

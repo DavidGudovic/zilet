@@ -10,7 +10,7 @@ export default async function Page({
 }: {
   searchParams: Promise<{ status?: string; page?: string }>;
 }) {
-  await editorSession();
+  const editor = await editorSession();
   const q = await searchParams;
   const status = ['draft', 'published', 'unpublished'].includes(q.status || '')
     ? q.status
@@ -31,6 +31,10 @@ export default async function Page({
     .where(where);
   return (
     <>
+      <div className="desk-welcome">
+        <p>Dobro došli, {editor.name}.</p>
+        <Link href="/redakcija/pomoc">Kako da objavim tekst? ↗</Link>
+      </div>
       <div className="desk-title">
         <div>
           <span className="eyebrow">Vaša radna bilježnica</span>
