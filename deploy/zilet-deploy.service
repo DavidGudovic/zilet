@@ -1,0 +1,21 @@
+[Unit]
+Description=Install the latest CI-approved Zilet release
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=david
+Group=david
+SupplementaryGroups=docker
+WorkingDirectory=/var/www/html/zilet
+ExecStart=/usr/local/bin/zilet-deploy
+TimeoutStartSec=15min
+UMask=0077
+Nice=10
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

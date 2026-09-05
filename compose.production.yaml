@@ -1,0 +1,48 @@
+name: zilet
+services:
+  db:
+    image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    environment:
+      POSTGRES_DB: zilet
+      POSTGRES_USER: zilet
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Production password is required}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U zilet -d zilet"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    mem_limit: 512m
+    restart: unless-stopped
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+  app:
+    image: ${ZILET_IMAGE:?Use the deployment script to select a tested release}
+    pull_policy: never
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://zilet:${POSTGRES_PASSWORD}@db:5432/zilet
+      MEDIA_DIR: /app/media
+      RELEASE_SHA: ${RELEASE_SHA:?Release commit is required}
+    ports:
+      - "127.0.0.1:${APP_PORT:-3100}:3000"
+    volumes:
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 768m
+    init: true
+    restart: unless-stopped
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  database:
+  media:

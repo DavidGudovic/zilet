@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.env
+.env.*
+!.env.example
+media/
+backups/
+test-results/
+playwright-report/
+*.tsbuildinfo
+.deploy/
+release/
+skill-observations/
+zilet-astra-brief/

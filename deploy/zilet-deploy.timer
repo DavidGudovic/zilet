@@ -1,0 +1,11 @@
+[Unit]
+Description=Check for a successful Zilet main release every minute
+
+[Timer]
+OnBootSec=45s
+OnUnitInactiveSec=60s
+RandomizedDelaySec=5s
+Unit=zilet-deploy.service
+
+[Install]
+WantedBy=timers.target

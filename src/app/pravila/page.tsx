@@ -1,0 +1,31 @@
+export const metadata = { title: 'Pravila i privatnost' };
+export default function Page() {
+  return (
+    <article className="wrap information-page">
+      <span className="eyebrow">Čitanje i razgovor</span>
+      <h1>Pravila i privatnost</h1>
+      <div className="prose">
+        <p>
+          Za čitanje tekstova nije potreban nalog. Za komentarisanje su potrebni ime za prikaz,
+          adresa e-pošte i lozinka. Adresa e-pošte se ne objavljuje.
+        </p>
+        <h2>Komentari</h2>
+        <p>
+          Razgovarajte o djelu i argumentima. Ne objavljujte prijetnje, lične podatke drugih osoba
+          ili neželjene reklame. Urednici mogu ukloniti komentar i obustaviti pristup nalogu.
+          Uklonjen komentar mogu vratiti; autor može izbrisati svoj komentar.
+        </p>
+        <h2>Nalog i podaci</h2>
+        <p>
+          Podaci o nalogu služe za prijavu, potvrdu adrese, obnovu lozinke i zaštitu od zloupotrebe.
+          Sesija koristi neophodan kolačić. Ne šaljemo biltene niti marketinške poruke.
+        </p>
+        <h2>Privatni nacrti</h2>
+        <p>
+          Nacrti, njihove ranije verzije i neobjavljene fotografije dostupni su samo ovlašćenoj
+          redakciji. Izmjene objavljenog teksta postaju javne tek nakon objave.
+        </p>
+      </div>
+    </article>
+  );
+}

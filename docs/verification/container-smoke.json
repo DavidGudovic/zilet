@@ -1,0 +1,12 @@
+{
+  "date": "2026-09-05T22:18:17.038Z",
+  "published": 2,
+  "migrations": 2,
+  "restore_marker": 0,
+  "homepage": 200,
+  "image": 200,
+  "imageSHA256": "55ee84238bb68f7e538f328c8bdd4c2a584554f33f294e726e3128b850cd96ae",
+  "makeUp": true,
+  "makeDownUpPersistence": true,
+  "backupRestore": true
+}

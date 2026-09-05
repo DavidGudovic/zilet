@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+cd /var/www/html/zilet
+exec bash scripts/deploy.sh

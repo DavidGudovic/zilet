@@ -1,0 +1,27 @@
+services:
+  umami-db:
+    image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:?Set a separate analytics database password}
+    volumes:
+      - analytics_database:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U umami -d umami"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+  umami:
+    image: docker.umami.is/umami-software/umami:postgresql-latest@sha256:fa32d116cf20cad52cbc3fad9a63b46e7fa02299d8f967168eb453d49c476b4a
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD}@umami-db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?Set a separate analytics secret}
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  analytics_database:

@@ -1,0 +1,119 @@
+import { db } from '@/db';
+import { authors, posts, revisions, media, placements, redirects } from '@/db/schema';
+import { and, eq, inArray } from 'drizzle-orm';
+import { revisionSchema, slugify, searchText } from './publishing';
+import { HttpError } from './security';
+export async function savePost(actorId: string, input: unknown, id?: string, expected = 0) {
+  const content = revisionSchema.parse(input);
+  return db.transaction(async (tx) => {
+    const [author] = await tx.select().from(authors).where(eq(authors.id, content.authorId));
+    if (!author) throw new HttpError(400, 'Izaberite autora.');
+    if (content.media.length) {
+      const ids = [...new Set(content.media.map((m) => m.id))];
+      const found = await tx.select({ id: media.id }).from(media).where(inArray(media.id, ids));
+      if (found.length !== ids.length) throw new HttpError(400, 'Fotografija nije pronađena.');
+    }
+    let post;
+    if (id) {
+      [post] = await tx.select().from(posts).where(eq(posts.id, id)).for('update');
+      if (!post) throw new HttpError(404, 'Tekst nije pronađen.');
+      if (post.version !== expected)
+        throw new HttpError(
+          409,
+          'Drugi urednik je sačuvao novu verziju. Vaš tekst je ostao u ovom prozoru. Ponovo otvorite sačuvanu verziju prije nastavka.',
+        );
+    } else {
+      const postId = crypto.randomUUID();
+      [post] = await tx
+        .insert(posts)
+        .values({
+          id: postId,
+          slug: `${slugify(content.title)}-${postId.slice(0, 6)}`,
+          createdBy: actorId,
+        })
+        .returning();
+    }
+    const revisionId = crypto.randomUUID();
+    await tx
+      .insert(revisions)
+      .values({ id: revisionId, postId: post.id, content, createdBy: actorId });
+    const [updated] = await tx
+      .update(posts)
+      .set({ draftRevisionId: revisionId, version: post.version + 1, updatedAt: new Date() })
+      .where(eq(posts.id, post.id))
+      .returning();
+    // Keep at most 30 recoverable autosaves plus the live revision.
+    const all = await tx
+      .select({ id: revisions.id })
+      .from(revisions)
+      .where(eq(revisions.postId, post.id))
+      .orderBy(revisions.createdAt);
+    const old = all
+      .slice(0, -30)
+      .filter((r) => r.id !== post.publishedRevisionId && r.id !== revisionId);
+    if (old.length)
+      await tx.delete(revisions).where(
+        inArray(
+          revisions.id,
+          old.map((r) => r.id),
+        ),
+      );
+    return updated;
+  });
+}
+export async function publishPost(id: string, version: number, slot?: string, newSlug?: string) {
+  return db.transaction(async (tx) => {
+    const [post] = await tx.select().from(posts).where(eq(posts.id, id)).for('update');
+    if (!post) throw new HttpError(404, 'Tekst nije pronađen.');
+    if (post.version !== version)
+      throw new HttpError(409, 'Verzija je promijenjena. Ponovo otvorite tekst.');
+    const [revision] = await tx
+      .select()
+      .from(revisions)
+      .where(eq(revisions.id, post.draftRevisionId!));
+    if (!revision) throw new HttpError(400, 'Najprije sačuvajte tekst.');
+    const content = revisionSchema.parse(revision.content);
+    if (content.media.some((m) => !m.alt.trim() || !m.credit.trim()))
+      throw new HttpError(400, 'Dodajte opis i potpis za svaku fotografiju.');
+    if (slot === 'poem' && content.type !== 'poem')
+      throw new HttpError(400, 'Izbor poezije je namijenjen pjesmama.');
+    const [author] = await tx.select().from(authors).where(eq(authors.id, content.authorId));
+    const slug = newSlug ? slugify(newSlug) : post.slug;
+    if (slug !== post.slug) {
+      const occupied = await tx.select().from(posts).where(eq(posts.slug, slug));
+      const old = await tx.select().from(redirects).where(eq(redirects.slug, slug));
+      if (occupied.length || old.length) throw new HttpError(409, 'Ta adresa je već korišćena.');
+      await tx.insert(redirects).values({ slug: post.slug, postId: id }).onConflictDoNothing();
+    }
+    await tx
+      .update(posts)
+      .set({
+        slug,
+        status: 'published',
+        publishedRevisionId: revision.id,
+        publishedAt: post.publishedAt || new Date(),
+        searchText: searchText(content, author.name),
+        version: post.version + 1,
+        updatedAt: new Date(),
+      })
+      .where(eq(posts.id, id));
+    if (slot === 'auto') await tx.delete(placements).where(eq(placements.postId, id));
+    if (slot && ['lead', 'poem', 'art'].includes(slot)) {
+      await tx.delete(placements).where(eq(placements.postId, id));
+      await tx
+        .insert(placements)
+        .values({ slot, postId: id })
+        .onConflictDoUpdate({ target: placements.slot, set: { postId: id } });
+    }
+    return { slug, version: post.version + 1 };
+  });
+}
+export async function unpublishPost(id: string, version: number) {
+  const [post] = await db
+    .update(posts)
+    .set({ status: 'unpublished', version: version + 1, updatedAt: new Date() })
+    .where(and(eq(posts.id, id), eq(posts.version, version)))
+    .returning();
+  if (!post) throw new HttpError(409, 'Verzija je promijenjena. Ponovo otvorite tekst.');
+  return post;
+}

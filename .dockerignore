@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+media
+backups
+test-results
+playwright-report
+docs/verification/*.png
+skill-observations
+zilet-astra-brief/references
+.deploy
+release
+.github

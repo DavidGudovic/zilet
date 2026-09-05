@@ -1,0 +1,95 @@
+name: Test and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: zilet-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    env:
+      RELEASE_SHA: ${{ github.sha }}
+      COMPOSE_FILE: compose.yaml:compose.dev.yaml:compose.ci.yaml
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - name: Check source and critical contracts
+        run: |
+          npm run format:check
+          npm test
+          npm run typecheck
+          bash tests/deployment.sh
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Build the production container
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          load: true
+          tags: zilet/app:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Exercise the built image with PostgreSQL and local mail
+        run: |
+          sh scripts/setup.sh
+          docker compose up -d --no-build --wait --wait-timeout 150
+          npm run test:e2e
+          curl --fail --silent http://localhost:3000/api/health | jq -e --arg sha "$RELEASE_SHA" '.status == "ok" and .release == $sha'
+      - name: Package the tested image
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p release
+          docker save "zilet/app:$RELEASE_SHA" | gzip -1 > release/zilet-image.tar.gz
+          (cd release && sha256sum zilet-image.tar.gz > SHA256SUMS)
+      - name: Publish the release and mark it ready
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: bash scripts/ci-release.sh
+      - name: Verify the live release
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --max-time 10 https://zilet.me/api/health | jq -e --arg sha "$RELEASE_SHA" '.status == "ok" and .release == $sha'; then
+              echo "Published https://zilet.me at $RELEASE_SHA" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            # A newer push supersedes this run; its workflow verifies that release.
+            head=$(git ls-remote https://github.com/"$GITHUB_REPOSITORY".git refs/heads/main | cut -f1)
+            if [ "$head" != "$RELEASE_SHA" ]; then
+              echo "Superseded by $head" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo 'The server did not publish this release within ten minutes.' >&2
+          exit 1
+      - name: Container diagnostics on failure
+        if: failure()
+        run: docker compose logs --tail=80 app db
+      - name: Stop the disposable test stack
+        if: always()
+        run: docker compose down --volumes || true

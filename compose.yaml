@@ -1,0 +1,40 @@
+name: zilet
+services:
+  db:
+    image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    environment:
+      POSTGRES_DB: zilet
+      POSTGRES_USER: zilet
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run make setup first}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U zilet -d zilet"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://zilet:${POSTGRES_PASSWORD}@db:5432/zilet
+      MEDIA_DIR: /app/media
+      SMTP_HOST: ${SMTP_HOST:-mail}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    volumes:
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+  mail:
+    image: axllent/mailpit:v1.27.8
+    ports:
+      - "127.0.0.1:${MAIL_PORT:-8025}:8025"
+    restart: unless-stopped
+volumes:
+  database:
+  media:

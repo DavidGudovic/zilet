@@ -1,0 +1,8 @@
+name: zilet
+services:
+  db:
+    ports:
+      - "127.0.0.1:${DB_PORT:-55439}:5432"
+  mail:
+    ports:
+      - "127.0.0.1:1025:1025"

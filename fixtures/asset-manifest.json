@@ -1,0 +1,30 @@
+[
+  {
+    "file": "strandgade.jpg",
+    "title": "Strandgade, Sunshine",
+    "creator": "Vilhelm Hammersh\u00f8i",
+    "date": "c. 1906",
+    "source": "https://www.clevelandart.org/art/2023.38",
+    "download": "https://openaccess-cdn.clevelandart.org/2023.38/2023.38_web.jpg",
+    "rights": "CC0 \u2014 Cleveland Museum of Art Open Access",
+    "credit": "Nancy F. and Joseph P. Keithley Collection Gift, 2023.38",
+    "role": "Development illustration only; not an original image of either supplied post",
+    "dimensions": [
+      900,
+      797
+    ]
+  },
+  {
+    "file": "portrait.jpg",
+    "title": "Portrait of a Woman",
+    "creator": "Rembrandt van Rijn and studio",
+    "source": "https://www.clevelandart.org/art/1944.90",
+    "download": "https://openaccess-cdn.clevelandart.org/1944.90/1944.90_web.jpg",
+    "rights": "CC0 \u2014 Cleveland Museum of Art Open Access",
+    "role": "Development portrait-aspect-ratio gallery test only; never an author portrait",
+    "dimensions": [
+      738,
+      900
+    ]
+  }
+]
