@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 if [ -f .deploy/release.env ]; then
+  exec 9>.deploy/lock
+  flock 9
   set -a
   source .deploy/release.env
   set +a

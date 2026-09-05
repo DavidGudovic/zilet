@@ -47,7 +47,7 @@ main() {
   previous=$current
   if [[ -n "$previous" ]]; then
     # A backup failure leaves the running release untouched and stops deployment.
-    bash scripts/backup.sh
+    ZILET_DEPLOY_LOCKED=1 bash scripts/backup.sh
     cp .deploy/release.env .deploy/previous.env
   fi
   git reset --hard "$sha"

@@ -5,12 +5,10 @@ export ZILET_IMAGE RELEASE_SHA
 setup:
 	@sh scripts/setup.sh
 up: setup
-	@rm -f .deploy/paused
-	docker compose up -d --build --wait
+	@bash scripts/container-control.sh up
 	@sed -n 's/^APP_URL=/Žilet: /p' .env
 down:
-	@if [ -f .deploy/release.env ]; then touch .deploy/paused; fi
-	docker compose down
+	@bash scripts/container-control.sh down
 logs:
 	docker compose logs -f --tail=100 app
 dev: setup

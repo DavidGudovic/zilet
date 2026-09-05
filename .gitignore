@@ -3,8 +3,8 @@ node_modules/
 .env
 .env.*
 !.env.example
-media/
-backups/
+/media/
+/backups/
 test-results/
 playwright-report/
 *.tsbuildinfo

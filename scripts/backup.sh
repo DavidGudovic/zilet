@@ -2,6 +2,10 @@
 set -euo pipefail
 umask 077
 if [ -f .deploy/release.env ]; then
+  if [ "${ZILET_DEPLOY_LOCKED:-}" != 1 ]; then
+    exec 9>.deploy/lock
+    flock 9
+  fi
   set -a
   source .deploy/release.env
   set +a
