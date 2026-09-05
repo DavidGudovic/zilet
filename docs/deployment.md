@@ -1,7 +1,17 @@
 # Production deployment
 
-The public origin is **https://zilet.me**. The existing host Nginx proxies only
-this virtual host to `127.0.0.1:3100`; the other sites keep their own configuration.
+The intended public origin is **https://zilet.me**. The production container is
+installed and healthy on `127.0.0.1:3100`. The prepared Nginx configuration adds
+only this virtual host; the other sites keep their own configuration.
+
+**Installation status, 2026-09-06:** GitHub builds and integration checks passed,
+and the tested release was installed manually. Both approved texts and the
+credited illustration are in the production database/media volume. Nginx/TLS
+and `zilet-deploy.timer` are not installed yet: sudo rejected the supplied
+password. The final HTTPS workflow check therefore cannot pass yet. The owner
+can complete the prepared setup with `sudo bash /tmp/zilet-bootstrap-root.sh`
+on `ssh zilet` (versioned source: `deploy/bootstrap-host.sh`). Then verify
+`https://zilet.me/api/health` and `systemctl is-active zilet-deploy.timer`.
 The application and PostgreSQL run in the `zilet` Docker Compose project under
 `/var/www/html/zilet`. The database and media volumes survive every code deployment.
 

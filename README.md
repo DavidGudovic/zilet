@@ -94,7 +94,7 @@ SQL migrations in `migrations/` run before app startup, recorded in `zilet_migra
 
 ## VPS launch
 
-See [production deployment and CI/CD](docs/deployment.md) and [the launch checklist](docs/launch-checklist.md). Pushes to `main` run GitHub checks, package the tested container and trigger automatic installation on the VPS. Existing Nginx serves `https://zilet.me` through loopback port 3100. Production uses `compose.production.yaml`, separate persistent data, strong server-generated secrets and no Mailpit. `make up` / `make down` work on both the server and locally; production `make down` also pauses automatic deployment until `make up`. Registration remains disabled until real transactional SMTP is configured. Secure cookies follow the HTTPS app URL; SMTP and analytics credentials remain server-only.
+See [production deployment and CI/CD](docs/deployment.md) and [the launch checklist](docs/launch-checklist.md). Pushes to `main` run GitHub checks, package the tested container and trigger automatic installation on the VPS. The production container is installed on loopback port 3100. Nginx/TLS and the deployment timer are prepared but await working sudo authentication; public HTTPS is not yet enabled. Production uses `compose.production.yaml`, separate persistent data, strong server-generated secrets and no Mailpit. `make up` / `make down` work on both the server and locally; production `make down` also pauses automatic deployment until `make up`. Registration remains disabled until real transactional SMTP is configured. Secure cookies follow the HTTPS app URL; SMTP and analytics credentials remain server-only.
 
 ## Optional Umami
 

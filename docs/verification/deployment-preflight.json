@@ -1,0 +1,23 @@
+{
+  "date": "2026-09-06",
+  "repository": "https://github.com/DavidGudovic/zilet",
+  "checks": [
+    "Clean checkout integration exposed and corrected missing media routes caused by an unanchored ignore pattern.",
+    "Production Compose validates on target Docker Compose v5.",
+    "Seven local test files pass, including deployment approval, idempotence, backup ordering and failed-health rollback.",
+    "Secrets, runtime media, backup directories and briefing materials excluded from Git.",
+    "Nginx targets only zilet.me at loopback port 3100; existing sites use other configuration.",
+    "GitHub container acceptance and release publication passed for the installed commit.",
+    "Server image archive checksum and OCI revision label verified before installation.",
+    "Approved content imported once: two published posts and credited artwork.",
+    "Private database/media backups created before and after import.",
+    "Production make down/up completed; two published pieces and healthy container survived.",
+    "Production homepage and mobile poem inspected through SSH tunnel; canonical https://zilet.me and no mobile overflow.",
+    "Both pre-existing public websites returned HTTP 200."
+  ],
+  "pending": [
+    "Target Nginx/TLS/timer installation requires working sudo authentication.",
+    "Real public HTTPS verification cannot complete before that installation."
+  ],
+  "installedCommit": "f520f768498723c2c07d5dd244455876f1dbe8dd"
+}
