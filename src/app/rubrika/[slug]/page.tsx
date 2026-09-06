@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { rubrics, rubricLabel } from '@/lib/content';
 import { findPosts } from '@/lib/data';
+import { InkLines } from '@/components/ink-lines';
 import { ArchiveList, Pagination } from '@/components/archive';
 export const dynamic = 'force-dynamic';
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -25,7 +26,8 @@ export default async function Page({
   if (result.page > 1 && !result.items.length) notFound();
   return (
     <div className="wrap archive-page">
-      <header className="archive-heading">
+      <header className="archive-heading rubric-heading">
+        <InkLines className="rubric-lines" />
         <span className="eyebrow">Rubrike / Žilet</span>
         <h1>{slug === 'umjetnost' ? 'Umjetnost' : rubricLabel(slug)}</h1>
         {slug === 'umjetnost' && (

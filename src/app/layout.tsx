@@ -2,6 +2,8 @@ import { AnalyticsTracker } from '@/components/analytics-tracker';
 import type { Metadata } from 'next';
 import './fonts.css';
 import './globals.css';
+import './atmosphere.css';
+import { PageAtmosphere } from '@/components/page-atmosphere';
 import { Header, Footer } from '@/components/header';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
@@ -26,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Header />
         <main id="sadrzaj">{children}</main>
         <Footer />
+        <PageAtmosphere />
         {process.env.UMAMI_URL && process.env.UMAMI_WEBSITE_ID && <AnalyticsTracker />}
       </body>
     </html>

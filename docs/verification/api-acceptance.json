@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-05T23:32:15.328Z",
+  "date": "2026-09-06T00:16:28.602Z",
   "base": "http://localhost:3002",
   "checks": [
     "Registration, real sink mail, verification, sign-in; client role escalation rejected",
@@ -8,9 +8,11 @@
     "Unpublished article is absent; stale editor revision rejected",
     "Image upload decoded and stored; unpublished media cannot be read anonymously or by reader",
     "Publishing with image appears in SSR article and archive without rebuild",
+    "Posting account and work author are separate; plain-text editorial notes have a server-owned signature",
     "Published revision stays unchanged while private preview shows pending revision; private material absent anonymously",
     "Verified reader posts; cross-account deletion and cross-origin submission forbidden",
     "Plain-text comment escaping; removal and count update immediately; restoration works",
+    "Publishing promotes the note with its true editor signature; autosave never leaks it or changes the original posting credit",
     "Objavi izmjene deliberately promotes the new public revision",
     "Unconnected analytics truthfully renders unavailable state",
     "Disguised executable SVG is rejected by decoded-format validation",

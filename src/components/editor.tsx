@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import type { RevisionContent } from '@/db/schema';
 import { rubrics, type Author } from '@/lib/content';
+import { SelectField } from './select-field';
 import { MediaPicker } from './media-picker';
 import { remapEmphasis } from '@/lib/verse-edit';
 const RichEditor = dynamic(() => import('./rich-editor').then((m) => m.RichEditor), {
@@ -12,6 +13,7 @@ const RichEditor = dynamic(() => import('./rich-editor').then((m) => m.RichEdito
 const blank = (kind: RevisionContent['type'], authorId: string): RevisionContent => ({
   title: '',
   intro: '',
+  editorialNote: '',
   authorId,
   type: kind,
   body:
@@ -25,10 +27,12 @@ const blank = (kind: RevisionContent['type'], authorId: string): RevisionContent
 type PostState = { id: string; version: number; status: string; slug: string };
 export function Editor({
   authors: initialAuthors,
+  postedBy,
   initial,
   post: initialPost,
 }: {
   authors: Author[];
+  postedBy: string;
   initial?: RevisionContent;
   post?: PostState;
 }) {
@@ -263,17 +267,15 @@ export function Editor({
           />
         </label>
         <div className="author-field">
-          <label>
-            Autor
-            <select value={content.authorId} onChange={(e) => change({ authorId: e.target.value })}>
-              <option value="">Izaberite autora</option>
-              {authors.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SelectField
+            label="Autor djela"
+            value={content.authorId}
+            onChange={(authorId) => change({ authorId })}
+            options={[
+              { value: '', label: 'Izaberite autora' },
+              ...authors.map((a) => ({ value: a.id, label: a.name })),
+            ]}
+          />
           <button type="button" onClick={() => setNewAuthor(!newAuthor)}>
             + Dodaj autora
           </button>
@@ -311,6 +313,9 @@ export function Editor({
             <p className="hint">Autorski potpis ne otvara korisnički nalog.</p>
           </div>
         )}
+        <p className="composer-credit">
+          Objavu pripremio/la: <strong>{postedBy}</strong>
+        </p>
         <section className="content-field">
           <h2>Sadržaj</h2>
           {content.body.kind === 'poem' ? (
@@ -381,6 +386,23 @@ export function Editor({
             />
           )}
         </section>
+        <section className="editor-note-field">
+          <h2>Vaša bilješka uz djelo</h2>
+          <p className="hint" id="note-help">
+            Opciono: napišite svoj osvrt ili zašto dijelite ovo djelo. Bilješka se objavljuje
+            odvojeno od djela, uz ime urednika koji je napiše ili izmijeni.
+          </p>
+          <label htmlFor="editorial-note">Bilješka urednika</label>
+          <textarea
+            id="editorial-note"
+            value={content.editorialNote || ''}
+            maxLength={4000}
+            rows={5}
+            aria-describedby="note-help"
+            placeholder="Šta biste dodali uz ovo djelo?"
+            onChange={(event) => change({ editorialNote: event.target.value })}
+          />
+        </section>
         <section>
           <h2>Fotografije</h2>
           <MediaPicker items={content.media} onChange={(media) => change({ media })} />
@@ -424,32 +446,31 @@ export function Editor({
             Dozvoli komentare
           </label>
           {content.body.kind === 'poem' && (
-            <label>
-              Poravnanje pjesme
-              <select
-                value={content.body.align}
-                onChange={(e) => {
-                  if (content.body.kind === 'poem')
-                    change({
-                      body: { ...content.body, align: e.target.value as 'left' | 'center' },
-                    });
-                }}
-              >
-                <option value="left">Lijevo (uobičajeno)</option>
-                <option value="center">Centrirano (po izboru autora)</option>
-              </select>
-            </label>
+            <SelectField
+              label="Poravnanje pjesme"
+              value={content.body.align}
+              onChange={(align) => {
+                if (content.body.kind === 'poem')
+                  change({ body: { ...content.body, align: align as 'left' | 'center' } });
+              }}
+              options={[
+                { value: 'left', label: 'Lijevo (uobičajeno)' },
+                { value: 'center', label: 'Centrirano (po izboru autora)' },
+              ]}
+            />
           )}
-          <label>
-            Istakni na početnoj prilikom objave
-            <select value={slot} onChange={(e) => setSlot(e.target.value)}>
-              <option value="">Zadrži postojeći izbor</option>
-              <option value="auto">Prepusti automatskom izboru</option>
-              <option value="lead">Glavni tekst</option>
-              <option value="poem">Izbor poezije</option>
-              <option value="art">Umjetnost</option>
-            </select>
-          </label>
+          <SelectField
+            label="Istakni na početnoj prilikom objave"
+            value={slot}
+            onChange={setSlot}
+            options={[
+              { value: '', label: 'Zadrži postojeći izbor' },
+              { value: 'auto', label: 'Prepusti automatskom izboru' },
+              { value: 'lead', label: 'Glavni tekst' },
+              { value: 'poem', label: 'Izbor poezije' },
+              { value: 'art', label: 'Umjetnost' },
+            ]}
+          />
           {post && (
             <>
               <button

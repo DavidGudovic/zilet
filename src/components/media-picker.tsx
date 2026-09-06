@@ -1,5 +1,6 @@
 'use client';
 import { useRef, useState } from 'react';
+import { SelectField } from './select-field';
 import type { ImageRef } from '@/db/schema';
 export function MediaPicker({
   items,
@@ -155,25 +156,22 @@ export function MediaPicker({
                 )}
               </label>
             ))}
-            <label>
-              Položaj slike
-              <select
-                value={m.placement}
-                onChange={(e) =>
-                  onChange(
-                    items.map((x) =>
-                      x.id === m.id
-                        ? { ...x, placement: e.target.value as ImageRef['placement'] }
-                        : x,
-                    ),
-                  )
-                }
-              >
-                <option value="above">Iznad djela</option>
-                <option value="beside">Uz pjesmu</option>
-                <option value="below">Ispod djela</option>
-              </select>
-            </label>
+            <SelectField
+              label="Položaj slike"
+              value={m.placement}
+              onChange={(placement) =>
+                onChange(
+                  items.map((x) =>
+                    x.id === m.id ? { ...x, placement: placement as ImageRef['placement'] } : x,
+                  ),
+                )
+              }
+              options={[
+                { value: 'above', label: 'Iznad djela' },
+                { value: 'beside', label: 'Uz pjesmu' },
+                { value: 'below', label: 'Ispod djela' },
+              ]}
+            />
             <div className="media-actions">
               <button
                 type="button"

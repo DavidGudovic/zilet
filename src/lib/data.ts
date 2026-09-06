@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { authors, posts, revisions, media, placements, redirects } from '@/db/schema';
+import { authors, posts, revisions, media, placements, redirects, user } from '@/db/schema';
 import { and, eq, desc, asc, sql as dsql, ilike } from 'drizzle-orm';
 import { demoPosts } from './fixtures';
 import { fold, type PostView, type MediaView } from './content';
@@ -9,8 +9,11 @@ export const isDemo = () =>
 export async function viewPost(
   post: typeof posts.$inferSelect,
   content: RevisionContent,
+  editorialNoteBy?: string | null,
 ): Promise<PostView> {
   const [author] = await db.select().from(authors).where(eq(authors.id, content.authorId));
+  const postedBy = await postingName(post.createdBy);
+  const noteBy = editorialNoteBy ? await postingName(editorialNoteBy) : undefined;
   const images: MediaView[] = [];
   for (const ref of content.media) {
     const [m] = await db.select().from(media).where(eq(media.id, ref.id));
@@ -21,6 +24,9 @@ export async function viewPost(
     slug: post.slug,
     title: content.title,
     intro: content.intro,
+    postedBy,
+    editorialNote: content.editorialNote,
+    editorialNoteBy: noteBy,
     type: content.type,
     body: content.body,
     rubrics: content.rubrics,
@@ -87,7 +93,7 @@ export async function findPosts({
     .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
     .where(where);
   const rows = await db
-    .select({ post: posts, content: revisions.content })
+    .select({ post: posts, content: revisions.content, editorialNoteBy: revisions.editorialNoteBy })
     .from(posts)
     .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
     .where(where)
@@ -95,7 +101,7 @@ export async function findPosts({
     .limit(limit)
     .offset((page - 1) * limit);
   return {
-    items: await Promise.all(rows.map((r) => viewPost(r.post, r.content))),
+    items: await Promise.all(rows.map((r) => viewPost(r.post, r.content, r.editorialNoteBy))),
     total,
     page,
     limit,
@@ -109,7 +115,7 @@ export async function getFrontPage() {
   const choices = await getPlacements();
   if (isDemo()) return { posts: recent, choices };
   const selected = await db
-    .select({ post: posts, content: revisions.content })
+    .select({ post: posts, content: revisions.content, editorialNoteBy: revisions.editorialNoteBy })
     .from(placements)
     .innerJoin(posts, eq(placements.postId, posts.id))
     .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
@@ -117,18 +123,18 @@ export async function getFrontPage() {
   const older = await Promise.all(
     selected
       .filter((r) => !recent.some((p) => p.id === r.post.id))
-      .map((r) => viewPost(r.post, r.content)),
+      .map((r) => viewPost(r.post, r.content, r.editorialNoteBy)),
   );
   return { posts: [...recent, ...older], choices };
 }
 export async function getPost(slug: string) {
   if (isDemo()) return demoPosts.find((p) => p.slug === slug);
   const [row] = await db
-    .select({ post: posts, content: revisions.content })
+    .select({ post: posts, content: revisions.content, editorialNoteBy: revisions.editorialNoteBy })
     .from(posts)
     .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
     .where(and(eq(posts.slug, slug), eq(posts.status, 'published')));
-  return row ? viewPost(row.post, row.content) : undefined;
+  return row ? viewPost(row.post, row.content, row.editorialNoteBy) : undefined;
 }
 export async function getRedirect(slug: string) {
   if (isDemo()) return;
@@ -166,4 +172,11 @@ export async function getPortrait(id?: string | null) {
         credit: m.credit,
       }
     : undefined;
+}
+
+export async function postingName(id: string) {
+  const [account] = await db.select({ name: user.name }).from(user).where(eq(user.id, id));
+  return id === 'approved-content-import' || id === 'fixture-system'
+    ? 'Redakcija Žileta'
+    : account?.name || 'Redakcija Žileta';
 }

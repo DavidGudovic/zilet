@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { authors, posts, revisions } from '@/db/schema';
 import { eq, asc } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
+import { postingName } from '@/lib/data';
 import { Editor } from '@/components/editor';
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   await editorSession();
@@ -14,6 +15,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   return (
     <Editor
       initial={r.content}
+      postedBy={await postingName(p.createdBy)}
       post={{ id: p.id, version: p.version, slug: p.slug, status: p.status }}
       authors={await db.select().from(authors).orderBy(asc(authors.name))}
     />

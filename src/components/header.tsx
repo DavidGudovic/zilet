@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
+import { InkLines } from './ink-lines';
 import { rubrics } from '@/lib/content';
 export function Header() {
   const path = usePathname();
@@ -14,13 +15,14 @@ export function Header() {
   return (
     <header className="site-header">
       <div className="masthead wrap">
+        <InkLines className="masthead-lines" />
         <p className="descriptor">
           Časopis za književnost,
           <br />
           umjetnost i kulturu
         </p>
         <Link href="/" className="brand" aria-label="Žilet — Početna">
-          <img src="/identity/wordmark-green.svg" width="380" height="168" alt="Žilet" />
+          <img src="/identity/wordmark-generated.png" width="1881" height="836" alt="Žilet" />
         </Link>
         <div className="masthead-right">
           <span>Književnost i umjetnost</span>
@@ -119,20 +121,42 @@ export function Footer() {
   const path = usePathname();
   if (path.startsWith('/redakcija')) return null;
   return (
-    <footer className="footer wrap">
-      <Link href="/" aria-label="Žilet — Početna">
-        <img src="/identity/wordmark-green.svg" width="100" height="45" alt="Žilet" />
-      </Link>
-      <p>Časopis za književnost, umjetnost i kulturu</p>
-      <div>
-        <Link href="/autori">Autori</Link>
-        <Link href="/o-casopisu">O časopisu</Link>
-        <Link href="/pravila">Pravila i privatnost</Link>
-        <Link href="/redakcija">Redakcija</Link>
-      </div>
-      <a href="#vrh" className="to-top">
-        Na vrh ↑
-      </a>
-    </footer>
+    <div className="footer-surface">
+      <footer className="footer wrap">
+        <InkLines className="footer-lines" />
+        <Link href="/" aria-label="Žilet — Početna">
+          <img src="/identity/wordmark-generated.png" width="100" height="45" alt="Žilet" />
+        </Link>
+        <p>Časopis za književnost, umjetnost i kulturu</p>
+        <div>
+          <Link href="/autori">Autori</Link>
+          <Link href="/o-casopisu">O časopisu</Link>
+          <Link href="/pravila">Pravila i privatnost</Link>
+          <Link href="/redakcija">Redakcija</Link>
+        </div>
+        <a className="maker-credit" href="https://www.linkedin.com/in/david-gudovic/">
+          Made with{' '}
+          <svg
+            width="19"
+            height="22"
+            viewBox="0 0 24 28"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            aria-hidden="true"
+          >
+            <path
+              d="M4 25C8 17 13 10 20 3M7 19C3 11 11 3 21 2C21 11 17 18 7 19ZM10 15L9 10M14 10L19 9M6 23L11 22"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>{' '}
+          by David Gudović
+        </a>
+        <a href="#vrh" className="to-top">
+          Na vrh ↑
+        </a>
+      </footer>
+    </div>
   );
 }

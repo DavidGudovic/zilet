@@ -24,6 +24,14 @@ export default async function Page() {
           </p>
         </li>
         <li>
+          <h2>Dodajte svoj osvrt</h2>
+          <p>
+            U polje <strong>Bilješka urednika</strong> možete dodati svoj komentar uz pjesmu ili
+            tekst. Autor djela ostaje potpisan posebno. Bilješka nosi ime urednika koji je napiše
+            ili izmijeni i izlazi tek kad objavite tekst.
+          </p>
+        </li>
+        <li>
           <h2>Dodajte sliku, ako želite</h2>
           <p>
             U Fotografijama izaberite sliku sa telefona ili iz biblioteke. Napišite šta se na njoj

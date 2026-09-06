@@ -90,6 +90,7 @@ export type ImageRef = {
 export type RevisionContent = {
   title: string;
   intro: string;
+  editorialNote?: string;
   authorId: string;
   type: 'poem' | 'prose' | 'gallery';
   body: Body;
@@ -120,6 +121,7 @@ export const revisions = pgTable(
       .notNull()
       .references(() => posts.id, { onDelete: 'cascade' }),
     content: jsonb('content').$type<RevisionContent>().notNull(),
+    editorialNoteBy: text('editorial_note_by').references(() => user.id),
     createdBy: text('created_by')
       .notNull()
       .references(() => user.id),

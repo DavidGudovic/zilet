@@ -9,14 +9,14 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   await editorSession();
   const { id } = await params;
   const [row] = await db
-    .select({ post: posts, content: revisions.content })
+    .select({ post: posts, content: revisions.content, editorialNoteBy: revisions.editorialNoteBy })
     .from(posts)
     .innerJoin(revisions, eq(posts.draftRevisionId, revisions.id))
     .where(eq(posts.id, id));
   if (!row) notFound();
   return (
     <div className="private-preview">
-      <Article post={await viewPost(row.post, row.content)} preview>
+      <Article post={await viewPost(row.post, row.content, row.editorialNoteBy)} preview>
         <p className="notice">Komentarisanje nije dostupno u privatnom pregledu.</p>
       </Article>
     </div>

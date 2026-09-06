@@ -1,18 +1,22 @@
 # Žilet identity
 
-Current identity (September 2026 refresh): a lowercase `žilet` wordmark outlined
-from Adobe Source Serif 4 at weight 620 and optical size 60, with tightened tracking.
-The continuous lowercase rhythm replaces the first hand-constructed mixed-case
-mark. Its restrained caron and high-contrast letterforms sit within a lighter ruled
-masthead. Source Serif 4's SIL OFL 1.1 license remains alongside the font provenance.
-The lettering is distributed as paths, not a font or raster wrapper.
+Current masthead (6 September 2026 refinement): an expressive capital-Ž wordmark
+created with ImageGen after the owner rejected the lowercase outline. The original
+transparent PNG is used consistently in the header, footer and editorial desk.
+Its provenance, final prompt and regeneration boundaries are recorded in
+[logo-generation.md](logo-generation.md).
 
-Editable outline data and construction parameters: `docs/design/wordmark-paths.json`.
-Regenerate the asset variants with `node scripts/identity.mjs`, then the social
-preview with `node scripts/social-preview.mjs`. The historical A/B studies below
-record the initial design, not the current mark.
+The earlier Source Serif 4 outline and hand-constructed studies remain historical
+alternatives. Source Serif 4 continues to serve the reading typography, with its
+SIL OFL 1.1 license retained. `scripts/identity.mjs` regenerates the historical
+vector variants; it does not change the active PNG. Regenerate the sharing card
+with `node scripts/social-preview.mjs`.
 
-Assets in `public/identity`: wordmark and monogram in green, monochrome and reversed versions; circular avatar; 1200 × 630 social fallback. `public/icon.svg` is a simplified small-size Ž. All final logo SVGs consist of vector paths, clean viewBoxes and no runtime font, image or script dependency. The descriptor is set as ordinary accessible HTML next to the logo.
+Assets in `public/identity`: wordmark and monogram in green, monochrome and reversed versions; circular avatar; 1200 × 630 social fallback. `public/icon.svg` is a simplified small-size Ž. The auxiliary SVG marks consist of vector paths, clean viewBoxes and no runtime font, image or script dependency. The descriptor is set as ordinary accessible HTML next to the logo.
+
+The page surfaces now include fine paper grain, sage #DCE2CF, ochre #BC893A and
+terracotta #99543D. Grain is a background, so paintings and photographs stay clean.
+Drawn curves and once-only scroll entrances soften transitions between sections.
 
 Colours: paper #F6F2E9; ink #20251F; forest #173A2B; burgundy #4A181B; metadata #626359; rules #C9C2B6. Do not use the rule colour for text. Leave clear space at least the height of the i dot on all sides. Minimum wordmark width: 120 px. Use the simplified icon at 16–32 px; use the larger outlined monogram above 32 px. Reversed artwork belongs on forest or ink, not a photographic background.
 

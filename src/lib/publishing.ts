@@ -4,6 +4,7 @@ export const revisionSchema = z
   .object({
     title: z.string().trim().min(1).max(240),
     intro: z.string().max(2000),
+    editorialNote: z.string().max(4000).optional(),
     authorId: z.string().min(1).max(100),
     type: z.enum(['poem', 'prose', 'gallery']),
     body: bodySchema,

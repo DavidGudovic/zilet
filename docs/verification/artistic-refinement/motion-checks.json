@@ -1,0 +1,10 @@
+{
+  "date": "2026-09-06T00:24:21.183Z",
+  "evidence": [
+    "Below-fold text starts at 30% opacity, enters on scrolling and remains fully readable",
+    "Decorative lines draw on scroll and finish with a complete stroke",
+    "Paper has grain; artwork has no texture overlay, opacity animation or filter",
+    "Reduced-motion preference leaves every text and decorative line static",
+    "Without JavaScript all content is visible"
+  ]
+}

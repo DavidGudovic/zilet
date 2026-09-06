@@ -6,6 +6,6 @@ The front page behaves like an edited spread. Criticism has the strongest headli
 
 Compare Literata with Source Serif 4, each supported by Source Sans 3, in a working specimen using the supplied capitals, accents, verse and criticism. Select for sustained reading and expressive but sturdy headlines. Public prose starts at 21px with a 64-character measure. Poetry preserves authored whitespace in selectable HTML, with soft visual wrapping and an optional confined original-layout view.
 
-The desktop article layout sets a small contextual rail beside an unhurried reading column. On phones the rail becomes compact metadata above the work. Navigation opens into a legible rubric index. Search uses a real page. Motion is limited to menu disclosure and focus/hover details, with a finished reduced-motion state.
+The desktop article layout sets a small contextual rail beside an unhurried reading column. On phones the rail becomes compact metadata above the work. Navigation opens into a legible rubric index. Search uses a real page. The owner-requested refinement adds fine looping lines, muted sage/ochre/terracotta surfaces, paper grain and once-only scroll entrances for text. Images remain clean, and reduced-motion and print keep a finished static state.
 
 The implementation follows the approved brief. Design decisions are delegated by that brief; no additional proposal approval is needed.

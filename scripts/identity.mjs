@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 mkdirSync('public/identity', { recursive: true });
+// Historical vector alternative; the active masthead is wordmark-generated.png.
 // Outlined Source Serif 4 (Adobe, SIL OFL 1.1), with display proportions and custom tracking.
 // The editable paths and construction parameters are retained with the identity notes.
 const drawing = JSON.parse(readFileSync('docs/design/wordmark-paths.json', 'utf8'));

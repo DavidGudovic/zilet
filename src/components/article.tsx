@@ -25,10 +25,17 @@ export function Article({
         </header>
         <div className="article-grid">
           <aside className="article-rail">
+            <span className="credit-label">Autor djela</span>
             <Link className="byline" href={`/autor/${post.author.slug}`}>
               {post.author.name}
             </Link>
             <time dateTime={post.publishedAt}>{dateLabel(post.publishedAt)}</time>
+            {post.postedBy && (
+              <p className="posting-credit">
+                <span>Objavu pripremio/la</span>
+                {post.postedBy}
+              </p>
+            )}
             <div className="rail-actions">
               <Share />
               <a href="#komentari">Komentari ↓</a>
@@ -70,6 +77,15 @@ export function Article({
               <span>{post.author.name}</span>
               <Link href={`/autor/${post.author.slug}`}>Svi tekstovi autora ↗</Link>
             </div>
+            {post.editorialNote?.trim() && (
+              <section className="editorial-note" aria-label="Bilješka urednika">
+                <span className="eyebrow">Uz djelo / bilješka urednika</span>
+                <div className="editorial-note-text">{post.editorialNote}</div>
+                <p className="editorial-note-signature">
+                  — {post.editorialNoteBy || 'Redakcija Žileta'}
+                </p>
+              </section>
+            )}
             {children || (
               <section className="comments" id="komentari">
                 <h2>Komentari</h2>

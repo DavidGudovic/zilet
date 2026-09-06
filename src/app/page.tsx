@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getFrontPage } from '@/lib/data';
+import { InkLines } from '@/components/ink-lines';
 import { bodyText, rubricLabel } from '@/lib/content';
 export const dynamic = 'force-dynamic';
 export default async function Home() {
@@ -186,6 +187,7 @@ export default async function Home() {
         </section>
       )}
       <div className="browse-strip">
+        <InkLines className="browse-lines" />
         <p>Rubrike</p>
         <div>
           {[

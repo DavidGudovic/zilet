@@ -33,10 +33,19 @@ export async function savePost(actorId: string, input: unknown, id?: string, exp
         })
         .returning();
     }
+    const [previous] = post.draftRevisionId
+      ? await tx.select().from(revisions).where(eq(revisions.id, post.draftRevisionId))
+      : [];
+    const note = content.editorialNote || '';
+    const editorialNoteBy = note.trim()
+      ? note === (previous?.content.editorialNote || '') && previous?.editorialNoteBy
+        ? previous.editorialNoteBy
+        : actorId
+      : null;
     const revisionId = crypto.randomUUID();
     await tx
       .insert(revisions)
-      .values({ id: revisionId, postId: post.id, content, createdBy: actorId });
+      .values({ id: revisionId, postId: post.id, content, createdBy: actorId, editorialNoteBy });
     const [updated] = await tx
       .update(posts)
       .set({ draftRevisionId: revisionId, version: post.version + 1, updatedAt: new Date() })

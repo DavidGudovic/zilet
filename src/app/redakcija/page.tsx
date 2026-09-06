@@ -1,7 +1,7 @@
 import { editorSession } from '@/lib/editor-session';
 import Link from 'next/link';
 import { db } from '@/db';
-import { posts, revisions } from '@/db/schema';
+import { posts, revisions, user, authors } from '@/db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 import { dateLabel } from '@/lib/content';
 import { Pagination } from '@/components/archive';
@@ -18,9 +18,16 @@ export default async function Page({
   const page = Math.max(1, Math.min(10000, Number(q.page) || 1));
   const where = status ? eq(posts.status, status) : undefined;
   const list = await db
-    .select({ post: posts, content: revisions.content })
+    .select({
+      post: posts,
+      content: revisions.content,
+      postedBy: user.name,
+      authorName: authors.name,
+    })
     .from(posts)
     .leftJoin(revisions, eq(posts.draftRevisionId, revisions.id))
+    .leftJoin(user, eq(posts.createdBy, user.id))
+    .leftJoin(authors, sql`${revisions.content}->>'authorId' = ${authors.id}`)
     .where(where)
     .orderBy(desc(posts.updatedAt))
     .limit(20)
@@ -62,7 +69,7 @@ export default async function Page({
       </nav>
       {list.length ? (
         <div className="desk-list">
-          {list.map(({ post: p, content: c }) => (
+          {list.map(({ post: p, content: c, postedBy, authorName }) => (
             <Link key={p.id} href={`/redakcija/tekst/${p.id}`}>
               <div>
                 <span className={`status status-${p.status}`}>
@@ -75,6 +82,14 @@ export default async function Page({
                       : 'Povučeno'}
                 </span>
                 <h2>{c?.title || 'Novi tekst'}</h2>
+                <p className="desk-post-credit">
+                  Autor djela: {authorName || '—'}
+                  <br />
+                  Objavu pripremio/la:{' '}
+                  {p.createdBy === 'approved-content-import'
+                    ? 'Redakcija Žileta'
+                    : postedBy || 'Redakcija Žileta'}
+                </p>
               </div>
               <span>
                 {dateLabel(p.updatedAt)} <b aria-hidden="true">↗</b>

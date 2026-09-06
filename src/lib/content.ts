@@ -167,6 +167,9 @@ export type PostView = {
   slug: string;
   title: string;
   intro: string;
+  postedBy?: string;
+  editorialNote?: string;
+  editorialNoteBy?: string;
   type: 'poem' | 'prose' | 'gallery';
   body: Body;
   rubrics: string[];

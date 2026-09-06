@@ -77,6 +77,8 @@ try {
   await db.delete(limits);
   const editor = await signup('editor');
   await db.update(user).set({ role: 'editor' }).where(eq(user.id, editor.id));
+  const secondEditor = await signup('second-editor');
+  await db.update(user).set({ role: 'editor' }).where(eq(user.id, secondEditor.id));
   const reader = await signup('reader');
   const other = await signup('other', 'maintainer');
   const [otherRow] = await db.select().from(user).where(eq(user.id, other.id));
@@ -103,6 +105,7 @@ try {
   const content = {
     title: 'Provjera: pjesma i izvorni redovi',
     intro: '',
+    editorialNote: 'Moj osvrt uz pjesmu.\n\n<script>Bilješka je običan tekst.</script>',
     authorId: testAuthor.data.id,
     type: 'poem',
     body: {
@@ -121,6 +124,14 @@ try {
   const loaded = await request(`/api/posts/${post.id}`, 'GET', undefined, editor.cookie);
   assert.equal(loaded.data.content.body.text, poem.text);
   assert.deepEqual(loaded.data.content.body.emphasis, content.body.emphasis);
+  assert.equal(loaded.data.content.editorialNote, content.editorialNote);
+  const forgedNote = await request(
+    '/api/posts',
+    'POST',
+    { ...content, editorialNoteBy: secondEditor.id },
+    editor.cookie,
+  );
+  assert.equal(forgedNote.r.status, 400);
   ok(
     'Poetry source, zero-width characters, authored line breaks and emphasis round-trip through PostgreSQL',
   );
@@ -186,22 +197,54 @@ try {
   assert.equal((await request(`/media/${media.id}`)).r.status, 200);
   assert.ok((await request('/rubrika/poezija')).text.includes('Provjera: pjesma'));
   ok('Publishing with image appears in SSR article and archive without rebuild');
+  assert.ok(publicPage.text.includes('Razvojni autor (test)'));
+  assert.ok(publicPage.text.includes('Objavu pripremio/la'));
+  assert.ok(publicPage.text.includes('Provjera editor'));
+  assert.ok(publicPage.text.includes('Moj osvrt uz pjesmu.'));
+  assert.ok(publicPage.text.includes('&lt;script&gt;Bilješka je običan tekst.&lt;/script&gt;'));
+  assert.ok(!publicPage.text.includes(editor.email));
+  // Another editor can edit the work without stealing an unchanged note's signature.
+  const copyEdit = await request(
+    `/api/posts/${post.id}`,
+    'PUT',
+    { version: post.version, content: withArt },
+    secondEditor.cookie,
+  );
+  assert.equal(copyEdit.r.status, 200);
+  post = copyEdit.data;
+  const sameNotePreview = await request(
+    `/redakcija/pregled/${post.id}`,
+    'GET',
+    undefined,
+    secondEditor.cookie,
+  );
+  assert.match(
+    sameNotePreview.text,
+    /editorial-note-signature[^>]*>[^<]*—[\s\S]{0,50}Provjera editor/,
+  );
+  ok(
+    'Posting account and work author are separate; plain-text editorial notes have a server-owned signature',
+  );
   const changed = {
     ...withArt,
     title: 'Privatna izmjena koja čeka objavu',
+    editorialNote: 'Nova privatna bilješka drugog urednika.',
     body: { ...withArt.body, text: '  Nova\tstrofa\n\n\nDrugi red  ', emphasis: [] },
   };
   const pending = await request(
     `/api/posts/${post.id}`,
     'PUT',
     { version: post.version, content: changed },
-    editor.cookie,
+    secondEditor.cookie,
   );
   assert.equal(pending.r.status, 200);
   post = pending.data;
   assert.ok(!(await request(`/tekst/${post.slug}`)).text.includes(changed.title));
   const preview = await request(`/redakcija/pregled/${post.id}`, 'GET', undefined, editor.cookie);
   assert.ok(preview.text.includes(changed.title));
+  assert.ok(preview.text.includes(changed.editorialNote));
+  assert.ok(preview.text.includes('Provjera second-editor'));
+  assert.ok(!(await request(`/tekst/${post.slug}`)).text.includes(changed.editorialNote));
   assert.ok(!(await request(`/redakcija/pregled/${post.id}`)).text.includes(changed.title));
   assert.ok(!(await request('/sitemap.xml')).text.includes('redakcija'));
   ok(
@@ -258,6 +301,15 @@ try {
   assert.equal(promo.r.status, 200);
   post = { ...post, version: promo.data.version };
   assert.ok((await request(`/tekst/${post.slug}`)).text.includes(changed.title));
+  const updatedNotePage = await request(`/tekst/${post.slug}`);
+  assert.ok(updatedNotePage.text.includes(changed.editorialNote));
+  assert.match(
+    updatedNotePage.text,
+    /editorial-note-signature[^>]*>[^<]*—[\s\S]{0,50}Provjera second-editor/,
+  );
+  ok(
+    'Publishing promotes the note with its true editor signature; autosave never leaks it or changes the original posting credit',
+  );
   ok('Objavi izmjene deliberately promotes the new public revision');
   const analytics = await request('/redakcija/statistika', 'GET', undefined, editor.cookie);
   assert.ok(analytics.text.includes('Statistika još nije povezana'));

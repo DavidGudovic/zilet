@@ -57,6 +57,10 @@ jobs:
           docker compose up -d --no-build --wait --wait-timeout 150
           npm run test:e2e
           curl --fail --silent http://localhost:3000/api/health | jq -e --arg sha "$RELEASE_SHA" '.status == "ok" and .release == $sha'
+      - name: Check editor menus and signed notes in a real browser
+        run: |
+          npx playwright install --with-deps chromium --only-shell
+          node --env-file=.env --import tsx tests/integration/editor-ui.ts
       - name: Package the tested image
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |

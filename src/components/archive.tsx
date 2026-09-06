@@ -16,6 +16,9 @@ export function ArchiveList({ items }: { items: PostView[] }) {
             <p className="archive-byline">
               <Link href={`/autor/${p.author.slug}`}>{p.author.name}</Link>
             </p>
+            {p.postedBy && (
+              <p className="archive-posting-credit">Objavu pripremio/la: {p.postedBy}</p>
+            )}
             <p className={p.type === 'poem' ? 'archive-verse' : 'archive-excerpt'}>
               {p.intro ||
                 (p.type === 'poem'
