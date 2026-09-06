@@ -34,7 +34,20 @@ export function Header() {
       <div className="nav-rule">
         <nav className="main-nav wrap" aria-label="Glavna navigacija">
           <Link className="nav-home" href="/" aria-label="Početna">
-            <img src="/identity/monogram-green.svg" width="19" height="28" alt="Ž" />
+            <svg width="20" height="28" viewBox="100 60 575 715" aria-hidden="true">
+              <defs>
+                <clipPath id="nav-logo-z">
+                  {/* Frame the original Ž while excluding the neighbouring i's serifs. */}
+                  <path d="M100 60H653V540H675V680H644V775H100Z" />
+                </clipPath>
+              </defs>
+              <image
+                href="/identity/wordmark-generated.png"
+                width="1881"
+                height="836"
+                clipPath="url(#nav-logo-z)"
+              />
+            </svg>
           </Link>
           <div className="primary-links">
             <Link
