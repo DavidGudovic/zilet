@@ -3,6 +3,7 @@
   --terracotta: #99543d;
   --sage: #dce2cf;
   --grain: url('/textures/paper-grain.svg');
+  --grain-colored: url('/textures/paper-grain-colored.svg');
 }
 /* Grain belongs to the paper surfaces, never to an overlay above an image. */
 body {
@@ -35,7 +36,7 @@ body {
 }
 .nav-rule {
   background-color: #e7e9dc;
-  background-image: var(--grain);
+  background-image: var(--grain-colored);
   border-bottom-color: #99a58e;
 }
 .nav-rule::before {
@@ -77,7 +78,7 @@ body {
 }
 .front-art-feature figure {
   background-color: #e6e5d6;
-  background-image: var(--grain);
+  background-image: var(--grain-colored);
 }
 .front-art-feature article::before {
   width: 62px;
@@ -90,7 +91,7 @@ body {
   isolation: isolate;
   padding: 30px 36px 35px;
   background-color: #e4e7d8;
-  background-image: var(--grain);
+  background-image: var(--grain-colored);
   border-left: 3px solid var(--ochre);
   overflow: hidden;
 }
@@ -114,7 +115,7 @@ body {
   isolation: isolate;
   padding: 38px 34px;
   background-color: var(--sage);
-  background-image: var(--grain);
+  background-image: var(--grain-colored);
   border: 0;
 }
 .browse-strip a {
@@ -134,7 +135,7 @@ body {
 .footer-surface {
   position: relative;
   background-color: #e8e3d5;
-  background-image: var(--grain);
+  background-image: var(--grain-colored);
   border-top: 1px solid #b4b7a1;
 }
 .footer {
@@ -194,7 +195,7 @@ body {
   padding: 28px 30px;
   border-left: 2px solid var(--terracotta);
   background-color: #ece7d9;
-  background-image: var(--grain);
+  background-image: var(--grain-colored);
 }
 .editorial-note-text {
   white-space: pre-wrap;
@@ -217,7 +218,7 @@ body {
   padding: 24px;
   border-left: 2px solid var(--ochre);
   background-color: #eeeddf;
-  background-image: var(--grain);
+  background-image: var(--grain-colored);
 }
 .editor-note-field label {
   margin-top: 20px;
@@ -298,10 +299,12 @@ body {
 .desk-header,
 .editor-heading,
 .profile-form,
-.upload-zone,
+.upload-zone {
+  background-image: var(--grain);
+}
 .menu-sheet,
 .button {
-  background-image: var(--grain);
+  background-image: var(--grain-colored);
 }
 .editor-fields input:not([type='checkbox']),
 .editor-fields textarea,
