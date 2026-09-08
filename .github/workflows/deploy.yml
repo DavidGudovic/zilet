@@ -24,6 +24,8 @@ jobs:
       RELEASE_SHA: ${{ github.sha }}
       COMPOSE_FILE: compose.yaml:compose.dev.yaml:compose.ci.yaml
       NEXT_TELEMETRY_DISABLED: "1"
+      ZILET_DISPOSABLE_TEST: "true"
+      ZILET_TEST_CONTAINER: "zilet-app-1"
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -56,6 +58,7 @@ jobs:
           sh scripts/setup.sh
           docker compose up -d --no-build --wait --wait-timeout 150
           npm run test:e2e
+          node --env-file=.env --import tsx tests/integration/submissions.ts
           curl --fail --silent http://localhost:3000/api/health | jq -e --arg sha "$RELEASE_SHA" '.status == "ok" and .release == $sha'
       - name: Check editor menus and signed notes in a real browser
         run: |

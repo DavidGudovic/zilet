@@ -44,11 +44,11 @@ export default async function Page({
         )}
       </header>
       <div className="section-rule">
-        <span>Objavljeni tekstovi</span>
+        <span>Objavljeni radovi</span>
         <span>{result.total}</span>
       </div>
       <ArchiveList items={result.items} />
-      {!result.total && <p className="empty">Još nema objavljenih tekstova.</p>}
+      {!result.total && <p className="empty">Još nema objavljenih radova.</p>}
       <Pagination {...result} path={`/autor/${slug}`} />
     </div>
   );

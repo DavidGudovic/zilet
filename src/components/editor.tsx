@@ -2,7 +2,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import type { RevisionContent } from '@/db/schema';
-import { rubrics, type Author } from '@/lib/content';
+import { rubrics, bodyText, type Author } from '@/lib/content';
+import { DeletePostButton } from './delete-post-button';
 import { SelectField } from './select-field';
 import { MediaPicker } from './media-picker';
 import { remapEmphasis } from '@/lib/verse-edit';
@@ -37,7 +38,7 @@ export function Editor({
   post?: PostState;
 }) {
   const [authors, setAuthors] = useState(initialAuthors);
-  const [content, setContent] = useState(initial || blank('poem', ''));
+  const [content, setContent] = useState(initial || { ...blank('poem', ''), rubrics: [] });
   const data = useRef(content);
   data.current = content;
   const [post, setPost] = useState(initialPost);
@@ -62,8 +63,8 @@ export function Editor({
     if (flight.current) await flight.current;
     if (blocked) return undefined;
     const snapshot = data.current;
-    if (!snapshot.title.trim() || !snapshot.authorId) {
-      setStatus('Dodajte naslov i autora');
+    if (!snapshot.title.trim() || !snapshot.authorId || !snapshot.rubrics.length) {
+      setStatus('Izaberite rubriku, dodajte naslov i autora');
       return undefined;
     }
     const serial = JSON.stringify(snapshot);
@@ -177,6 +178,7 @@ export function Editor({
   }
   return (
     <div className="editing-desk">
+      <h1 className="sr-only">{initial ? 'Uredi tekst' : 'Novi tekst'}</h1>
       <div className="editor-heading">
         <a href="/redakcija">← Tekstovi</a>
         <span className={status === 'Nije sačuvano' ? 'form-error' : 'save-state'} role="status">
@@ -191,8 +193,7 @@ export function Editor({
             onClick={async () => {
               setBusy(true);
               const current = await ensureSaved();
-              if (current)
-                window.open(`/redakcija/pregled/${current.id}`, '_blank', 'noopener,noreferrer');
+              if (current) window.location.assign(`/redakcija/pregled/${current.id}#radni-prostor`);
               setBusy(false);
             }}
             disabled={busy || blocked}
@@ -227,30 +228,33 @@ export function Editor({
           </a>
         </p>
       )}
-      {!initial && !post && (
-        <fieldset className="type-starters">
-          <legend>Šta pripremate?</legend>
-          {[
-            ['poem', 'Pjesma'],
-            ['prose', 'Tekst'],
-            ['gallery', 'Galerija'],
-          ].map(([type, label]) => (
-            <button
-              type="button"
-              key={type}
-              aria-pressed={content.type === type}
-              onClick={() => {
-                if (!content.title)
-                  change(blank(type as RevisionContent['type'], content.authorId));
-                else setMessage('Za promjenu vrste otvorite novi tekst; vaš nacrt ostaje sačuvan.');
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </fieldset>
-      )}
       <div className="editor-fields">
+        <div className="rubric-first" data-next-step tabIndex={-1}>
+          <SelectField
+            label="Rubrika"
+            value={content.rubrics[0] === 'price' ? 'proza' : content.rubrics[0] || ''}
+            options={[
+              { value: '', label: 'Izaberite rubriku' },
+              ...rubrics.filter(([s]) => s !== 'price').map(([value, label]) => ({ value, label })),
+            ]}
+            onChange={(rubric) => {
+              if (!rubric) return;
+              const kind =
+                rubric === 'poezija' ? 'poem' : rubric === 'slikarstvo' ? 'gallery' : 'prose';
+              // Never convert authored formatting implicitly when moving an existing work.
+              const empty = !bodyText(content.body).length;
+              change({
+                rubrics: [rubric, ...content.rubrics.slice(1).filter((r) => r !== rubric)],
+                ...(empty ? { type: kind, body: blank(kind, content.authorId).body } : {}),
+              });
+              if (!content.title)
+                requestAnimationFrame(() => document.getElementById('text-title')?.focus());
+            }}
+          />
+          <p className="hint">
+            Prvo izaberite đe će rad biti objavljen, zatim dodajte naslov, autora i sadržaj.
+          </p>
+        </div>
         <p className="composer-hint">
           Napišite ili nalijepite tekst, kao objavu na Facebooku. Nacrt se čuva automatski. Dugme
           „Objavi” ga otvara čitaocima.
@@ -259,6 +263,7 @@ export function Editor({
           Naslov
           <textarea
             rows={2}
+            id="text-title"
             aria-label="Naslov"
             value={content.title}
             maxLength={240}
@@ -285,6 +290,7 @@ export function Editor({
             <label>
               Ime autora
               <input
+                autoFocus
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
                 maxLength={120}
@@ -407,25 +413,11 @@ export function Editor({
           <h2>Fotografije</h2>
           <MediaPicker items={content.media} onChange={(media) => change({ media })} />
         </section>
-        <fieldset className="rubric-checkboxes">
-          <legend>Rubrika</legend>
-          {rubrics.map(([slug, label]) => (
-            <label key={slug}>
-              <input
-                type="checkbox"
-                checked={content.rubrics.includes(slug)}
-                onChange={(e) =>
-                  change({
-                    rubrics: e.target.checked
-                      ? [...content.rubrics, slug].slice(0, 4)
-                      : content.rubrics.filter((s) => s !== slug),
-                  })
-                }
-              />
-              {label}
-            </label>
-          ))}
-        </fieldset>
+        {post && ['draft', 'unpublished'].includes(post.status) && !dirty && !busy && (
+          <section className="delete-draft">
+            <DeletePostButton id={post.id} version={post.version} />
+          </section>
+        )}
         <details className="advanced">
           <summary>Dodatne mogućnosti</summary>
           <label>

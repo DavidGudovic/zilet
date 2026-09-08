@@ -1,8 +1,11 @@
+import { headers } from 'next/headers';
+import { requireUser } from '@/lib/security';
 import { AnalyticsTracker } from '@/components/analytics-tracker';
 import type { Metadata } from 'next';
 import './fonts.css';
 import './globals.css';
 import './atmosphere.css';
+import './editorial-experience.css';
 import { PageAtmosphere } from '@/components/page-atmosphere';
 import { Header, Footer } from '@/components/header';
 export const dynamic = 'force-dynamic';
@@ -18,14 +21,19 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', images: ['/identity/social-preview.png'] },
   icons: { icon: '/icon.svg' },
 };
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  let isEditor = false;
+  try {
+    await requireUser(await headers(), 'editor');
+    isEditor = true;
+  } catch {}
   return (
     <html lang="cnr-Latn">
       <body id="vrh">
         <a className="skip-link" href="#sadrzaj">
           Pređi na sadržaj
         </a>
-        <Header />
+        <Header isEditor={isEditor} />
         <main id="sadrzaj">{children}</main>
         <Footer />
         <PageAtmosphere />

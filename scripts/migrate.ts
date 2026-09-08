@@ -9,6 +9,7 @@ try {
       '002_auth_issuer.sql',
       '003_editor_profiles.sql',
       '004_editorial_notes.sql',
+      '005_reader_submissions.sql',
     ]) {
       const exists = await tx`SELECT name FROM zilet_migrations WHERE name=${name}`;
       if (!exists.length) {

@@ -1,0 +1,134 @@
+.statistics {
+  max-width: 920px;
+}
+
+.intro,
+.note {
+  max-width: 68ch;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 30px 0 52px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+
+.summary > div {
+  min-width: 0;
+  padding: 22px 18px 20px;
+  background: var(--paper);
+}
+
+.summary dt {
+  min-height: 3em;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.summary dd {
+  margin: 10px 0 0;
+  font: 34px/1.05 var(--serif);
+  overflow-wrap: anywhere;
+}
+
+.reading {
+  margin-bottom: 52px;
+}
+
+.reading h2,
+.breakdown h2 {
+  margin: 7px 0 18px;
+  font-size: 30px;
+}
+
+.reading ol,
+.breakdown ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+
+.reading li,
+.breakdown li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: baseline;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.reading a,
+.breakdown span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.reading strong,
+.breakdown strong {
+  color: var(--muted);
+  font: 14px var(--sans);
+  white-space: nowrap;
+}
+
+.reading strong {
+  max-width: 18ch;
+  text-align: right;
+  white-space: normal;
+}
+
+.breakdowns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 30px;
+}
+
+.breakdown h2 {
+  font-size: 24px;
+}
+
+.breakdown p,
+.reading p {
+  color: var(--muted);
+}
+
+.note {
+  margin-top: 44px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 42px;
+  }
+
+  .summary dd {
+    font-size: 30px;
+  }
+
+  .breakdowns {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+@media (max-width: 380px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+  .summary dt {
+    min-height: 0;
+  }
+}

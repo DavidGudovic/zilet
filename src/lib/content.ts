@@ -2,7 +2,7 @@ import { z } from 'zod';
 export const rubrics = [
   ['poezija', 'Poezija'],
   ['proza', 'Proza'],
-  ['price', 'Priče'],
+  ['price', 'Proza'],
   ['eseji', 'Eseji'],
   ['knjizevna-kritika', 'Književna kritika'],
   ['novosti', 'Novosti'],
@@ -10,6 +10,7 @@ export const rubrics = [
   ['slikarstvo', 'Slikarstvo'],
   ['muzika', 'Muzika'],
   ['film', 'Film'],
+  ['citaoci', 'Radovi čitalaca'],
 ] as const;
 export const rubricLabel = (key: string) => rubrics.find(([k]) => k === key)?.[1] || key;
 const markSchema = z

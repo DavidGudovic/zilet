@@ -95,7 +95,7 @@ export default async function Home() {
         <section className="front-art-feature">
           <div className="section-rule">
             <h2>Umjetnost</h2>
-            <Link href="/rubrika/umjetnost">Svi tekstovi ↗</Link>
+            <Link href="/rubrika/umjetnost">Svi radovi ↗</Link>
           </div>
           <div>
             {art.media[0] && (
@@ -192,9 +192,10 @@ export default async function Home() {
         <div>
           {[
             ['poezija', 'Poezija'],
-            ['proza', 'Proza i priče'],
+            ['proza', 'Proza'],
             ['knjizevna-kritika', 'Književna kritika'],
             ['umjetnost', 'Umjetnost'],
+            ['citaoci', 'Radovi čitalaca'],
           ].map(([slug, label]) => (
             <Link key={slug} href={`/rubrika/${slug}`}>
               {label}

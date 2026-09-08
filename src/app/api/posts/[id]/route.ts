@@ -3,6 +3,7 @@ import { posts, revisions } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { requireUser, assertOrigin, jsonBody, failure, HttpError } from '@/lib/security';
 import { savePost } from '@/lib/post-service';
+import { deletePostPermanently } from '@/lib/storage-cleanup';
 type Ctx = { params: Promise<{ id: string }> };
 export async function GET(req: Request, { params }: Ctx) {
   try {
@@ -36,6 +37,17 @@ export async function PUT(req: Request, { params }: Ctx) {
     const input = await jsonBody(req);
     if (!Number.isInteger(input.version)) throw new HttpError(400, 'Nedostaje verzija.');
     return Response.json(await savePost(u.id, input.content, (await params).id, input.version));
+  } catch (e) {
+    return failure(e);
+  }
+}
+export async function DELETE(req: Request, { params }: Ctx) {
+  try {
+    assertOrigin(req);
+    await requireUser(req.headers, 'editor');
+    const input = await jsonBody(req, 10000);
+    if (!Number.isInteger(input.version)) throw new HttpError(400, 'Nedostaje verzija.');
+    return Response.json(await deletePostPermanently((await params).id, input.version));
   } catch (e) {
     return failure(e);
   }

@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { HttpError } from './security';
 export const mediaRoot = () =>
@@ -25,7 +25,6 @@ export async function processImage(bytes: Buffer, id: string) {
       'Koristite JPG, PNG ili WebP fotografiju. SVG i animacije nijesu podržani.',
     );
   if (!meta.width || !meta.height) throw new HttpError(400, 'Nije moguće pročitati dimenzije.');
-  await mkdir(path.join(mediaRoot(), id), { recursive: true });
   const originalPath = `${id}/original.webp`;
   const displayPath = `${id}/display.webp`;
   const smallPath = `${id}/small.webp`;
@@ -38,11 +37,19 @@ export async function processImage(bytes: Buffer, id: string) {
     .resize({ width: 640, height: 640, fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 80 })
     .toBuffer();
-  await Promise.all([
-    writeFile(storagePath(originalPath), original),
-    writeFile(storagePath(displayPath), display.data),
-    writeFile(storagePath(smallPath), small),
-  ]);
+  await mkdir(path.join(mediaRoot(), id), { recursive: true });
+  try {
+    const writes = await Promise.allSettled([
+      writeFile(storagePath(originalPath), original),
+      writeFile(storagePath(displayPath), display.data),
+      writeFile(storagePath(smallPath), small),
+    ]);
+    const failed = writes.find((result) => result.status === 'rejected');
+    if (failed?.status === 'rejected') throw failed.reason;
+  } catch (error) {
+    await rm(path.join(mediaRoot(), id), { recursive: true, force: true }).catch(() => {});
+    throw error;
+  }
   return {
     originalPath,
     path: displayPath,

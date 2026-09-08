@@ -94,7 +94,7 @@ export function AccountForm({
         {view === 'login'
           ? editorial
             ? 'Dobro došli u redakciju. Prijavite se da pišete, dodajete fotografije i objavljujete tekstove.'
-            : 'Nalog vam je potreban samo za komentarisanje. Čitanje je uvijek otvoreno.'
+            : 'Prijavite se da komentarišete i pošaljete svoj rad. Čitanje je uvijek otvoreno.'
           : view === 'register'
             ? 'Vaša adresa e-pošte ostaje privatna. Uz komentar se prikazuje ime koje izaberete.'
             : view === 'reset'

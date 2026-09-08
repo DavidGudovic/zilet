@@ -11,7 +11,7 @@ export default async function Page() {
         <li>
           <h2>Otvorite novi tekst</h2>
           <p>
-            Izaberite <strong>+ Novi tekst</strong>, pa Pjesma, Tekst ili Galerija. Dodajte naslov i
+            Izaberite <strong>+ Novi tekst</strong>, pa izaberite Rubriku. Dodajte naslov i
             izaberite autora.
           </p>
         </li>
@@ -58,7 +58,7 @@ export default async function Page() {
         <h2>Vaša stranica i lozinka</h2>
         <p>
           U <Link href="/redakcija/autori">Autorima</Link> uredite biografiju. U{' '}
-          <Link href="/redakcija/nalog">Moj nalog</Link> promijenite lozinku. Ime autora ispod
+          <Link href="/redakcija/nalog">Moj nalog</Link> promijenite ime i lozinku. Ime autora ispod
           teksta birate posebno od naloga kojim ste prijavljeni.
         </p>
         <h2>Ako piše „Nije sačuvano”</h2>

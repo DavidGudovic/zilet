@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { authors, posts, revisions, media, placements, redirects } from '@/db/schema';
+import { authors, posts, revisions, media, placements, redirects, submissions } from '@/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import { revisionSchema, slugify, searchText } from './publishing';
 import { HttpError } from './security';
@@ -8,11 +8,6 @@ export async function savePost(actorId: string, input: unknown, id?: string, exp
   return db.transaction(async (tx) => {
     const [author] = await tx.select().from(authors).where(eq(authors.id, content.authorId));
     if (!author) throw new HttpError(400, 'Izaberite autora.');
-    if (content.media.length) {
-      const ids = [...new Set(content.media.map((m) => m.id))];
-      const found = await tx.select({ id: media.id }).from(media).where(inArray(media.id, ids));
-      if (found.length !== ids.length) throw new HttpError(400, 'Fotografija nije pronađena.');
-    }
     let post;
     if (id) {
       [post] = await tx.select().from(posts).where(eq(posts.id, id)).for('update');
@@ -32,6 +27,18 @@ export async function savePost(actorId: string, input: unknown, id?: string, exp
           createdBy: actorId,
         })
         .returning();
+    }
+    if (content.media.length) {
+      // Keep this ordering (post, then sorted media IDs) aligned with publication and media
+      // deletion. A media row lock makes an attachment and its deletion mutually exclusive.
+      const ids = [...new Set(content.media.map((m) => m.id))].sort();
+      const found = await tx
+        .select({ id: media.id })
+        .from(media)
+        .where(inArray(media.id, ids))
+        .orderBy(media.id)
+        .for('update');
+      if (found.length !== ids.length) throw new HttpError(400, 'Fotografija nije pronađena.');
     }
     const [previous] = post.draftRevisionId
       ? await tx.select().from(revisions).where(eq(revisions.id, post.draftRevisionId))
@@ -81,7 +88,36 @@ export async function publishPost(id: string, version: number, slot?: string, ne
       .from(revisions)
       .where(eq(revisions.id, post.draftRevisionId!));
     if (!revision) throw new HttpError(400, 'Najprije sačuvajte tekst.');
-    const content = revisionSchema.parse(revision.content);
+    let content = revisionSchema.parse(revision.content);
+    if (content.media.length) {
+      const ids = [...new Set(content.media.map((m) => m.id))].sort();
+      const found = await tx
+        .select({ id: media.id })
+        .from(media)
+        .where(inArray(media.id, ids))
+        .orderBy(media.id)
+        .for('update');
+      if (found.length !== ids.length) throw new HttpError(400, 'Fotografija nije pronađena.');
+    }
+    const [submission] = await tx
+      .select({ id: submissions.id })
+      .from(submissions)
+      .where(eq(submissions.postId, id))
+      .for('update');
+    if (submission) {
+      if (!content.editorialNote?.trim())
+        throw new HttpError(400, 'Za tekst iz prijave dodajte uredničku bilješku prije objave.');
+      if (!content.rubrics.includes('citaoci')) {
+        content = {
+          ...content,
+          rubrics: [
+            'citaoci',
+            ...content.rubrics.filter((rubric) => rubric !== 'citaoci').slice(0, 3),
+          ],
+        };
+        await tx.update(revisions).set({ content }).where(eq(revisions.id, revision.id));
+      }
+    }
     if (content.media.some((m) => !m.alt.trim() || !m.credit.trim()))
       throw new HttpError(400, 'Dodajte opis i potpis za svaku fotografiju.');
     if (slot === 'poem' && content.type !== 'poem')

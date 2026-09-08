@@ -1,3 +1,4 @@
+import { ProfileForm } from '@/components/profile-form';
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { auth, registrationEnabled } from '@/lib/auth';
@@ -25,8 +26,10 @@ export default async function Page({
             {['editor', 'maintainer'].includes(session.user.role || '') && (
               <Link href="/redakcija">Otvorite redakciju ↗</Link>
             )}
+            <Link href="/posalji">Pošaljite svoj rad ↗</Link>
             <SignOut />
           </div>
+          <ProfileForm name={session.user.name} email={session.user.email} />
           <PasswordForm />
         </section>
       ) : (

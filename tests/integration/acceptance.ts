@@ -1,10 +1,40 @@
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
-import { writeFile, readFile } from 'node:fs/promises';
+import { writeFile, readFile, mkdir } from 'node:fs/promises';
 import { db, sql } from '../../src/db';
-import { user, limits, rateLimit, posts, comments, authors } from '../../src/db/schema';
+import {
+  user,
+  limits,
+  rateLimit,
+  posts,
+  comments,
+  authors,
+  media as mediaTable,
+} from '../../src/db/schema';
 import { eq } from 'drizzle-orm';
+import { execFileSync } from 'node:child_process';
 import poem from '../../fixtures/poem.json';
+assert.equal(
+  process.env.ZILET_DISPOSABLE_TEST,
+  'true',
+  'Set ZILET_DISPOSABLE_TEST=true only for an explicitly disposable local database.',
+);
+const containerName = process.env.ZILET_TEST_CONTAINER;
+assert.ok(
+  containerName && /^[a-zA-Z0-9_.-]+$/.test(containerName),
+  'ZILET_TEST_CONTAINER must name the disposable app container.',
+);
+function checkImageFiles(id: string, present: boolean) {
+  execFileSync('docker', [
+    'exec',
+    containerName!,
+    'node',
+    '-e',
+    `const fs=require('node:fs'); const id=process.argv[1]; if(!/^[a-f0-9-]{36}$/.test(id))process.exit(2); for(const variant of ['original','display','small']) { if(fs.existsSync('/app/media/'+id+'/'+variant+'.webp') !== (process.argv[2]==='true'))process.exit(1); }`,
+    id,
+    String(present),
+  ]);
+}
 const base = process.env.APP_URL || 'http://localhost:3000';
 const mailBase = process.env.MAILPIT_URL || 'http://localhost:8025';
 assert.ok(
@@ -85,7 +115,7 @@ try {
   assert.equal(otherRow.role, 'reader');
   ok('Registration, real sink mail, verification, sign-in; client role escalation rejected');
   await writeFile(
-    '/tmp/zilet-browser-account.json',
+    `/tmp/zilet-browser-account-${new URL(base).port || '80'}.json`,
     JSON.stringify({ email: editor.email, password }),
     { mode: 0o600 },
   );
@@ -155,6 +185,9 @@ try {
   });
   assert.equal(uploaded.status, 201);
   const media = await uploaded.json();
+  const [storedMedia] = await db.select().from(mediaTable).where(eq(mediaTable.id, media.id));
+  assert.ok(storedMedia);
+  checkImageFiles(media.id, true);
   assert.equal((await request(`/media/${media.id}`)).r.status, 404);
   assert.equal(
     (await request(`/media/${media.id}`, 'GET', undefined, reader.cookie)).r.status,
@@ -454,15 +487,61 @@ try {
   );
   ok('Slug change permanently redirects old route; published comment closure is enforced');
 
-  await request(
+  const unpublished = await request(
     `/api/posts/${post.id}/unpublish`,
     'POST',
     { version: post.version },
     editor.cookie,
   );
+  assert.equal(unpublished.r.status, 200, JSON.stringify(unpublished.data));
+  post = { ...post, version: unpublished.data.version };
   assert.equal((await request(`/tekst/${post.slug}`)).r.status, 404);
   assert.equal((await request(`/media/${media.id}`)).r.status, 404);
   ok('Unpublishing removes article and formerly public media without stale caches');
+  assert.equal(
+    (await request(`/api/posts/${post.id}`, 'DELETE', { version: post.version }, reader.cookie)).r
+      .status,
+    403,
+  );
+  assert.equal(
+    (
+      await request(
+        `/api/posts/${post.id}`,
+        'DELETE',
+        { version: post.version },
+        editor.cookie,
+        'https://foreign.test',
+      )
+    ).r.status,
+    403,
+  );
+  assert.equal(
+    (await request(`/api/media/${media.id}`, 'DELETE', {}, editor.cookie)).r.status,
+    409,
+  );
+  assert.equal(
+    (await request(`/api/posts/${post.id}`, 'DELETE', { version: post.version - 1 }, editor.cookie))
+      .r.status,
+    409,
+  );
+  assert.equal(
+    (await request(`/api/posts/${post.id}`, 'DELETE', { version: post.version }, editor.cookie)).r
+      .status,
+    200,
+  );
+  assert.equal(
+    (await request(`/api/posts/${post.id}`, 'GET', undefined, editor.cookie)).r.status,
+    404,
+  );
+  assert.equal(
+    (await request(`/api/media/${media.id}`, 'DELETE', {}, editor.cookie)).r.status,
+    200,
+  );
+  assert.equal((await db.select().from(mediaTable).where(eq(mediaTable.id, media.id))).length, 0);
+  checkImageFiles(media.id, false);
+  ok(
+    'Editors permanently delete withdrawn drafts with version/origin guards; referenced media is kept and unused files are removed',
+  );
   await db.delete(rateLimit);
   await db.delete(limits);
   const profilePath = `/api/authors/${testAuthor.data.id}`;
@@ -554,15 +633,16 @@ try {
     200,
   );
   await writeFile(
-    '/tmp/zilet-browser-account.json',
+    `/tmp/zilet-browser-account-${new URL(base).port || '80'}.json`,
     JSON.stringify({ email: editor.email, password: changedPassword }),
     { mode: 0o600 },
   );
   ok(
     'Authenticated password change checks current password and length, rejects old credentials and revokes other sessions',
   );
+  await mkdir('docs/verification/editorial-reader-2026-09-08', { recursive: true });
   await writeFile(
-    'docs/verification/api-acceptance.json',
+    'docs/verification/editorial-reader-2026-09-08/api-acceptance.json',
     JSON.stringify({ date: new Date().toISOString(), base, checks: evidence }, null, 2),
   );
 } finally {

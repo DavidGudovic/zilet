@@ -3,27 +3,39 @@ import { chromium } from '@playwright/test';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import poem from '../../fixtures/poem.json';
+assert.equal(
+  process.env.ZILET_DISPOSABLE_TEST,
+  'true',
+  'Set ZILET_DISPOSABLE_TEST=true only for an explicitly disposable local database.',
+);
 const base = process.env.APP_URL || 'http://localhost:3000';
 assert.ok(
   ['localhost', '127.0.0.1'].includes(new URL(base).hostname),
   'Disposable local stack only',
 );
-const account = JSON.parse(await readFile('/tmp/zilet-browser-account.json', 'utf8'));
+const account = JSON.parse(
+  await readFile(`/tmp/zilet-browser-account-${new URL(base).port || '80'}.json`, 'utf8'),
+);
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
 const page = await context.newPage();
 const evidence: string[] = [];
 const errors: string[] = [];
 page.on('pageerror', (error) => errors.push(error.message));
-const dir = 'docs/verification/artistic-refinement';
+const dir = 'docs/verification/editorial-reader-2026-09-08';
 await mkdir(dir, { recursive: true });
 try {
   await page.goto(`${base}/redakcija`);
   await page.getByLabel('Adresa e-pošte').fill(account.email);
   await page.getByLabel('Lozinka', { exact: true }).fill(account.password);
   await page.getByRole('button', { name: 'Prijavi se', exact: true }).click();
-  await page.waitForURL('**/redakcija');
-  await page.getByRole('link', { name: '+ Novi tekst', exact: true }).click();
+  await page.waitForURL('**/redakcija*');
+  await page
+    .getByRole('navigation', { name: 'Redakcija', exact: true })
+    .getByRole('link', { name: '+ Novi tekst', exact: true })
+    .click();
+  await page.getByRole('combobox', { name: 'Rubrika', exact: true }).click();
+  await page.getByRole('option', { name: 'Poezija', exact: true }).click();
   await page.getByLabel('Naslov', { exact: true }).fill('Provjera bilješke i izbora');
   const author = page.getByRole('combobox', { name: 'Autor djela', exact: true });
   await author.tap();
@@ -31,7 +43,7 @@ try {
   await page.waitForTimeout(2200);
   assert.equal(await author.getAttribute('aria-expanded'), 'true');
   await page.screenshot({ path: `${dir}/author-menu-390.png` });
-  await page.getByRole('option', { name: 'Razvojni autor (test)', exact: true }).tap();
+  await page.getByRole('option', { name: 'Razvojni autor (test)', exact: true }).first().tap();
   assert.equal(await author.getAttribute('aria-expanded'), 'false');
   await page.getByLabel('Sadržaj pjesme', { exact: true }).fill(poem.text);
   const note = 'Ovo je zasebna urednička bilješka.\n\nPjesma ostaje u izvornom obliku.';

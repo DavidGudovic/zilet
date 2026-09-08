@@ -1,3 +1,4 @@
+import { ProfileForm } from '@/components/profile-form';
 import { editorSession } from '@/lib/editor-session';
 import { PasswordForm } from '@/components/password-form';
 export default async function Page() {
@@ -11,6 +12,7 @@ export default async function Page() {
         </div>
       </div>
       <p>{user.email}</p>
+      <ProfileForm name={user.name} email={user.email} />
       <PasswordForm />
     </div>
   );

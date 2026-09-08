@@ -14,7 +14,22 @@ export default async function Page() {
         <dt>Otvaranje naloga</dt>
         <dd>{registrationEnabled() ? 'Omogućeno' : 'Onemogućeno'}</dd>
         <dt>Statistika</dt>
-        <dd>{process.env.UMAMI_URL ? 'Podešena' : 'Nije povezana'}</dd>
+        <dd>
+          {process.env.UMAMI_URL &&
+          process.env.UMAMI_WEBSITE_ID &&
+          process.env.UMAMI_USERNAME &&
+          process.env.UMAMI_PASSWORD
+            ? 'Podešena'
+            : 'Nije povezana'}
+        </dd>
+        <dt>Provjera priloga čitalaca</dt>
+        <dd>
+          {process.env.INTEL_KEY
+            ? 'Automatska provjera uz ručni pregled kada servis nije dostupan'
+            : 'Ručni pregled redakcije'}
+        </dd>
+        <dt>Facebook za prigovore</dt>
+        <dd>{process.env.FACEBOOK_URL ? 'Link je podešen' : 'Dodajte FACEBOOK_URL'}</dd>
         <dt>Moderacija</dt>
         <dd>
           {process.env.COMMENTS_REQUIRE_APPROVAL === 'true' ? 'Prije objave' : 'Nakon objave'}

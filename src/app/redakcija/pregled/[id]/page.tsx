@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { editorSession } from '@/lib/editor-session';
 import { db } from '@/db';
 import { posts, revisions } from '@/db/schema';
@@ -16,6 +17,9 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   if (!row) notFound();
   return (
     <div className="private-preview">
+      <Link className="button secondary" href={`/redakcija/tekst/${id}#radni-prostor`}>
+        ← Nazad na uređivanje
+      </Link>
       <Article post={await viewPost(row.post, row.content, row.editorialNoteBy)} preview>
         <p className="notice">Komentarisanje nije dostupno u privatnom pregledu.</p>
       </Article>

@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import { rubrics, rubricLabel } from '@/lib/content';
 import { findPosts } from '@/lib/data';
@@ -20,6 +20,7 @@ export default async function Page({
   searchParams: Promise<{ page?: string; sort?: string }>;
 }) {
   const { slug } = await params;
+  if (slug === 'price') permanentRedirect('/rubrika/proza');
   if (slug !== 'umjetnost' && !rubrics.some(([s]) => s === slug)) notFound();
   const q = await searchParams;
   const result = await findPosts({ rubric: slug, page: Number(q.page) || 1, sort: q.sort });
@@ -39,7 +40,6 @@ export default async function Page({
             ))}
           </div>
         )}
-        {slug === 'proza' && <Link href="/rubrika/price">Priče ↗</Link>}
       </header>
       <form className="archive-filter">
         <span>

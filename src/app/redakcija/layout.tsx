@@ -1,3 +1,4 @@
+import { DeskNavigation } from '@/components/desk-navigation';
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -31,18 +32,10 @@ export default async function Layout({ children }: { children: React.ReactNode }
           <SignOut />
         </div>
       </header>
-      <nav className="desk-nav" aria-label="Redakcija">
-        <Link href="/redakcija">Tekstovi</Link>
-        <Link href="/redakcija/fotografije">Fotografije</Link>
-        <Link href="/redakcija/komentari">Komentari</Link>
-        <Link href="/redakcija/autori">Autori</Link>
-        <Link href="/redakcija/statistika">Statistika</Link>
-        <Link href="/redakcija/pomoc">Pomoć</Link>
-        <Link className="button" href="/redakcija/novi">
-          + Novi tekst
-        </Link>
-      </nav>
-      <div className="desk-content">{children}</div>
+      <DeskNavigation />
+      <div className="desk-content" id="radni-prostor" tabIndex={-1}>
+        {children}
+      </div>
       {user.role === 'maintainer' && (
         <footer className="desk-footer">
           <Link href="/redakcija/podesavanja">Tehnička podešavanja</Link>

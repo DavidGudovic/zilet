@@ -187,3 +187,30 @@ export const redirects = pgTable('redirects', {
     .notNull()
     .references(() => posts.id),
 });
+
+export const submissions = pgTable(
+  'submissions',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id),
+    authorName: text('author_name').notNull(),
+    title: text('title').notNull(),
+    text: text('text').notNull(),
+    rubric: text('rubric').notNull(),
+    mediaId: text('media_id').references(() => media.id, { onDelete: 'set null' }),
+    status: text('status').notNull().default('pending'),
+    screening: text('screening').notNull().default('manual'),
+    screeningReason: text('screening_reason').notNull().default(''),
+    postId: text('post_id').references(() => posts.id, { onDelete: 'set null' }),
+    reviewedBy: text('reviewed_by').references(() => user.id),
+    reviewNote: text('review_note').notNull().default(''),
+    version: integer('version').notNull().default(1),
+    createdAt: time('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('submission_queue_idx').on(t.status, t.createdAt),
+    index('submission_user_idx').on(t.userId, t.createdAt),
+  ],
+);

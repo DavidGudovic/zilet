@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { InkLines } from './ink-lines';
 import { rubrics } from '@/lib/content';
-export function Header() {
+export function Header({ isEditor = false }: { isEditor?: boolean }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -62,9 +62,30 @@ export function Header() {
             >
               Književna kritika
             </Link>
-            <Link href="/rubrika/proza">Proza</Link>
-            <Link href="/rubrika/eseji">Eseji</Link>
-            <Link href="/rubrika/umjetnost">Umjetnost</Link>
+            <Link
+              href="/rubrika/proza"
+              aria-current={
+                path === '/rubrika/proza' || path === '/rubrika/price' ? 'page' : undefined
+              }
+            >
+              Proza
+            </Link>
+            <Link
+              href="/rubrika/eseji"
+              aria-current={path === '/rubrika/eseji' ? 'page' : undefined}
+            >
+              Eseji
+            </Link>
+            <Link
+              href="/rubrika/umjetnost"
+              aria-current={
+                ['umjetnost', 'slikarstvo', 'muzika', 'film'].some((s) => path === `/rubrika/${s}`)
+                  ? 'page'
+                  : undefined
+              }
+            >
+              Umjetnost
+            </Link>
           </div>
           <button
             ref={trigger}
@@ -94,7 +115,14 @@ export function Header() {
               </svg>
               <span>Pretraga</span>
             </Link>
-            <Link href="/nalog">Nalog</Link>
+            <Link href="/nalog" aria-current={path === '/nalog' ? 'page' : undefined}>
+              Nalog
+            </Link>
+            {isEditor && (
+              <Link className="editor-entry" href="/redakcija#radni-prostor">
+                Redakcija
+              </Link>
+            )}
           </div>
         </nav>
       </div>
@@ -113,12 +141,18 @@ export function Header() {
             <p className="eyebrow">Rubrike</p>
             <div className="rubric-grid">
               <Link href="/">Početna</Link>
-              {rubrics.map(([slug, label]) => (
-                <Link key={slug} href={`/rubrika/${slug}`}>
-                  {label}
-                  <span aria-hidden="true">↗</span>
-                </Link>
-              ))}
+              {rubrics
+                .filter(([slug]) => slug !== 'price')
+                .map(([slug, label]) => (
+                  <Link
+                    key={slug}
+                    href={`/rubrika/${slug}`}
+                    aria-current={path === `/rubrika/${slug}` ? 'page' : undefined}
+                  >
+                    {label}
+                    <span aria-hidden="true">↗</span>
+                  </Link>
+                ))}
             </div>
             <div className="menu-bottom">
               <Link href="/autori">Autori</Link>
@@ -145,7 +179,7 @@ export function Footer() {
           <Link href="/autori">Autori</Link>
           <Link href="/o-casopisu">O časopisu</Link>
           <Link href="/pravila">Pravila i privatnost</Link>
-          <Link href="/redakcija">Redakcija</Link>
+          <Link href="/posalji">Pošaljite rad</Link>
         </div>
         <a className="maker-credit" href="https://www.linkedin.com/in/david-gudovic/">
           Made with{' '}

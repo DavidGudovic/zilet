@@ -6,8 +6,8 @@ export default function Page() {
       <h1>Pravila i privatnost</h1>
       <div className="prose">
         <p>
-          Za čitanje tekstova nije potreban nalog. Za komentarisanje su potrebni ime za prikaz,
-          adresa e-pošte i lozinka. Adresa e-pošte se ne objavljuje.
+          Za čitanje tekstova nije potreban nalog. Za komentarisanje i slanje radova potrebni su ime
+          za prikaz, adresa e-pošte i lozinka. Adresa e-pošte se ne objavljuje.
         </p>
         <h2>Komentari</h2>
         <p>
@@ -19,6 +19,19 @@ export default function Page() {
         <p>
           Podaci o nalogu služe za prijavu, potvrdu adrese, obnovu lozinke i zaštitu od zloupotrebe.
           Sesija koristi neophodan kolačić. Ne šaljemo biltene niti marketinške poruke.
+        </p>
+        <h2>Radovi čitalaca</h2>
+        <p>
+          Prilozi i fotografije ostaju privatni do odluke redakcije. Slanjem potvrđujete autorstvo i
+          pravo na objavu. Izabrani rad objavljujemo uz vaše ime i zasebnu, potpisanu bilješku
+          urednika.
+        </p>
+        <p>
+          Kada je automatska provjera uključena, naslov i tekst šalju se Google Gemini servisu radi
+          prepoznavanja neželjenog sadržaja. Ime naloga, adresu e-pošte i fotografiju ne šaljemo tom
+          servisu. Na besplatnom paketu Google može koristiti poslat tekst za unapređenje svojih
+          usluga, prema svojim uslovima korišćenja. Provjera može pogriješiti; za prigovor se javite
+          Žiletu na Facebooku. Ako servis nije dostupan, prilog pregleda urednik.
         </p>
         <h2>Privatni nacrti</h2>
         <p>

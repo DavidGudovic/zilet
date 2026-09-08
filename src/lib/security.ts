@@ -71,3 +71,31 @@ export function failure(error: unknown) {
   console.error('Zahtjev nije uspio', error instanceof Error ? error.message : 'unknown');
   return Response.json({ error: 'Promjena nije sačuvana. Pokušajte ponovo.' }, { status: 500 });
 }
+
+export async function boundedForm(req: Request, max: number) {
+  if (Number(req.headers.get('content-length') || 0) > max)
+    throw new HttpError(413, 'Prilog je prevelik.');
+  const reader = req.body?.getReader();
+  if (!reader) throw new HttpError(400, 'Nedostaje prilog.');
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.length;
+    if (size > max) {
+      await reader.cancel();
+      throw new HttpError(413, 'Prilog je prevelik.');
+    }
+    chunks.push(value);
+  }
+  try {
+    return await new Request(req.url, {
+      method: 'POST',
+      headers: { 'content-type': req.headers.get('content-type') || '' },
+      body: Buffer.concat(chunks),
+    }).formData();
+  } catch {
+    throw new HttpError(400, 'Neispravan prilog.');
+  }
+}

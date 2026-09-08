@@ -1,21 +1,64 @@
 import { getPost } from './data';
+
+type Metric = { name: string; views: number; averagePageSeconds?: number };
+
 export type Analytics =
   | { available: false; message: string }
   | {
       available: true;
       pageviews: number;
       visitors: number;
-      popular: { title: string; views: number }[];
-      sources: { name: string; views: number }[];
+      visits: number;
+      averagePageSeconds?: number;
+      popular: (Metric & { href: string })[];
+      sources: Metric[];
+      countries: Metric[];
+      devices: Metric[];
     };
+
+const unavailable = {
+  available: false as const,
+  message:
+    'Statistika još nije povezana. Kada bude podešena, ovdje ćete vidjeti stvarne podatke o posjetama.',
+};
+
+function number(value: unknown) {
+  const candidate =
+    typeof value === 'object' && value !== null && 'value' in value ? value.value : value;
+  if (
+    typeof candidate !== 'number' &&
+    (typeof candidate !== 'string' || candidate.trim().length === 0)
+  )
+    return undefined;
+  const result = Number(candidate);
+  return Number.isFinite(result) ? result : undefined;
+}
+
+function metrics(value: unknown, emptyName: string): Metric[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const rows = value.map((row) => {
+    if (!row || typeof row !== 'object') return undefined;
+    const metric = row as Record<string, unknown>;
+    const views = number(metric.pageviews ?? metric.views ?? metric.value ?? metric.y);
+    if (views === undefined) return undefined;
+    const name = metric.name ?? metric.x;
+    const bounces = number(metric.bounces);
+    const totalTime = number(metric.totaltime);
+    return {
+      name: typeof name === 'string' && name ? name : emptyName,
+      views,
+      ...(bounces !== undefined && totalTime !== undefined && views > bounces
+        ? { averagePageSeconds: totalTime / (views - bounces) }
+        : {}),
+    };
+  });
+  return rows.filter((row): row is Metric => Boolean(row));
+}
+
 export async function analytics(days: number): Promise<Analytics> {
   const { UMAMI_URL, UMAMI_WEBSITE_ID, UMAMI_USERNAME, UMAMI_PASSWORD } = process.env;
-  if (!UMAMI_URL || !UMAMI_WEBSITE_ID || !UMAMI_USERNAME || !UMAMI_PASSWORD)
-    return {
-      available: false,
-      message:
-        'Statistika još nije povezana. Kada bude podešena, ovdje ćete vidjeti stvarne podatke o posjetama.',
-    };
+  if (!UMAMI_URL || !UMAMI_WEBSITE_ID || !UMAMI_USERNAME || !UMAMI_PASSWORD) return unavailable;
+
   try {
     const base = UMAMI_URL.replace(/\/$/, '');
     const login = await fetch(`${base}/api/auth/login`, {
@@ -26,65 +69,75 @@ export async function analytics(days: number): Promise<Analytics> {
       cache: 'no-store',
     });
     if (!login.ok) throw new Error('auth');
-    const { token } = await login.json();
+    const token = ((await login.json()) as { token?: unknown }).token;
+    if (typeof token !== 'string' || !token) throw new Error('token');
+
     const params = new URLSearchParams({
       startAt: String(Date.now() - days * 86400000),
       endAt: String(Date.now()),
+      limit: '10',
     });
     const get = async (path: string) => {
-      const r = await fetch(`${base}/api/websites/${UMAMI_WEBSITE_ID}/${path}`, {
+      const response = await fetch(`${base}/api/websites/${UMAMI_WEBSITE_ID}/${path}`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store',
         signal: AbortSignal.timeout(6000),
       });
-      if (!r.ok) throw new Error('service');
-      return r.json();
+      if (!response.ok) throw new Error('service');
+      return response.json() as Promise<unknown>;
     };
-    const [stats, urls, sources] = await Promise.all([
+    const [stats, paths, sources, countries, devices] = await Promise.all([
       get(`stats?${params}`),
-      get(`metrics/expanded?${params}&type=path&limit=10`),
-      get(`metrics/expanded?${params}&type=referrer&limit=10`),
+      get(`metrics/expanded?${params}&type=path`),
+      get(`metrics/expanded?${params}&type=referrer`),
+      get(`metrics/expanded?${params}&type=country`),
+      get(`metrics/expanded?${params}&type=device`),
     ]);
-    const number = (v: unknown) =>
-      typeof v === 'number'
-        ? v
-        : typeof v === 'object' && v !== null && 'value' in v
-          ? Number(v.value)
-          : NaN;
-    const pageviews = number(stats.pageviews),
-      visitors = number(stats.visitors);
+    if (!stats || typeof stats !== 'object') throw new Error('stats');
+    const summary = stats as Record<string, unknown>;
+    const pageviews = number(summary.pageviews);
+    const visitors = number(summary.visitors);
+    const visits = number(summary.visits);
+    const bounces = number(summary.bounces);
+    const totalTime = number(summary.totaltime);
+    const pathMetrics = metrics(paths, 'Nepoznata stranica');
+    const sourceMetrics = metrics(sources, 'Direktna posjeta');
+    const countryMetrics = metrics(countries, 'Nepoznata zemlja');
+    const deviceMetrics = metrics(devices, 'Drugi uređaj');
     if (
-      !Number.isFinite(pageviews) ||
-      !Number.isFinite(visitors) ||
-      !Array.isArray(urls) ||
-      !Array.isArray(sources)
+      pageviews === undefined ||
+      visitors === undefined ||
+      visits === undefined ||
+      bounces === undefined ||
+      totalTime === undefined ||
+      !pathMetrics ||
+      !sourceMetrics ||
+      !countryMetrics ||
+      !deviceMetrics
     )
       throw new Error('shape');
+
+    const articlePaths = pathMetrics.filter((row) => /^\/tekst\/[a-z0-9-]+$/.test(row.name));
     const titles = new Map(
       await Promise.all(
-        urls
-          .filter((r: { name: string }) => r.name.startsWith('/tekst/'))
-          .map(
-            async (r: { name: string }) =>
-              [r.name, (await getPost(r.name.slice(7)))?.title] as const,
-          ),
+        articlePaths.map(
+          async ({ name }) => [name, (await getPost(name.slice(7)))?.title] as const,
+        ),
       ),
     );
+
     return {
       available: true,
       pageviews,
       visitors,
-      popular: urls
-        .filter((r: { name: string }) => r.name.startsWith('/tekst/'))
-        .map((r: { name: string; pageviews: number }) => ({
-          title: titles.get(r.name) || r.name,
-          views: r.pageviews,
-        }))
-        .sort((a: { views: number }, b: { views: number }) => b.views - a.views),
-      sources: sources.map((r: { name: string; pageviews: number }) => ({
-        name: r.name || 'Direktna posjeta',
-        views: r.pageviews,
-      })),
+      visits,
+      averagePageSeconds: pageviews > bounces ? totalTime / (pageviews - bounces) : undefined,
+      popular: articlePaths
+        .map((row) => ({ ...row, href: row.name, name: titles.get(row.name) || row.name }))
+        .sort((a, b) => b.views - a.views),
+      sources: sourceMetrics,
+      countries: countryMetrics,
+      devices: deviceMetrics,
     };
   } catch {
     return {

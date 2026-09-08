@@ -9,6 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         '/redakcija',
         '/api',
         '/nalog',
+        '/posalji',
         '/oporavak',
         '/nova-lozinka',
         '/pretraga',

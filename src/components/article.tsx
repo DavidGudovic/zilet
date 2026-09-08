@@ -75,7 +75,7 @@ export function Article({
             )}
             <div className="article-colophon">
               <span>{post.author.name}</span>
-              <Link href={`/autor/${post.author.slug}`}>Svi tekstovi autora ↗</Link>
+              <Link href={`/autor/${post.author.slug}`}>Svi radovi autora ↗</Link>
             </div>
             {post.editorialNote?.trim() && (
               <section className="editorial-note" aria-label="Bilješka urednika">
