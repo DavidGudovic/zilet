@@ -1,5 +1,5 @@
 // Run after acceptance.ts against an explicitly disposable built container.
-import { chromium } from '@playwright/test';
+import { chromium, expect } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 assert.equal(process.env.ZILET_DISPOSABLE_TEST, 'true');
@@ -71,14 +71,15 @@ try {
   );
   await start('Proza', 'Citat, kurziv i masno u prozi');
   const prose = page.locator('[contenteditable=true]');
-  await prose.fill('Svjetlost ostaje na prozoru.');
-  await prose.press('Control+Home');
-  await prose.press('Control+Shift+End');
-  assert.equal(
-    await page.evaluate(() => window.getSelection()?.toString()),
-    'Svjetlost ostaje na prozoru.',
-    'Keyboard selection must cover the prose before using the toolbar',
-  );
+  await prose.click();
+  await prose.pressSequentially('Svjetlost ostaje na prozoru.');
+  await expect(prose).toHaveText('Svjetlost ostaje na prozoru.');
+  for (const _ of 'Svjetlost ostaje na prozoru.') await prose.press('Shift+ArrowLeft');
+  await expect
+    .poll(() => page.evaluate(() => window.getSelection()?.toString()), {
+      message: 'Keyboard selection must cover the prose before using the toolbar',
+    })
+    .toBe('Svjetlost ostaje na prozoru.');
   await page.getByRole('button', { name: 'Masno', exact: true }).tap();
   assert.equal(await prose.locator('strong').innerText(), 'Svjetlost ostaje na prozoru.');
   await page.getByRole('button', { name: 'Kurziv', exact: true }).tap();
@@ -88,8 +89,8 @@ try {
   );
   await page.getByRole('button', { name: 'Citat', exact: true }).tap();
   assert.equal(await prose.locator('blockquote').innerText(), 'Svjetlost ostaje na prozoru.');
-  assert.equal(
-    await page.getByRole('button', { name: 'Citat', exact: true }).getAttribute('aria-pressed'),
+  await expect(page.getByRole('button', { name: 'Citat', exact: true })).toHaveAttribute(
+    'aria-pressed',
     'true',
   );
   await save();
