@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-08T17:30:09.330Z",
+  "date": "2026-09-08T17:47:13.127Z",
   "base": "http://localhost:3300",
   "checks": [
     "Registration, real sink mail, verification, sign-in; client role escalation rejected",

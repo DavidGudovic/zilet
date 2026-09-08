@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-08T17:30:28.010Z",
+  "date": "2026-09-08T17:47:29.208Z",
   "evidence": [
     "Touch author menu survives parent autosave; keyboard alignment selects, Escape cancels and preserves focus",
     "Image and homepage menus work with pointer/touch; exact verse, note and image placement survive save/reopen",
