@@ -1,22 +1,25 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 export function DeskNavigation() {
   const path = usePathname();
+  const query = useSearchParams().toString();
   useEffect(() => {
     if (location.hash !== '#radni-prostor') return;
     const root = document.getElementById('radni-prostor');
     const target =
       root?.querySelector<HTMLElement>('[data-next-step] [role=combobox]') ||
-      root?.querySelector<HTMLElement>('[data-next-step], h1') ||
+      root?.querySelector<HTMLElement>('[data-next-step]') ||
+      root?.querySelector<HTMLElement>('h1') ||
       root;
     if (target) {
-      if (!target.hasAttribute('tabindex')) target.tabIndex = -1;
+      if (!target.matches('input, select, textarea, button, a[href], [tabindex]'))
+        target.tabIndex = -1;
       target.focus();
       target.scrollIntoView({ block: 'start' });
     }
-  }, [path]);
+  }, [path, query]);
   return (
     <nav className="desk-nav" aria-label="Redakcija">
       {[
