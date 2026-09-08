@@ -15,7 +15,9 @@ database.
 docker compose -f compose.yaml -f compose.analytics.yaml up -d umami-db umami
 ```
 
-The service binds only to `127.0.0.1:3001`. Reach it through an SSH tunnel or a
+The service binds only to `127.0.0.1:${UMAMI_PORT:-3001}`. On the shared production
+host, Žilet uses `UMAMI_PORT=3101` because port 3001 belongs to another service.
+Reach it through an SSH tunnel or a
 deliberately configured private reverse-proxy route; do not expose its database
 or its initial account to the public internet. On first sign-in, change Umami's
 initial password, create the Žilet website entry, and copy its website ID.
@@ -63,6 +65,7 @@ secrets and reporting variables above to `.env`, and set:
 
 ```dotenv
 COMPOSE_FILE=compose.production.yaml:compose.analytics.yaml
+UMAMI_PORT=3101
 ```
 
 From `/var/www/html/zilet`, start the analytics services with the installed
