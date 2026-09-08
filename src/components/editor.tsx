@@ -346,7 +346,7 @@ export function Editor({
                 className="editor-toolbar"
                 role="toolbar"
                 aria-label="Uređivanje pjesme"
-                onMouseDown={(event) => event.preventDefault()}
+                onPointerDown={(event) => event.preventDefault()}
               >
                 <button
                   type="button"

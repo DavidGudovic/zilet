@@ -74,6 +74,11 @@ try {
   await prose.fill('Svjetlost ostaje na prozoru.');
   await prose.press('Control+Home');
   await prose.press('Control+Shift+End');
+  assert.equal(
+    await page.evaluate(() => window.getSelection()?.toString()),
+    'Svjetlost ostaje na prozoru.',
+    'Keyboard selection must cover the prose before using the toolbar',
+  );
   await page.getByRole('button', { name: 'Masno', exact: true }).tap();
   assert.equal(await prose.locator('strong').innerText(), 'Svjetlost ostaje na prozoru.');
   await page.getByRole('button', { name: 'Kurziv', exact: true }).tap();

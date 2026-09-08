@@ -1,7 +1,7 @@
 'use client';
 import { useEditor, useEditorState, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { canonicalRichNode, type RichNode } from '@/lib/content';
 export function RichEditor({
   doc,
@@ -10,6 +10,7 @@ export function RichEditor({
   doc: RichNode;
   onChange: (doc: RichNode) => void;
 }) {
+  const emittedDocs = useRef(new WeakSet<RichNode>());
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -35,9 +36,17 @@ export function RichEditor({
         spellcheck: 'false',
       },
     },
-    onUpdate: ({ editor }) => onChange(canonicalRichNode(editor.getJSON() as RichNode)),
+    onUpdate: ({ editor }) => {
+      const next = canonicalRichNode(editor.getJSON() as RichNode);
+      emittedDocs.current.add(next);
+      onChange(next);
+    },
   });
   useEffect(() => {
+    // A parent render may echo an earlier local edit after another transaction.
+    // Replacing the document then would discard the newer edit and its selection.
+    // Only externally loaded revisions should reset Tiptap's content.
+    if (emittedDocs.current.has(doc)) return;
     if (
       editor &&
       JSON.stringify(canonicalRichNode(editor.getJSON() as RichNode)) !== JSON.stringify(doc)
@@ -63,7 +72,7 @@ export function RichEditor({
         className="editor-toolbar"
         role="toolbar"
         aria-label="Uređivanje teksta"
-        onMouseDown={(event) => event.preventDefault()}
+        onPointerDown={(event) => event.preventDefault()}
       >
         <button
           type="button"
