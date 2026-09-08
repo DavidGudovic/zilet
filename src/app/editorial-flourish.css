@@ -1,0 +1,27 @@
+/* Optional paper-and-ink accents; kept separate so this design change can be reverted alone. */
+.rubric-first {
+  background-image: linear-gradient(120deg, #e5e9dc, #f2eee3);
+}
+.rubric-first:focus-within {
+  box-shadow: inset 3px 0 var(--ochre);
+}
+.desk-list > a:hover,
+.desk-list > a:focus-visible {
+  box-shadow: inset 3px 0 var(--terracotta);
+  background-color: #eeeade;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rubric-first,
+  .desk-list > a {
+    transition:
+      background-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+}
+@media print {
+  .rubric-first,
+  .desk-list > a {
+    box-shadow: none;
+    background-image: none;
+  }
+}
