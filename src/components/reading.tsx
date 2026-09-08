@@ -1,7 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
 import type { Body, MediaView, RichNode } from '@/lib/content';
-import { safeHref } from '@/lib/content';
+import { safeHref, mediaSrcSet } from '@/lib/content';
 export function RichText({ node }: { node: RichNode }) {
   if (node.type === 'text') {
     let el: React.ReactNode = node.text;
@@ -37,10 +37,7 @@ export function RichText({ node }: { node: RichNode }) {
       return <>{children}</>;
   }
 }
-export function Poem({ body }: { body: Extract<Body, { kind: 'poem' }> }) {
-  const [original, setOriginal] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [copyError, setCopyError] = useState(false);
+export function VerseText({ body }: { body: Extract<Body, { kind: 'poem' }> }) {
   const boundaries = [
     ...new Set([0, body.text.length, ...body.emphasis.flatMap((m) => [m.from, m.to])]),
   ].sort((a, b) => a - b);
@@ -51,6 +48,12 @@ export function Poem({ body }: { body: Extract<Body, { kind: 'poem' }> }) {
       text = m.style === 'italic' ? <em>{text}</em> : <strong>{text}</strong>;
     return <span key={start}>{text}</span>;
   });
+  return <>{runs}</>;
+}
+export function Poem({ body }: { body: Extract<Body, { kind: 'poem' }> }) {
+  const [original, setOriginal] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   return (
     <div className="poetry">
       <div className="poem-controls">
@@ -89,7 +92,7 @@ export function Poem({ body }: { body: Extract<Body, { kind: 'poem' }> }) {
         tabIndex={original ? 0 : undefined}
         aria-describedby={original ? 'verse-help' : undefined}
       >
-        {runs}
+        <VerseText body={body} />
       </div>
       <span className="endmark" aria-hidden="true">
         ▪
@@ -135,7 +138,7 @@ export function Artwork({ items }: { items: MediaView[] }) {
             >
               <img
                 src={m.url}
-                srcSet={`${m.url}${m.url.includes('?') ? '&' : '?'}size=small 640w, ${m.url} ${m.width}w`}
+                srcSet={mediaSrcSet(m)}
                 sizes="(max-width: 767px) 100vw, 780px"
                 width={m.width}
                 height={m.height}

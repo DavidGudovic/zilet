@@ -18,6 +18,11 @@ export async function savePost(actorId: string, input: unknown, id?: string, exp
           'Drugi urednik je sačuvao novu verziju. Vaš tekst je ostao u ovom prozoru. Ponovo otvorite sačuvanu verziju prije nastavka.',
         );
     } else {
+      if (content.rubrics.includes('citaoci'))
+        throw new HttpError(
+          400,
+          'Radovi čitalaca nastaju isključivo prihvatanjem pristiglog rada.',
+        );
       const postId = crypto.randomUUID();
       [post] = await tx
         .insert(posts)
@@ -27,6 +32,14 @@ export async function savePost(actorId: string, input: unknown, id?: string, exp
           createdBy: actorId,
         })
         .returning();
+    }
+    if (content.rubrics.includes('citaoci')) {
+      const [accepted] = await tx
+        .select({ id: submissions.id })
+        .from(submissions)
+        .where(and(eq(submissions.postId, post.id), eq(submissions.status, 'accepted')));
+      if (!accepted)
+        throw new HttpError(400, 'U Radove čitalaca mogu samo prihvaćeni prilozi čitalaca.');
     }
     if (content.media.length) {
       // Keep this ordering (post, then sorted media IDs) aligned with publication and media
@@ -102,8 +115,10 @@ export async function publishPost(id: string, version: number, slot?: string, ne
     const [submission] = await tx
       .select({ id: submissions.id })
       .from(submissions)
-      .where(eq(submissions.postId, id))
+      .where(and(eq(submissions.postId, id), eq(submissions.status, 'accepted')))
       .for('update');
+    if (content.rubrics.includes('citaoci') && !submission)
+      throw new HttpError(400, 'U Radove čitalaca mogu samo prihvaćeni prilozi čitalaca.');
     if (submission) {
       if (!content.editorialNote?.trim())
         throw new HttpError(400, 'Za tekst iz prijave dodajte uredničku bilješku prije objave.');

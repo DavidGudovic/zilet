@@ -38,6 +38,8 @@ test('Gemini screening blocks only recognized decisions and fails open to manual
     for (const [data, expected] of [
       [{ decision: 'allow', reason: 'none' }, 'passed'],
       [{ decision: 'block', reason: 'spam' }, 'blocked'],
+      [{ decision: 'block', reason: 'language' }, 'blocked'],
+      [{ decision: 'block', reason: 'abuse' }, 'blocked'],
       [{ decision: 'review', reason: 'language' }, 'manual'],
       [{ decision: 'block', reason: 'none' }, 'manual'],
       [{ decision: 'allow', reason: 'abuse' }, 'manual'],
@@ -52,6 +54,24 @@ test('Gemini screening blocks only recognized decisions and fails open to manual
       };
       assert.equal((await screenSubmission('Naslov', 'tekst')).status, expected);
     }
+    for (const payload of [
+      { promptFeedback: { blockReason: 'SAFETY' } },
+      { candidates: [{ finishReason: 'SAFETY' }] },
+      { candidates: [{ finishReason: 'PROHIBITED_CONTENT' }] },
+    ]) {
+      globalThis.fetch = async () => Response.json(payload);
+      assert.equal((await screenSubmission('Naslov', 'tekst')).status, 'blocked');
+    }
+    globalThis.fetch = async () =>
+      Response.json({
+        candidates: [
+          {
+            finishReason: 'MAX_TOKENS',
+            content: { parts: [{ text: '{"decision":"allow","reason":"none"}' }] },
+          },
+        ],
+      });
+    assert.equal((await screenSubmission('Naslov', 'tekst')).status, 'manual');
     globalThis.fetch = async () => new Response('', { status: 429 });
     assert.equal((await screenSubmission('Naslov', 'tekst')).status, 'manual');
     globalThis.fetch = async () => {

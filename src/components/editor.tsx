@@ -6,7 +6,8 @@ import { rubrics, bodyText, type Author } from '@/lib/content';
 import { DeletePostButton } from './delete-post-button';
 import { SelectField } from './select-field';
 import { MediaPicker } from './media-picker';
-import { remapEmphasis } from '@/lib/verse-edit';
+import { remapEmphasis, toggleEmphasis } from '@/lib/verse-edit';
+import { VerseText } from './reading';
 const RichEditor = dynamic(() => import('./rich-editor').then((m) => m.RichEditor), {
   ssr: false,
   loading: () => <p>Otvaranje prostora za pisanje…</p>,
@@ -29,11 +30,13 @@ type PostState = { id: string; version: number; status: string; slug: string };
 export function Editor({
   authors: initialAuthors,
   postedBy,
+  readerSubmission = false,
   initial,
   post: initialPost,
 }: {
   authors: Author[];
   postedBy: string;
+  readerSubmission?: boolean;
   initial?: RevisionContent;
   post?: PostState;
 }) {
@@ -54,6 +57,7 @@ export function Editor({
   const [newAuthor, setNewAuthor] = useState(false);
   const [authorName, setAuthorName] = useState('');
   const verse = useRef<HTMLTextAreaElement>(null);
+  const [selection, setSelection] = useState({ from: 0, to: 0 });
   const dirty = JSON.stringify(content) !== saved.current;
   function change(update: Partial<RevisionContent>) {
     setContent((c) => ({ ...c, ...update }));
@@ -155,26 +159,18 @@ export function Editor({
   }
   function mark(style: 'italic' | 'bold') {
     if (content.body.kind !== 'poem' || !verse.current) return;
-    const from = verse.current.selectionStart,
-      to = verse.current.selectionEnd;
+    const { from, to } = selection;
     if (from === to) {
       setMessage('Najprije označite riječi u pjesmi.');
       return;
     }
-    const same = content.body.emphasis.some(
-      (m) => m.from === from && m.to === to && m.style === style,
-    );
     change({
-      body: {
-        ...content.body,
-        emphasis: same
-          ? content.body.emphasis.filter(
-              (m) => !(m.from === from && m.to === to && m.style === style),
-            )
-          : [...content.body.emphasis, { from, to, style }],
-      },
+      body: { ...content.body, emphasis: toggleEmphasis(content.body.emphasis, from, to, style) },
     });
-    verse.current.focus();
+    requestAnimationFrame(() => {
+      verse.current?.focus();
+      verse.current?.setSelectionRange(from, to);
+    });
   }
   return (
     <div className="editing-desk">
@@ -232,10 +228,16 @@ export function Editor({
         <div className="rubric-first" data-next-step tabIndex={-1}>
           <SelectField
             label="Rubrika"
-            value={content.rubrics[0] === 'price' ? 'proza' : content.rubrics[0] || ''}
+            value={
+              content.rubrics.find((r) => r !== 'citaoci') === 'price'
+                ? 'proza'
+                : content.rubrics.find((r) => r !== 'citaoci') || ''
+            }
             options={[
               { value: '', label: 'Izaberite rubriku' },
-              ...rubrics.filter(([s]) => s !== 'price').map(([value, label]) => ({ value, label })),
+              ...rubrics
+                .filter(([s]) => s !== 'price' && s !== 'citaoci')
+                .map(([value, label]) => ({ value, label })),
             ]}
             onChange={(rubric) => {
               if (!rubric) return;
@@ -244,13 +246,23 @@ export function Editor({
               // Never convert authored formatting implicitly when moving an existing work.
               const empty = !bodyText(content.body).length;
               change({
-                rubrics: [rubric, ...content.rubrics.slice(1).filter((r) => r !== rubric)],
+                rubrics: [
+                  ...(readerSubmission ? ['citaoci'] : []),
+                  rubric,
+                  ...content.rubrics
+                    .filter((r) => r !== 'citaoci')
+                    .slice(1)
+                    .filter((r) => r !== rubric),
+                ],
                 ...(empty ? { type: kind, body: blank(kind, content.authorId).body } : {}),
               });
               if (!content.title)
                 requestAnimationFrame(() => document.getElementById('text-title')?.focus());
             }}
           />
+          {readerSubmission && (
+            <p className="hint">Prihvaćeni rad čitaoca · objavljuje se i u Radovima čitalaca.</p>
+          )}
           <p className="hint">
             Prvo izaberite đe će rad biti objavljen, zatim dodajte naslov, autora i sadržaj.
           </p>
@@ -330,19 +342,43 @@ export function Editor({
                 Enter započinje novi red. Prazan red odvaja strofe. Razmaci i izvorno pismo ostaju
                 sačuvani.
               </p>
-              <div className="editor-toolbar" role="toolbar" aria-label="Uređivanje pjesme">
-                <button type="button" onClick={() => mark('italic')}>
+              <div
+                className="editor-toolbar"
+                role="toolbar"
+                aria-label="Uređivanje pjesme"
+                onMouseDown={(event) => event.preventDefault()}
+              >
+                <button
+                  type="button"
+                  aria-pressed={
+                    selection.to > selection.from &&
+                    content.body.emphasis.some(
+                      (m) =>
+                        m.style === 'italic' && m.from <= selection.from && m.to >= selection.to,
+                    )
+                  }
+                  onClick={() => mark('italic')}
+                >
                   <em>Kurziv</em>
                 </button>
-                <button type="button" onClick={() => mark('bold')}>
+                <button
+                  type="button"
+                  aria-pressed={
+                    selection.to > selection.from &&
+                    content.body.emphasis.some(
+                      (m) => m.style === 'bold' && m.from <= selection.from && m.to >= selection.to,
+                    )
+                  }
+                  onClick={() => mark('bold')}
+                >
                   <strong>Masno</strong>
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     if (content.body.kind !== 'poem' || !verse.current) return;
-                    const start = verse.current.selectionStart,
-                      end = verse.current.selectionEnd;
+                    const start = selection.from,
+                      end = selection.to;
                     const text =
                       content.body.text.slice(0, start) + '\n\n' + content.body.text.slice(end);
                     change({
@@ -360,6 +396,12 @@ export function Editor({
               <textarea
                 className="verse-input"
                 ref={verse}
+                onSelect={(event) =>
+                  setSelection({
+                    from: event.currentTarget.selectionStart,
+                    to: event.currentTarget.selectionEnd,
+                  })
+                }
                 aria-label="Sadržaj pjesme"
                 placeholder="Ovdje napišite ili nalijepite pjesmu…"
                 spellCheck={false}
@@ -381,7 +423,18 @@ export function Editor({
                     });
                 }}
               />
-              <p className="hint">Naglašene djelove provjerite u pregledu prije objave.</p>
+              {content.body.emphasis.length > 0 && (
+                <div
+                  className="verse-format-preview"
+                  role="region"
+                  aria-label="Pregled naglašavanja"
+                >
+                  <p className="hint">Pregled naglašavanja</p>
+                  <div className="verse" style={{ textAlign: content.body.align }}>
+                    <VerseText body={content.body} />
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <RichEditor

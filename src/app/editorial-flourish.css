@@ -1,4 +1,13 @@
 /* Optional paper-and-ink accents; kept separate so this design change can be reverted alone. */
+.desk-list > a {
+  padding-inline: 16px;
+}
+.verse-format-preview {
+  margin-top: 16px;
+  padding: 16px;
+  border-left: 2px solid var(--green);
+  background: var(--paper);
+}
 .rubric-first {
   background-image: linear-gradient(120deg, #e5e9dc, #f2eee3);
 }

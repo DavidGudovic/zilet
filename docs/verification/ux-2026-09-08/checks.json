@@ -1,0 +1,8 @@
+{
+  "date": "2026-09-08T18:46:58.553Z",
+  "evidence": [
+    "Poem touch formatting shows bold/italic immediately and preserves exact canonical whitespace through save/reopen.",
+    "Prose bold, italic and Citat work with real touch clicks, expose active state and survive save/reopen.",
+    "Public home, reader rubric, poem and quoted prose fit 320/390/768/1440 px; submit link works; reduced motion and print verified."
+  ]
+}

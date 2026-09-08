@@ -22,7 +22,7 @@ const page = await context.newPage();
 const evidence: string[] = [];
 const errors: string[] = [];
 page.on('pageerror', (error) => errors.push(error.message));
-const dir = 'docs/verification/editorial-reader-2026-09-08';
+const dir = process.env.ZILET_EVIDENCE_DIR || 'docs/verification/editorial-reader-2026-09-08';
 await mkdir(dir, { recursive: true });
 try {
   await page.goto(`${base}/redakcija`);

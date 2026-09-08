@@ -27,11 +27,10 @@ export default function Page() {
           urednika.
         </p>
         <p>
-          Kada je automatska provjera uključena, naslov i tekst šalju se Google Gemini servisu radi
-          prepoznavanja neželjenog sadržaja. Ime naloga, adresu e-pošte i fotografiju ne šaljemo tom
-          servisu. Na besplatnom paketu Google može koristiti poslat tekst za unapređenje svojih
-          usluga, prema svojim uslovima korišćenja. Provjera može pogriješiti; za prigovor se javite
-          Žiletu na Facebooku. Ako servis nije dostupan, prilog pregleda urednik.
+          Kada je automatska provjera uključena, naslov i tekst šalju se servisu za automatsku
+          provjeru radi prepoznavanja neželjenog sadržaja. Ime naloga, adresu e-pošte i fotografiju
+          ne šaljemo tom servisu. Provjera može pogriješiti; za prigovor se javite Žiletu na
+          Facebooku. Ako servis nije dostupan, prilog pregleda urednik.
         </p>
         <h2>Privatni nacrti</h2>
         <p>

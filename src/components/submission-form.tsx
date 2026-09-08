@@ -118,10 +118,9 @@ export function SubmissionForm({
           </label>
           {screening && (
             <p className="hint">
-              Naslov i tekst šalju se Google Gemini servisu radi automatske provjere neželjenog
-              sadržaja. Fotografiju, ime i adresu e-pošte ne šaljemo. Ako provjera nije dostupna,
-              rad pregleda redakcija. Na besplatnom paketu Google može koristiti poslat tekst za
-              unapređenje svojih usluga. Ne unosite povjerljive ili tuđe lične podatke.
+              Naslov i tekst šalju se servisu za automatsku provjeru radi automatske provjere
+              neželjenog sadržaja. Fotografiju, ime i adresu e-pošte ne šaljemo. Ako provjera nije
+              dostupna, rad pregleda redakcija. Ne unosite povjerljive ili tuđe lične podatke.
             </p>
           )}
           <button className="button" disabled={busy || !rubric}>

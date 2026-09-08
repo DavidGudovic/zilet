@@ -5,11 +5,23 @@ import { findPosts } from '@/lib/data';
 import { InkLines } from '@/components/ink-lines';
 import { ArchiveList, Pagination } from '@/components/archive';
 export const dynamic = 'force-dynamic';
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string; sort?: string }>;
+}) {
+  const { slug: requested } = await params;
+  const slug = requested === 'price' ? 'proza' : requested;
+  const q = await searchParams;
+  const page = Math.max(1, Math.min(10000, Math.floor(Number(q.page)) || 1));
+  const title = slug === 'umjetnost' ? 'Umjetnost' : rubricLabel(slug);
   return {
-    title: slug === 'umjetnost' ? 'Umjetnost' : rubricLabel(slug),
-    alternates: { canonical: `/rubrika/${slug}` },
+    title: page > 1 ? `${title} — stranica ${page}` : title,
+    description: `${title} u Žiletu. Čitajte objavljene radove i otkrijte autore.`,
+    alternates: { canonical: `/rubrika/${slug}${page > 1 ? `?page=${page}` : ''}` },
+    ...(q.sort === 'oldest' ? { robots: { index: false, follow: true } } : {}),
   };
 }
 export default async function Page({
@@ -31,6 +43,14 @@ export default async function Page({
         <InkLines className="rubric-lines" />
         <span className="eyebrow">Rubrike / Žilet</span>
         <h1>{slug === 'umjetnost' ? 'Umjetnost' : rubricLabel(slug)}</h1>
+        {slug === 'citaoci' && (
+          <div className="reader-invitation">
+            <p>Vaše riječi, naše stranice.</p>
+            <Link className="button secondary submission-link" href="/posalji">
+              Pošaljite rad <span aria-hidden="true">↗</span>
+            </Link>
+          </div>
+        )}
         {slug === 'umjetnost' && (
           <div className="subrubrics">
             {['slikarstvo', 'muzika', 'film'].map((s) => (

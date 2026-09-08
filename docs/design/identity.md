@@ -3,6 +3,7 @@
 Current masthead (6 September 2026 refinement): an expressive capital-Ž wordmark
 created with ImageGen after the owner rejected the lowercase outline. The original
 transparent PNG is used consistently in the header, footer and editorial desk.
+A lossless WebP derivative serves the same visible artwork with a smaller transfer; the PNG remains the source.
 Its provenance, final prompt and regeneration boundaries are recorded in
 [logo-generation.md](logo-generation.md).
 

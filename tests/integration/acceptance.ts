@@ -640,9 +640,11 @@ try {
   ok(
     'Authenticated password change checks current password and length, rejects old credentials and revokes other sessions',
   );
-  await mkdir('docs/verification/editorial-reader-2026-09-08', { recursive: true });
+  const evidenceDir =
+    process.env.ZILET_EVIDENCE_DIR || 'docs/verification/editorial-reader-2026-09-08';
+  await mkdir(evidenceDir, { recursive: true });
   await writeFile(
-    'docs/verification/editorial-reader-2026-09-08/api-acceptance.json',
+    `${evidenceDir}/api-acceptance.json`,
     JSON.stringify({ date: new Date().toISOString(), base, checks: evidence }, null, 2),
   );
 } finally {

@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { getFrontPage } from '@/lib/data';
 import { InkLines } from '@/components/ink-lines';
-import { bodyText, rubricLabel } from '@/lib/content';
+import { bodyText, rubricLabel, mediaSrcSet } from '@/lib/content';
+export const metadata = { alternates: { canonical: '/' } };
 export const dynamic = 'force-dynamic';
 export default async function Home() {
   const { posts, choices: placements } = await getFrontPage();
@@ -47,6 +48,9 @@ export default async function Home() {
               <figure className="front-art">
                 <img
                   src={lead.media[0].url}
+                  srcSet={mediaSrcSet(lead.media[0])}
+                  sizes="(max-width: 767px) 100vw, 65vw"
+                  decoding="async"
                   width={lead.media[0].width}
                   height={lead.media[0].height}
                   alt={lead.media[0].alt}
@@ -103,6 +107,9 @@ export default async function Home() {
                 <Link href={`/tekst/${art.slug}`}>
                   <img
                     src={art.media[0].url}
+                    srcSet={mediaSrcSet(art.media[0])}
+                    sizes="(max-width: 767px) 100vw, 65vw"
+                    decoding="async"
                     width={art.media[0].width}
                     height={art.media[0].height}
                     alt={art.media[0].alt}

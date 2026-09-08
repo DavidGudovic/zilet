@@ -37,5 +37,5 @@ export function submissionBody(text: string, rubric: string): Body {
 export const screeningReasons = {
   spam: 'sadržaj izgleda kao neželjena reklama ili ponovljene besmislene poruke',
   language: 'tekst nije pretežno na crnogorskom, srpskom, hrvatskom ili bosanskom jeziku',
-  abuse: 'sadržaj sadrži direktne prijetnje, ciljano uznemiravanje ili govor mržnje',
+  abuse: 'sadržaj sadrži prijetnje, uznemiravanje, govor mržnje ili pretjerano uvredljiv govor',
 } as const;

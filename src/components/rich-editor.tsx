@@ -1,5 +1,5 @@
 'use client';
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, useEditorState, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect } from 'react';
 import { canonicalRichNode, type RichNode } from '@/lib/content';
@@ -47,31 +47,50 @@ export function RichEditor({
         parseOptions: { preserveWhitespace: 'full' },
       });
   }, [doc, editor]);
+  const active = useEditorState({
+    editor,
+    selector: ({ editor }) => ({
+      bold: editor?.isActive('bold') ?? false,
+      italic: editor?.isActive('italic') ?? false,
+      heading: editor?.isActive('heading', { level: 2 }) ?? false,
+      quote: editor?.isActive('blockquote') ?? false,
+    }),
+  });
   if (!editor) return <p role="status">Otvaranje prostora za pisanje…</p>;
   return (
     <div className="rich-editor">
-      <div className="editor-toolbar" role="toolbar" aria-label="Uređivanje teksta">
+      <div
+        className="editor-toolbar"
+        role="toolbar"
+        aria-label="Uređivanje teksta"
+        onMouseDown={(event) => event.preventDefault()}
+      >
         <button
           type="button"
-          aria-pressed={editor.isActive('bold')}
+          aria-pressed={active?.bold}
           onClick={() => editor.chain().focus().toggleBold().run()}
         >
           <strong>Masno</strong>
         </button>
         <button
           type="button"
-          aria-pressed={editor.isActive('italic')}
+          aria-pressed={active?.italic}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         >
           <em>Kurziv</em>
         </button>
         <button
           type="button"
+          aria-pressed={active?.heading}
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         >
           Podnaslov
         </button>
-        <button type="button" onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+        <button
+          type="button"
+          aria-pressed={active?.quote}
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+        >
           Citat
         </button>
         <button

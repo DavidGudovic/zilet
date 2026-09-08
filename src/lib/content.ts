@@ -181,3 +181,11 @@ export type PostView = {
   version: number;
   demo?: boolean;
 };
+
+// Derivatives fit inside 640 × 640; a portrait thumbnail is narrower than 640 px.
+export function mediaSrcSet(media: Pick<MediaView, 'url' | 'width' | 'height'>) {
+  const longest = Math.max(media.width, media.height);
+  if (longest <= 640) return undefined;
+  const smallWidth = Math.max(1, Math.round((media.width * 640) / longest));
+  return `${media.url}${media.url.includes('?') ? '&' : '?'}size=small ${smallWidth}w, ${media.url} ${media.width}w`;
+}

@@ -1,42 +1,71 @@
+import { cache } from 'react';
 import { db } from '@/db';
 import { authors, posts, revisions, media, placements, redirects, user } from '@/db/schema';
-import { and, eq, desc, asc, sql as dsql, ilike } from 'drizzle-orm';
+import { and, eq, desc, asc, sql as dsql, ilike, inArray } from 'drizzle-orm';
 import { demoPosts } from './fixtures';
-import { fold, type PostView, type MediaView } from './content';
+import { fold, type PostView } from './content';
 import type { RevisionContent } from '@/db/schema';
 export const isDemo = () =>
   process.env.DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production';
+type PostRow = {
+  post: typeof posts.$inferSelect;
+  content: RevisionContent;
+  editorialNoteBy?: string | null;
+};
+async function viewPosts(rows: PostRow[]): Promise<PostView[]> {
+  if (!rows.length) return [];
+  const authorIds = [...new Set(rows.map((r) => r.content.authorId))];
+  const accountIds = [
+    ...new Set(
+      rows.flatMap((r) => [r.post.createdBy, ...(r.editorialNoteBy ? [r.editorialNoteBy] : [])]),
+    ),
+  ];
+  const mediaIds = [...new Set(rows.flatMap((r) => r.content.media.map((m) => m.id)))];
+  const [names, accounts, images] = await Promise.all([
+    db.select().from(authors).where(inArray(authors.id, authorIds)),
+    db.select({ id: user.id, name: user.name }).from(user).where(inArray(user.id, accountIds)),
+    mediaIds.length
+      ? db
+          .select({ id: media.id, width: media.width, height: media.height })
+          .from(media)
+          .where(inArray(media.id, mediaIds))
+      : [],
+  ]);
+  const authorMap = new Map(names.map((a) => [a.id, a]));
+  const accountMap = new Map(accounts.map((a) => [a.id, a.name]));
+  const imageMap = new Map(images.map((m) => [m.id, m]));
+  const name = (id: string) =>
+    ['approved-content-import', 'fixture-system'].includes(id)
+      ? 'Redakcija Žileta'
+      : accountMap.get(id) || 'Redakcija Žileta';
+  return rows.map(({ post, content, editorialNoteBy }) => ({
+    id: post.id,
+    slug: post.slug,
+    title: content.title,
+    intro: content.intro,
+    postedBy: name(post.createdBy),
+    editorialNote: content.editorialNote,
+    editorialNoteBy: editorialNoteBy ? name(editorialNoteBy) : undefined,
+    type: content.type,
+    body: content.body,
+    rubrics: content.rubrics,
+    author: authorMap.get(content.authorId)!,
+    publishedAt: (post.publishedAt || post.createdAt).toISOString(),
+    media: content.media.flatMap((ref) => {
+      const m = imageMap.get(ref.id);
+      return m ? [{ ...ref, url: `/media/${m.id}`, width: m.width, height: m.height }] : [];
+    }),
+    commentsOpen: content.commentsOpen,
+    version: post.version,
+    demo: post.id.startsWith('sample-'),
+  }));
+}
 export async function viewPost(
   post: typeof posts.$inferSelect,
   content: RevisionContent,
   editorialNoteBy?: string | null,
 ): Promise<PostView> {
-  const [author] = await db.select().from(authors).where(eq(authors.id, content.authorId));
-  const postedBy = await postingName(post.createdBy);
-  const noteBy = editorialNoteBy ? await postingName(editorialNoteBy) : undefined;
-  const images: MediaView[] = [];
-  for (const ref of content.media) {
-    const [m] = await db.select().from(media).where(eq(media.id, ref.id));
-    if (m) images.push({ ...ref, url: `/media/${m.id}`, width: m.width, height: m.height });
-  }
-  return {
-    id: post.id,
-    slug: post.slug,
-    title: content.title,
-    intro: content.intro,
-    postedBy,
-    editorialNote: content.editorialNote,
-    editorialNoteBy: noteBy,
-    type: content.type,
-    body: content.body,
-    rubrics: content.rubrics,
-    author,
-    publishedAt: (post.publishedAt || post.createdAt).toISOString(),
-    media: images,
-    commentsOpen: content.commentsOpen,
-    version: post.version,
-    demo: post.id.startsWith('sample-'),
-  };
+  return (await viewPosts([{ post, content, editorialNoteBy }]))[0];
 }
 export async function findPosts({
   q = '',
@@ -101,7 +130,7 @@ export async function findPosts({
     .limit(limit)
     .offset((page - 1) * limit);
   return {
-    items: await Promise.all(rows.map((r) => viewPost(r.post, r.content, r.editorialNoteBy))),
+    items: await viewPosts(rows),
     total,
     page,
     limit,
@@ -111,8 +140,7 @@ export async function getPosts() {
   return (await findPosts({ limit: 24 })).items;
 }
 export async function getFrontPage() {
-  const recent = await getPosts();
-  const choices = await getPlacements();
+  const [recent, choices] = await Promise.all([getPosts(), getPlacements()]);
   if (isDemo()) return { posts: recent, choices };
   const selected = await db
     .select({ post: posts, content: revisions.content, editorialNoteBy: revisions.editorialNoteBy })
@@ -120,14 +148,10 @@ export async function getFrontPage() {
     .innerJoin(posts, eq(placements.postId, posts.id))
     .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
     .where(eq(posts.status, 'published'));
-  const older = await Promise.all(
-    selected
-      .filter((r) => !recent.some((p) => p.id === r.post.id))
-      .map((r) => viewPost(r.post, r.content, r.editorialNoteBy)),
-  );
+  const older = await viewPosts(selected.filter((r) => !recent.some((p) => p.id === r.post.id)));
   return { posts: [...recent, ...older], choices };
 }
-export async function getPost(slug: string) {
+export const getPost = cache(async (slug: string) => {
   if (isDemo()) return demoPosts.find((p) => p.slug === slug);
   const [row] = await db
     .select({ post: posts, content: revisions.content, editorialNoteBy: revisions.editorialNoteBy })
@@ -135,7 +159,7 @@ export async function getPost(slug: string) {
     .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
     .where(and(eq(posts.slug, slug), eq(posts.status, 'published')));
   return row ? viewPost(row.post, row.content, row.editorialNoteBy) : undefined;
-}
+});
 export async function getRedirect(slug: string) {
   if (isDemo()) return;
   const [row] = await db
@@ -145,7 +169,7 @@ export async function getRedirect(slug: string) {
     .where(and(eq(redirects.slug, slug), eq(posts.status, 'published')));
   return row?.slug;
 }
-export async function getAuthors() {
+export const getAuthors = cache(async () => {
   if (isDemo()) return [demoPosts[0].author];
   return db
     .select()
@@ -154,7 +178,7 @@ export async function getAuthors() {
       dsql`${authors.isEditor} or exists (select 1 from ${posts} inner join ${revisions} on ${posts.publishedRevisionId} = ${revisions.id} where ${posts.status} = 'published' and ${revisions.content}->>'authorId' = ${authors.id})`,
     )
     .orderBy(asc(authors.name));
-}
+});
 export async function getPlacements() {
   if (isDemo()) return [];
   return db.select().from(placements);

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getAuthors } from '@/lib/data';
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'O časopisu' };
+export const metadata = { title: 'O časopisu', alternates: { canonical: '/o-casopisu' } };
 export default async function Page() {
   const editors = (await getAuthors()).filter((a) => a.isEditor);
   return (

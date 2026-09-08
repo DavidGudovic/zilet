@@ -87,7 +87,28 @@ Install only the `zilet.me` Nginx virtual host from `deploy/nginx.conf`. TLS use
 the existing Certbot account, HTTP webroot `/var/www/letsencrypt`, and the host's
 Certbot renewal timer. A deployment hook validates/reloads Nginx after renewal.
 Always run `nginx -t` before reload; never replace the shared Nginx configuration.
-The `www` hostname has no DNS record and is not configured or claimed.
+The owner added `www.zilet.me` on 8 September 2026; authoritative DNS resolves it
+to the same IPv4 address as the apex. The intended behavior is an HTTPS-capable
+301 redirect to `https://zilet.me`, preserving paths and queries. The prepared
+`deploy/configure-www.sh` expands only the existing Žilet certificate, adds the
+HTTP challenge hostname and a dedicated HTTPS redirect block, validates Nginx
+before each graceful reload, and checks renewal with a dry run. It retains the
+current apex virtual host and its tuned upstream. It backs up and restores the
+original site configuration if setup fails. It requires sudo; installation is
+pending administrator access (the current SSH session cannot authenticate sudo,
+and later SSH attempts received connection refused). This script does not deploy
+the pending UX changes or modify other sites.
+
+From the local checkout, once SSH is reachable:
+
+```sh
+scp deploy/configure-www.sh zilet:/tmp/zilet-configure-www.sh
+ssh -t -o RemoteCommand=none zilet 'sudo bash /tmp/zilet-configure-www.sh'
+```
+
+After it succeeds, verify both `http://www.zilet.me` and
+`https://www.zilet.me`, and confirm `https://zilet.me` still serves the app. The
+Search Console sitemap remains `https://zilet.me/sitemap.xml`.
 
 One-time content import, explicitly approved by the owner on 2026-09-06:
 

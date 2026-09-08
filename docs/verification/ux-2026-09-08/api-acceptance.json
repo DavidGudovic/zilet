@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-08T18:43:25.054Z",
+  "base": "http://localhost:3400",
+  "checks": [
+    "Registration, real sink mail, verification, sign-in; client role escalation rejected",
+    "Anonymous and reader cannot read editorial drafts",
+    "Poetry source, zero-width characters, authored line breaks and emphasis round-trip through PostgreSQL",
+    "Unpublished article is absent; stale editor revision rejected",
+    "Image upload decoded and stored; unpublished media cannot be read anonymously or by reader",
+    "Publishing with image appears in SSR article and archive without rebuild",
+    "Posting account and work author are separate; plain-text editorial notes have a server-owned signature",
+    "Published revision stays unchanged while private preview shows pending revision; private material absent anonymously",
+    "Verified reader posts; cross-account deletion and cross-origin submission forbidden",
+    "Plain-text comment escaping; removal and count update immediately; restoration works",
+    "Publishing promotes the note with its true editor signature; autosave never leaks it or changes the original posting credit",
+    "Objavi izmjene deliberately promotes the new public revision",
+    "Unconnected analytics truthfully renders unavailable state",
+    "Disguised executable SVG is rejected by decoded-format validation",
+    "Password recovery request succeeds through configured local mail path",
+    "Recovery token delivered, consumed once, old password rejected and prior sessions revoked",
+    "Suspension revokes sessions and prevents login; access can be restored",
+    "Reader can delete their comment; editors cannot undo an author deletion",
+    "Slug change permanently redirects old route; published comment closure is enforced",
+    "Unpublishing removes article and formerly public media without stale caches",
+    "Editors permanently delete withdrawn drafts with version/origin guards; referenced media is kept and unused files are removed",
+    "Editor profiles are public without posts; biography writes enforce roles, origin, allowed fields and stale-write conflicts",
+    "Authenticated password change checks current password and length, rejects old credentials and revokes other sessions"
+  ]
+}

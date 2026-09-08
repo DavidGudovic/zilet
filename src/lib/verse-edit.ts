@@ -1,5 +1,27 @@
 import type { Body } from './content';
 type Emphasis = Extract<Body, { kind: 'poem' }>['emphasis'];
+export function toggleEmphasis(
+  marks: Emphasis,
+  from: number,
+  to: number,
+  style: 'italic' | 'bold',
+): Emphasis {
+  if (from >= to) return marks;
+  const ranges = marks.filter((m) => m.style === style).sort((a, b) => a.from - b.from);
+  let covered = from;
+  for (const range of ranges) {
+    if (range.from > covered) break;
+    covered = Math.max(covered, range.to);
+  }
+  const remaining = marks.flatMap((m) => {
+    if (m.style !== style || m.to <= from || m.from >= to) return [m];
+    return [
+      ...(m.from < from ? [{ ...m, to: from }] : []),
+      ...(m.to > to ? [{ ...m, from: to }] : []),
+    ];
+  });
+  return covered >= to ? remaining : [...remaining, { from, to, style }];
+}
 export function remapEmphasis(before: string, after: string, marks: Emphasis): Emphasis {
   let start = 0;
   while (start < before.length && start < after.length && before[start] === after[start]) start++;

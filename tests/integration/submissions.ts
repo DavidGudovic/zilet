@@ -169,6 +169,55 @@ try {
   const post = await call('/api/posts/' + accepted.data.postId, 'GET', undefined, editor);
   assert.equal(post.data.content.body.text, s.text);
   assert.deepEqual(post.data.content.rubrics, ['citaoci', 'poezija']);
+  const direct = await call('/api/posts', 'POST', post.data.content, editor);
+  assert.equal(
+    direct.r.status,
+    400,
+    'Editors cannot create reader submissions through the post API',
+  );
+  const ordinary = await call(
+    '/api/posts',
+    'POST',
+    { ...post.data.content, title: 'Običan urednički tekst', rubrics: ['poezija'] },
+    editor,
+  );
+  assert.equal(ordinary.r.status, 201, ordinary.text);
+  assert.equal(
+    (
+      await call(
+        '/api/posts/' + ordinary.data.id,
+        'PUT',
+        { version: ordinary.data.version, content: post.data.content },
+        editor,
+      )
+    ).r.status,
+    400,
+  );
+  // Simulate a legacy draft that had the rubric before the guard existed.
+  const { posts, revisions } = await import('../../src/db/schema');
+  const [legacy] = await db.select().from(posts).where(eq(posts.id, ordinary.data.id));
+  await db
+    .update(revisions)
+    .set({ content: post.data.content })
+    .where(eq(revisions.id, legacy.draftRevisionId!));
+  assert.equal(
+    (
+      await call(
+        `/api/posts/${ordinary.data.id}/publish`,
+        'POST',
+        { version: ordinary.data.version },
+        editor,
+      )
+    ).r.status,
+    400,
+  );
+  await call(
+    '/api/posts/' + ordinary.data.id,
+    'DELETE',
+    { version: ordinary.data.version },
+    editor,
+  );
+
   assert.equal((await call('/tekst/' + post.data.post.slug)).r.status, 404);
   const noNote = await call(
     '/api/posts/' + post.data.post.id,

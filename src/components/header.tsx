@@ -22,7 +22,7 @@ export function Header({ isEditor = false }: { isEditor?: boolean }) {
           umjetnost i kulturu
         </p>
         <Link href="/" className="brand" aria-label="Žilet — Početna">
-          <img src="/identity/wordmark-generated.png" width="1881" height="836" alt="Žilet" />
+          <img src="/identity/wordmark-generated.webp" width="1881" height="836" alt="Žilet" />
         </Link>
         <div className="masthead-right">
           <span>Književnost i umjetnost</span>
@@ -42,7 +42,7 @@ export function Header({ isEditor = false }: { isEditor?: boolean }) {
                 </clipPath>
               </defs>
               <image
-                href="/identity/wordmark-generated.png"
+                href="/identity/wordmark-generated.webp"
                 width="1881"
                 height="836"
                 clipPath="url(#nav-logo-z)"
@@ -172,7 +172,7 @@ export function Footer() {
       <footer className="footer wrap">
         <InkLines className="footer-lines" />
         <Link href="/" aria-label="Žilet — Početna">
-          <img src="/identity/wordmark-generated.png" width="100" height="45" alt="Žilet" />
+          <img src="/identity/wordmark-generated.webp" width="100" height="45" alt="Žilet" />
         </Link>
         <p>Časopis za književnost, umjetnost i kulturu</p>
         <div>
