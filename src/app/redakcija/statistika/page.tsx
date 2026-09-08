@@ -34,9 +34,10 @@ function Breakdown({
   rows: { name: string; views: number }[];
   rename?: (value: string) => string;
 }) {
+  const headingId = `${title.replaceAll(' ', '-')}-heading`;
   return (
-    <section className={styles.breakdown} aria-labelledby={`${title}-heading`}>
-      <h2 id={`${title}-heading`}>{title}</h2>
+    <section className={styles.breakdown} aria-labelledby={headingId}>
+      <h2 id={headingId}>{title}</h2>
       {rows.length ? (
         <ol>
           {rows.map((row) => (
