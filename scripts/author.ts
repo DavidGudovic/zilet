@@ -1,12 +1,16 @@
-// Owner-only CLI. No public endpoint can attach a portrait or edit a biography.
-import { readFile } from 'node:fs/promises';
+// Owner-only CLI for approved portraits; public endpoints cannot attach portraits.
+import { readFile, rm } from 'node:fs/promises';
 import { db, sql } from '../src/db';
 import { authors, media, user } from '../src/db/schema';
 import { eq } from 'drizzle-orm';
-import { processImage } from '../src/lib/media-store';
+import path from 'node:path';
+import { processImage, mediaRoot } from '../src/lib/media-store';
 const args = process.argv.slice(2);
 const value = (key: string) => (args.includes(key) ? args[args.indexOf(key) + 1] : undefined);
+let pendingMedia: typeof media.$inferInsert | undefined;
 try {
+  if (value('--portrait-file') && args.includes('--remove-portrait'))
+    throw new Error('Izaberite dodavanje ili uklanjanje portreta.');
   const slug = value('--slug');
   if (!slug)
     throw new Error(
@@ -32,16 +36,31 @@ try {
       throw new Error('Potreban je urednički nalog za evidenciju unosa.');
     const id = crypto.randomUUID();
     const stored = await processImage(await readFile(portrait), id);
-    await db
-      .insert(media)
-      .values({ id, ...stored, filename: 'Odobreni portret', alt, credit, createdBy: actor.id });
+    pendingMedia = {
+      id,
+      ...stored,
+      filename: 'Odobreni portret',
+      alt,
+      credit,
+      createdBy: actor.id,
+    };
     change.portraitId = id;
   }
   if (args.includes('--remove-portrait')) change.portraitId = null;
   if (!Object.keys(change).length) throw new Error('Nijedna izmjena nije navedena.');
-  await db.update(authors).set(change).where(eq(authors.id, author.id));
+  // The image row and portrait reference become visible together. Cleanup cannot see an
+  // unattached image in the gap between insertion and assignment.
+  await db.transaction(async (tx) => {
+    if (pendingMedia) await tx.insert(media).values(pendingMedia);
+    await tx.update(authors).set(change).where(eq(authors.id, author.id));
+  });
+  pendingMedia = undefined;
   console.log('Odobreni podaci autora su sačuvani.');
 } catch (e) {
+  if (pendingMedia)
+    await rm(path.join(mediaRoot(), pendingMedia.id), { recursive: true, force: true }).catch(
+      () => {},
+    );
   console.error(e instanceof Error ? e.message : e);
   process.exitCode = 1;
 } finally {
