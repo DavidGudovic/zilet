@@ -32,6 +32,18 @@ try {
   await page.waitForURL('**/redakcija*');
   await page
     .getByRole('navigation', { name: 'Redakcija', exact: true })
+    .getByRole('link', { name: 'Tekstovi', exact: true })
+    .click();
+  await page.waitForFunction(() => document.activeElement?.getAttribute('name') === 'q');
+  assert.equal(
+    await page
+      .getByRole('searchbox', { name: 'Pretraži tekstove' })
+      .evaluate((el) => (el as HTMLElement).tabIndex),
+    0,
+  );
+
+  await page
+    .getByRole('navigation', { name: 'Redakcija', exact: true })
     .getByRole('link', { name: '+ Novi tekst', exact: true })
     .click();
   await page.getByRole('combobox', { name: 'Rubrika', exact: true }).click();
