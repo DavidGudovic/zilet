@@ -108,6 +108,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ d
               </dd>
             </div>
           </dl>
+          <p className={styles.intro}>
+            Prikazi broje otvaranja stranica, uključujući ponovna. Posjetioci su procjena broja
+            različitih čitalaca; jedan čitalac može doći više puta i napraviti više posjeta. Uz
+            izvore, zemlje i uređaje prikazan je broj otvaranja stranica.
+          </p>
           <section className={styles.reading} aria-labelledby="reading-heading">
             <div>
               <span className="eyebrow">Šta se čitalo</span>

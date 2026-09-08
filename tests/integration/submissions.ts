@@ -10,9 +10,9 @@ assert.equal(
   'true',
   'Set ZILET_DISPOSABLE_TEST=true only for an explicitly disposable local database.',
 );
-const base = process.env.APP_URL || 'http://localhost:3300';
+const base = process.env.APP_URL || 'http://localhost:3000';
 assert.ok(['localhost', '127.0.0.1'].includes(new URL(base).hostname));
-const mail = process.env.MAILPIT_URL || 'http://localhost:8125';
+const mail = process.env.MAILPIT_URL || 'http://localhost:8025';
 async function call(path: string, method = 'GET', body?: unknown, cookie = '', origin = base) {
   const r = await fetch(base + path, {
     method,
