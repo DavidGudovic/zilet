@@ -515,6 +515,16 @@ try {
     ).r.status,
     403,
   );
+  const photoLibrary = await request('/redakcija/fotografije', 'GET', undefined, editor.cookie);
+  assert.equal(photoLibrary.r.status, 200);
+  const linkedPhoto = photoLibrary.text
+    .match(/<figure[\s\S]*?<\/figure>/g)
+    ?.find((figure) => figure.includes(`/media/${media.id}?`));
+  assert.ok(linkedPhoto, 'Uploaded image appears in the photo library');
+  assert.ok(linkedPhoto.includes('Vezana za sadržaj'));
+  assert.ok(linkedPhoto.includes(`/redakcija/tekst/${post.id}`));
+  assert.ok(!linkedPhoto.includes('Nije vezana za sadržaj'));
+  assert.match(linkedPhoto, /<button[^>]*disabled/);
   assert.equal(
     (await request(`/api/media/${media.id}`, 'DELETE', {}, editor.cookie)).r.status,
     409,

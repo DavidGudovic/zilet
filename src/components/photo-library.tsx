@@ -1,12 +1,20 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MediaPicker } from './media-picker';
 import type { ImageRef } from '@/db/schema';
 export function PhotoLibrary({
   items,
 }: {
-  items: { id: string; filename: string; width: number; height: number; inUse: boolean }[];
+  items: {
+    id: string;
+    filename: string;
+    width: number;
+    height: number;
+    inUse: boolean;
+    postId: string | null;
+  }[];
 }) {
   const router = useRouter();
   useEffect(() => setLibraryItems(items), [items]);
@@ -65,7 +73,13 @@ export function PhotoLibrary({
             <figcaption>
               {m.filename} · {m.width} × {m.height}
               <br />
-              {m.inUse ? 'U upotrebi' : 'Nije vezana za sadržaj'}
+              {m.inUse ? 'Vezana za sadržaj' : 'Nije vezana za sadržaj'}
+              {m.postId && (
+                <>
+                  {' · '}
+                  <Link href={`/redakcija/tekst/${m.postId}`}>Otvori tekst</Link>
+                </>
+              )}
             </figcaption>
             <button
               type="button"

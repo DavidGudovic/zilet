@@ -8,16 +8,24 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
   await editorSession();
   const page = Math.max(1, Math.min(10000, Number((await searchParams).page) || 1));
   const limit = 24;
+  // Keep the outer ID qualified inside subqueries: Drizzle strips direct column
+  // qualifiers in single-table SELECT fields.
+  const outerMediaId = sql`${media.id}`;
   const items = await db
     .select({
       id: media.id,
       filename: media.filename,
       width: media.width,
       height: media.height,
+      postId: sql<string | null>`(
+        select ${revisions.postId} from ${revisions}
+        where ${revisions.content}->'media' @> jsonb_build_array(jsonb_build_object('id', ${outerMediaId}))
+        order by ${revisions.createdAt} desc limit 1
+      )`,
       inUse: sql<boolean>`
-        exists (select 1 from ${revisions} where ${revisions.content}->'media' @> jsonb_build_array(jsonb_build_object('id', ${media.id})))
-        or exists (select 1 from ${authors} where ${authors.portraitId} = ${media.id})
-        or exists (select 1 from ${submissions} where ${submissions.mediaId} = ${media.id})
+        exists (select 1 from ${revisions} where ${revisions.content}->'media' @> jsonb_build_array(jsonb_build_object('id', ${outerMediaId})))
+        or exists (select 1 from ${authors} where ${authors.portraitId} = ${outerMediaId})
+        or exists (select 1 from ${submissions} where ${submissions.mediaId} = ${outerMediaId})
       `,
     })
     .from(media)
