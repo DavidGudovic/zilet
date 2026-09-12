@@ -47,7 +47,17 @@ async function login(page: Page, account: { email: string; password: string }, r
   await page.getByLabel('Lozinka', { exact: true }).fill(account.password);
   const request = page.waitForResponse((r) => r.url() === `${base}/api/auth/sign-in/email`);
   await page.getByRole('button', { name: 'Prijavi se', exact: true }).click();
-  assert.equal((await request).status(), 200, 'Browser login succeeds using isolated credentials');
+  let response = await request;
+  if (response.status() === 429) {
+    const supplied = Number(response.headers()['retry-after'] || 60);
+    const seconds = Number.isFinite(supplied) ? Math.max(1, Math.min(60, Math.ceil(supplied))) : 60;
+    console.log(`Waiting ${seconds}s for the shared disposable login rate limit before one retry.`);
+    await page.waitForTimeout(seconds * 1000);
+    const retry = page.waitForResponse((r) => r.url() === `${base}/api/auth/sign-in/email`);
+    await page.getByRole('button', { name: 'Prijavi se', exact: true }).click();
+    response = await retry;
+  }
+  assert.equal(response.status(), 200, 'Browser login succeeds using isolated credentials');
   await page.waitForURL(base + returnTo);
 }
 async function measure(page: Page, label: string, width: number) {
