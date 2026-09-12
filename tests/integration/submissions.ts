@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
 import { db, sql } from '../../src/db';
-import { submissions, user, limits, rateLimit } from '../../src/db/schema';
+import { submissions, submissionMessages, user, limits, rateLimit } from '../../src/db/schema';
 import { eq } from 'drizzle-orm';
 assert.equal(
   process.env.ZILET_DISPOSABLE_TEST,
@@ -68,6 +68,8 @@ try {
   }
   assert.ok(msg);
   const content = await (await fetch(mail + '/api/v1/message/' + msg.ID)).json();
+  assert.ok(content.HTML.includes('alt="Žilet"'), 'Verification email is branded HTML');
+  assert.ok(content.HTML.includes('Potvrdi adresu'));
   await fetch(content.Text.match(/https?:\/\/[^\s]+\/api\/auth\/verify-email\?[^\s]+/)[0]);
   const readerLogin = await call('/api/auth/sign-in/email', 'POST', { email, password });
   assert.equal(readerLogin.r.status, 200);
@@ -155,6 +157,12 @@ try {
     editor,
   );
   assert.equal(accepted.r.status, 200, accepted.text);
+  assert.equal(accepted.data.deliveryStatus, 'sent');
+  await submissionMail(
+    accepted.data.messageId,
+    email,
+    'Vaš rad je prihvaćen i priprema se za objavu.',
+  );
   assert.equal(
     (
       await call(
@@ -294,30 +302,190 @@ try {
   console.log(
     'PASS Single-photo bounds, private review, unavailable-AI fallback, duplicate acceptance conflict, signed publication and permanent cleanup',
   );
+  async function submissionMail(messageId: string, recipient: string, expected: string) {
+    const [record] = await db
+      .select()
+      .from(submissionMessages)
+      .where(eq(submissionMessages.id, messageId));
+    assert.equal(record.deliveryStatus, 'sent');
+    assert.ok(record.sentAt);
+    const list = await (await fetch(mail + '/api/v1/messages')).json();
+    for (const entry of list.messages.filter((m: { To: { Address: string }[] }) =>
+      m.To.some((t) => t.Address === recipient),
+    )) {
+      const message = await (await fetch(mail + '/api/v1/message/' + entry.ID)).json();
+      if (message.Text.includes(expected)) {
+        assert.ok(message.HTML.includes('alt="Žilet"'));
+        assert.ok(
+          message.HTML.includes('Pogledaj svoj prilog') || message.HTML.includes('Otvori razgovor'),
+        );
+        return;
+      }
+    }
+    assert.fail('Expected branded submission notification in local Mailpit');
+  }
+  // The accepted row above was deliberately removed by the cleanup exercise;
+  // its actual notification is still observable in Mailpit.
+  const acceptedMail = await (await fetch(mail + '/api/v1/messages')).json();
+  assert.ok(
+    acceptedMail.messages.some(
+      (m: { Subject: string; To: { Address: string }[] }) =>
+        m.Subject === 'Žilet — vaš rad je prihvaćen' && m.To.some((t) => t.Address === email),
+    ),
+  );
   const rejected = await submit(0);
   assert.equal(rejected.r.status, 201);
+  const thread = `/api/submissions/${rejected.data.id}/messages`;
+  const questionText = `Privatno pitanje ${rejected.data.id}: Možete li pojasniti naslov? <script>alert(1)</script>`;
+  assert.equal(
+    (await call(thread, 'POST', { version: 1, body: 'Odgovor bez pitanja' }, reader)).r.status,
+    409,
+  );
+  assert.equal((await call(thread, 'POST', { version: 1, body: questionText })).r.status, 401);
+  assert.equal(
+    (await call(thread, 'POST', { version: 1, body: questionText }, editor, 'https://foreign.test'))
+      .r.status,
+    403,
+  );
+  // A non-deliverable recipient must preserve the question and expose a retry,
+  // without pretending that e-mail was sent or committing another decision.
+  await db.update(user).set({ emailVerified: false }).where(eq(user.id, readerLogin.data.user.id));
+  const question = await call(thread, 'POST', { version: 1, body: questionText }, editor);
+  assert.equal(question.r.status, 201, question.text);
+  assert.equal(question.data.deliveryStatus, 'unavailable');
+  const [stillPending] = await db
+    .select()
+    .from(submissions)
+    .where(eq(submissions.id, rejected.data.id));
+  assert.equal(stillPending.status, 'pending');
+  assert.equal(stillPending.version, 2);
+  await db.update(user).set({ emailVerified: true }).where(eq(user.id, readerLogin.data.user.id));
+  assert.equal(
+    (await call(`${thread}/${question.data.messageId}/retry`, 'POST', undefined, reader)).r.status,
+    404,
+  );
+  const delivered = await call(
+    `${thread}/${question.data.messageId}/retry`,
+    'POST',
+    undefined,
+    editor,
+  );
+  assert.equal(delivered.r.status, 200, delivered.text);
+  assert.equal(delivered.data.deliveryStatus, 'sent');
+  await submissionMail(question.data.messageId, email, questionText);
+  const countBefore = (await (await fetch(mail + '/api/v1/messages')).json()).total;
+  const retriedMail = await call(
+    `${thread}/${question.data.messageId}/retry`,
+    'POST',
+    undefined,
+    editor,
+  );
+  assert.equal(retriedMail.data.deliveryStatus, 'sent');
+  assert.equal(
+    (await (await fetch(mail + '/api/v1/messages')).json()).total,
+    countBefore,
+    'Already-sent mail is not sent twice',
+  );
+  assert.equal(
+    (await call(thread, 'POST', { version: 1, body: 'Zastarjeli odgovor' }, reader)).r.status,
+    409,
+  );
+  const strangerEmail = `submission-other-${Date.now()}@zilet.test`;
   assert.equal(
     (
-      await call(
-        '/api/submissions/' + rejected.data.id,
-        'PATCH',
-        { action: 'reject', version: 1, note: 'Hvala na prilogu.' },
-        editor,
-      )
+      await call('/api/auth/sign-up/email', 'POST', {
+        email: strangerEmail,
+        password,
+        name: 'Drugi čitalac',
+      })
     ).r.status,
     200,
   );
+  await db.update(user).set({ emailVerified: true }).where(eq(user.email, strangerEmail));
+  const strangerLogin = await call('/api/auth/sign-in/email', 'POST', {
+    email: strangerEmail,
+    password,
+  });
+  assert.equal(strangerLogin.r.status, 200);
+  const stranger = cookie(strangerLogin.r);
+  assert.equal(
+    (await call(thread, 'POST', { version: 2, body: 'Tuđi odgovor' }, stranger)).r.status,
+    404,
+  );
+  assert.equal(
+    (await call(`${thread}/${question.data.messageId}/retry`, 'POST', undefined, stranger)).r
+      .status,
+    404,
+  );
+  assert.ok(
+    !(await call(`/posalji?prilog=${rejected.data.id}`, 'GET', undefined, stranger)).text.includes(
+      'Možete li pojasniti naslov?',
+    ),
+  );
+  const readerPage = await call('/posalji', 'GET', undefined, reader);
+  assert.ok(readerPage.text.includes('Možete li pojasniti naslov?'));
+  assert.ok(!readerPage.text.includes('<script>alert(1)</script>'));
+  assert.ok(!(await call('/posalji')).text.includes(questionText));
+  const reply = await call(
+    thread,
+    'POST',
+    { version: 2, body: 'Naslov se odnosi na tišinu sobe.' },
+    reader,
+  );
+  assert.equal(reply.r.status, 201, reply.text);
+  assert.equal(reply.data.version, 3);
+  assert.equal(reply.data.deliveryStatus, 'sent');
+  await submissionMail(reply.data.messageId, account.email, 'Naslov se odnosi na tišinu sobe.');
+  assert.ok(
+    (await call(`/redakcija/prilozi/${rejected.data.id}`, 'GET', undefined, editor)).text.includes(
+      'Naslov se odnosi na tišinu sobe.',
+    ),
+  );
+  assert.equal(
+    (
+      await call(
+        `/api/submissions/${rejected.data.id}`,
+        'PATCH',
+        { action: 'reject', version: 2, note: 'Zastarjela odluka' },
+        editor,
+      )
+    ).r.status,
+    409,
+  );
+  const decision = await call(
+    `/api/submissions/${rejected.data.id}`,
+    'PATCH',
+    { action: 'reject', version: 3, note: 'Hvala na prilogu.' },
+    editor,
+  );
+  assert.equal(decision.r.status, 200, decision.text);
+  assert.equal(decision.data.deliveryStatus, 'sent');
+  await submissionMail(decision.data.messageId, email, 'Hvala na prilogu.');
+  assert.equal(
+    (await call(thread, 'POST', { version: 4, body: 'Odgovor poslije odluke' }, reader)).r.status,
+    409,
+  );
   assert.ok((await call('/posalji', 'GET', undefined, reader)).text.includes('Hvala na prilogu.'));
   assert.equal(
-    (await call('/api/submissions/' + rejected.data.id, 'DELETE', { version: 1 }, reader)).r.status,
+    (await call(`/api/submissions/${rejected.data.id}`, 'DELETE', { version: 3 }, reader)).r.status,
     409,
   );
   assert.equal(
-    (await call('/api/submissions/' + rejected.data.id, 'DELETE', { version: 2 }, reader)).r.status,
+    (await call(`/api/submissions/${rejected.data.id}`, 'DELETE', { version: 4 }, reader)).r.status,
     200,
   );
+  assert.equal(
+    (
+      await db
+        .select()
+        .from(submissionMessages)
+        .where(eq(submissionMessages.submissionId, rejected.data.id))
+    ).length,
+    0,
+    'Deleting submission clears private correspondence',
+  );
   console.log(
-    'PASS Reader sees editorial reply and can remove their rejected submission with version guard',
+    'PASS Branded decision mail, private questions/replies, stale-version guards, honest delivery failure, idempotent retry and correspondence cleanup',
   );
   await writeFile(
     `/tmp/zilet-reader-account-${new URL(base).port || '80'}.json`,

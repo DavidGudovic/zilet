@@ -1,0 +1,142 @@
+[
+  {
+    "label": "conversation-editor-question",
+    "viewport": 320,
+    "document": 320
+  },
+  {
+    "label": "conversation-editor-question",
+    "viewport": 390,
+    "document": 390
+  },
+  {
+    "label": "conversation-editor-question",
+    "viewport": 768,
+    "document": 768
+  },
+  {
+    "label": "conversation-editor-question",
+    "viewport": 1440,
+    "document": 1440
+  },
+  {
+    "label": "email-question",
+    "viewport": 320,
+    "document": 320
+  },
+  {
+    "label": "email-question",
+    "viewport": 390,
+    "document": 390
+  },
+  {
+    "label": "email-question",
+    "viewport": 768,
+    "document": 768
+  },
+  {
+    "label": "email-question",
+    "viewport": 1440,
+    "document": 1440
+  },
+  {
+    "label": "conversation-reader-question",
+    "viewport": 320,
+    "document": 320
+  },
+  {
+    "label": "conversation-reader-question",
+    "viewport": 390,
+    "document": 390
+  },
+  {
+    "label": "conversation-reader-question",
+    "viewport": 768,
+    "document": 768
+  },
+  {
+    "label": "conversation-reader-question",
+    "viewport": 1440,
+    "document": 1440
+  },
+  {
+    "label": "conversation-reader-reply",
+    "viewport": 320,
+    "document": 320
+  },
+  {
+    "label": "conversation-reader-reply",
+    "viewport": 390,
+    "document": 390
+  },
+  {
+    "label": "conversation-reader-reply",
+    "viewport": 768,
+    "document": 768
+  },
+  {
+    "label": "conversation-reader-reply",
+    "viewport": 1440,
+    "document": 1440
+  },
+  {
+    "label": "conversation-editor-decision",
+    "viewport": 320,
+    "document": 320
+  },
+  {
+    "label": "conversation-editor-decision",
+    "viewport": 390,
+    "document": 390
+  },
+  {
+    "label": "conversation-editor-decision",
+    "viewport": 768,
+    "document": 768
+  },
+  {
+    "label": "conversation-editor-decision",
+    "viewport": 1440,
+    "document": 1440
+  },
+  {
+    "label": "email-decision",
+    "viewport": 320,
+    "document": 320
+  },
+  {
+    "label": "email-decision",
+    "viewport": 390,
+    "document": 390
+  },
+  {
+    "label": "email-decision",
+    "viewport": 768,
+    "document": 768
+  },
+  {
+    "label": "email-decision",
+    "viewport": 1440,
+    "document": 1440
+  },
+  {
+    "label": "conversation-reader-decision",
+    "viewport": 320,
+    "document": 320
+  },
+  {
+    "label": "conversation-reader-decision",
+    "viewport": 390,
+    "document": 390
+  },
+  {
+    "label": "conversation-reader-decision",
+    "viewport": 768,
+    "document": 768
+  },
+  {
+    "label": "conversation-reader-decision",
+    "viewport": 1440,
+    "document": 1440
+  }
+]

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { siteUrl } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -17,6 +18,6 @@ export default function robots(): MetadataRoute.Robots {
         '/dev-art',
       ],
     },
-    sitemap: `${process.env.APP_URL || 'http://localhost:3000'}/sitemap.xml`,
+    sitemap: siteUrl('/sitemap.xml'),
   };
 }

@@ -22,9 +22,14 @@ export function SubmissionReview({ id, version }: { id: string; version: number 
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Pregled nije sačuvan.');
-      if (result.postId) router.push(`/redakcija/tekst/${result.postId}#radni-prostor`);
+      if (result.postId && result.deliveryStatus === 'sent')
+        router.push(`/redakcija/tekst/${result.postId}#radni-prostor`);
       else {
-        setMessage('Prilog nije izabran. Odgovor je sačuvan.');
+        setMessage(
+          result.deliveryStatus === 'sent'
+            ? 'Odluka je sačuvana. Čitalac je obaviješten e-poštom.'
+            : 'Odluka je sačuvana, ali e-pošta nije poslata. Pokušajte ponovo iz razgovora.',
+        );
         router.refresh();
       }
     } catch (e) {

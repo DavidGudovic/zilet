@@ -11,16 +11,8 @@ import {
 } from '@/db/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import { rm } from 'node:fs/promises';
-import path from 'node:path';
-import { mediaRoot } from './media-store';
+import { mediaDirectory } from './media-store';
 import { HttpError } from './security';
-
-const mediaIdPattern = /^[a-f0-9-]{36}$/;
-
-function mediaDirectory(id: string) {
-  if (!mediaIdPattern.test(id)) throw new HttpError(404, 'Fotografija nije pronađena.');
-  return path.join(mediaRoot(), id);
-}
 
 export async function deletePostPermanently(id: string, version: number) {
   return db.transaction(async (tx) => {

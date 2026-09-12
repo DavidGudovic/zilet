@@ -203,6 +203,7 @@ export default async function Home() {
             ['knjizevna-kritika', 'Književna kritika'],
             ['umjetnost', 'Umjetnost'],
             ['citaoci', 'Radovi čitalaca'],
+            ['zanimljivosti-o-poznatim-licnostima', 'Zanimljivosti o poznatim ličnostima'],
           ].map(([slug, label]) => (
             <Link key={slug} href={`/rubrika/${slug}`}>
               {label}

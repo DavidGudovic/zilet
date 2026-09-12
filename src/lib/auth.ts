@@ -4,23 +4,10 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
-import nodemailer from 'nodemailer';
-export const mailConfigured = () => Boolean(process.env.SMTP_HOST && process.env.SMTP_FROM);
+import { mailConfigured, sendMail } from './mail';
+export { mailConfigured, sendMail } from './mail';
 export const registrationEnabled = () =>
   process.env.REGISTRATION_ENABLED === 'true' && mailConfigured();
-export async function sendMail(to: string, subject: string, text: string) {
-  if (!mailConfigured()) throw new Error('Slanje pošte nije podešeno.');
-  const transport = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: process.env.SMTP_USER
-      ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
-      : undefined,
-    connectionTimeout: 10000,
-  });
-  await transport.sendMail({ from: process.env.SMTP_FROM, to, subject, text });
-}
 export const auth = betterAuth({
   appName: 'Žilet',
   baseURL: process.env.APP_URL,
@@ -65,7 +52,8 @@ export const auth = betterAuth({
       await sendMail(
         user.email,
         'Žilet — obnova lozinke',
-        `Za novu lozinku otvorite ovaj link:\n\n${url}\n\nAko nijeste tražili promjenu, zanemarite ovu poruku.`,
+        'Zatražili ste obnovu lozinke za svoj nalog na Žiletu.\n\nAko nijeste tražili promjenu, zanemarite ovu poruku.',
+        { label: 'Postavi novu lozinku', url },
       );
     },
   },
@@ -76,7 +64,8 @@ export const auth = betterAuth({
       await sendMail(
         user.email,
         'Žilet — potvrdite adresu',
-        `Potvrdite svoju adresu za komentarisanje:\n\n${url}\n\nAko nijeste otvorili nalog, zanemarite ovu poruku.`,
+        'Dobro došli u Žilet. Potvrdite svoju adresu da biste komentarisali i slali radove redakciji.\n\nAko nijeste otvorili nalog, zanemarite ovu poruku.',
+        { label: 'Potvrdi adresu', url },
       );
     },
   },

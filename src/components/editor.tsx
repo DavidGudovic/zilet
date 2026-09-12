@@ -319,8 +319,14 @@ export function Editor({
                 });
                 if (r.ok) {
                   const a = await r.json();
-                  setAuthors([...authors, a]);
+                  setAuthors((current) =>
+                    current.some((item) => item.id === a.id) ? current : [...current, a],
+                  );
                   change({ authorId: a.id });
+                  if (r.status === 200)
+                    setMessage(
+                      'Izabran je postojeći autor. Velika i mala slova ne stvaraju novi profil.',
+                    );
                   setNewAuthor(false);
                   setAuthorName('');
                 } else setMessage('Autor nije sačuvan. Provjerite ime.');

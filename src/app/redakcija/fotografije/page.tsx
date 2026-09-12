@@ -6,7 +6,7 @@ import { PhotoLibrary } from '@/components/photo-library';
 import { Pagination } from '@/components/archive';
 export default async function Page({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   await editorSession();
-  const page = Math.max(1, Math.min(10000, Number((await searchParams).page) || 1));
+  const page = Math.max(1, Math.min(10000, Math.floor(Number((await searchParams).page)) || 1));
   const limit = 24;
   // Keep the outer ID qualified inside subqueries: Drizzle strips direct column
   // qualifiers in single-table SELECT fields.
@@ -29,7 +29,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
       `,
     })
     .from(media)
-    .orderBy(desc(media.createdAt))
+    .orderBy(desc(media.createdAt), desc(media.id))
     .limit(limit)
     .offset((page - 1) * limit);
   const [{ total }] = await db.select({ total: sql<number>`count(*)::int` }).from(media);

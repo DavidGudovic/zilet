@@ -2,10 +2,11 @@ import { readFile } from 'node:fs/promises';
 import { processImage } from '../src/lib/media-store';
 import { media } from '../src/db/schema';
 import { db } from '../src/db';
-import { authors, posts, revisions, user, placements } from '../src/db/schema';
+import { posts, revisions, user, placements } from '../src/db/schema';
 import { demoPosts } from '../src/lib/fixtures';
 import { eq } from 'drizzle-orm';
 import { searchText } from '../src/lib/publishing';
+import { insertOrResolveAuthor } from '../src/lib/author-service';
 
 export async function importContent(approved = false) {
   const artworkId = '6a5cd1e0-8425-40c2-9555-98d0c5000001';
@@ -33,8 +34,7 @@ export async function importContent(approved = false) {
         credit: 'Vilhelm Hammershøi · Cleveland Museum of Art · CC0',
       })
       .onConflictDoNothing();
-    const author = demoPosts[0].author;
-    await tx.insert(authors).values(author).onConflictDoNothing();
+    const { author } = await insertOrResolveAuthor(tx, demoPosts[0].author);
     for (const p of demoPosts) {
       const exists = await tx.select().from(posts).where(eq(posts.id, p.id));
       if (exists.length) continue;

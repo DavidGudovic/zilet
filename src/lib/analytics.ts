@@ -1,4 +1,6 @@
-import { getPost } from './data';
+import { db } from '@/db';
+import { posts, revisions } from '@/db/schema';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 
 type Metric = { name: string; views: number; averagePageSeconds?: number };
 
@@ -10,6 +12,8 @@ export type Analytics =
       visitors: number;
       visits: number;
       averagePageSeconds?: number;
+      previous?: { pageviews: number; visitors: number; visits: number };
+      updatedAt: string;
       popular: (Metric & { href: string })[];
       sources: Metric[];
       countries: Metric[];
@@ -31,7 +35,7 @@ function number(value: unknown) {
   )
     return undefined;
   const result = Number(candidate);
-  return Number.isFinite(result) ? result : undefined;
+  return Number.isFinite(result) && result >= 0 ? result : undefined;
 }
 
 function metrics(value: unknown, emptyName: string): Metric[] | undefined {
@@ -72,9 +76,12 @@ export async function analytics(days: number): Promise<Analytics> {
     const token = ((await login.json()) as { token?: unknown }).token;
     if (typeof token !== 'string' || !token) throw new Error('token');
 
+    const endAt = Date.now();
+    const period = (days === 30 ? 30 : 7) * 86400000;
+    const startAt = endAt - period;
     const params = new URLSearchParams({
-      startAt: String(Date.now() - days * 86400000),
-      endAt: String(Date.now()),
+      startAt: String(startAt),
+      endAt: String(endAt),
       limit: '10',
     });
     const get = async (path: string) => {
@@ -86,12 +93,17 @@ export async function analytics(days: number): Promise<Analytics> {
       if (!response.ok) throw new Error('service');
       return response.json() as Promise<unknown>;
     };
-    const [stats, paths, sources, countries, devices] = await Promise.all([
+    const previousParams = new URLSearchParams({
+      startAt: String(startAt - period),
+      endAt: String(startAt - 1),
+    });
+    const [stats, paths, sources, countries, devices, previousStats] = await Promise.all([
       get(`stats?${params}`),
-      get(`metrics/expanded?${params}&type=path`),
+      get(`metrics/expanded?${params}&type=path&search=%2Ftekst%2F`),
       get(`metrics/expanded?${params}&type=referrer`),
       get(`metrics/expanded?${params}&type=country`),
       get(`metrics/expanded?${params}&type=device`),
+      get(`stats?${previousParams}`).catch(() => undefined),
     ]);
     if (!stats || typeof stats !== 'object') throw new Error('stats');
     const summary = stats as Record<string, unknown>;
@@ -118,19 +130,49 @@ export async function analytics(days: number): Promise<Analytics> {
       throw new Error('shape');
 
     const articlePaths = pathMetrics.filter((row) => /^\/tekst\/[a-z0-9-]+$/.test(row.name));
-    const titles = new Map(
-      await Promise.all(
-        articlePaths.map(
-          async ({ name }) => [name, (await getPost(name.slice(7)))?.title] as const,
-        ),
-      ),
-    );
+    // Only the live title is needed here; avoid loading each article's full body,
+    // authors, account credits and media for the dashboard.
+    const titleRows = articlePaths.length
+      ? await db
+          .select({ slug: posts.slug, title: sql<string>`${revisions.content}->>'title'` })
+          .from(posts)
+          .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
+          .where(
+            and(
+              eq(posts.status, 'published'),
+              inArray(
+                posts.slug,
+                articlePaths.map((row) => row.name.slice(7)),
+              ),
+            ),
+          )
+      : [];
+    const titles = new Map(titleRows.map((row) => [`/tekst/${row.slug}`, row.title]));
+    const prior =
+      previousStats && typeof previousStats === 'object'
+        ? (previousStats as Record<string, unknown>)
+        : {};
+    const previousPageviews = number(prior.pageviews);
+    const previousVisitors = number(prior.visitors);
+    const previousVisits = number(prior.visits);
 
     return {
       available: true,
       pageviews,
       visitors,
       visits,
+      updatedAt: new Date(endAt).toISOString(),
+      ...(previousPageviews !== undefined &&
+      previousVisitors !== undefined &&
+      previousVisits !== undefined
+        ? {
+            previous: {
+              pageviews: previousPageviews,
+              visitors: previousVisitors,
+              visits: previousVisits,
+            },
+          }
+        : {}),
       averagePageSeconds: pageviews > bounces ? totalTime / (pageviews - bounces) : undefined,
       popular: articlePaths
         .map((row) => ({ ...row, href: row.name, name: titles.get(row.name) || row.name }))

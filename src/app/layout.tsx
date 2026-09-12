@@ -2,24 +2,22 @@ import { headers } from 'next/headers';
 import { requireUser } from '@/lib/security';
 import { AnalyticsTracker } from '@/components/analytics-tracker';
 import type { Metadata } from 'next';
+import { pageMetadata, siteDescription, siteUrl } from '@/lib/seo';
 import './fonts.css';
 import './globals.css';
 import './atmosphere.css';
 import './editorial-experience.css';
 import './editorial-flourish.css';
+import './responsive-content.css';
 import { PageAtmosphere } from '@/components/page-atmosphere';
 import { Header, Footer } from '@/components/header';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.APP_URL || 'http://localhost:3000'),
+  ...pageMetadata('Žilet — književnost, umjetnost i kultura', siteDescription, '/'),
+  metadataBase: new URL(siteUrl()),
   title: { default: 'Žilet — književnost, umjetnost i kultura', template: '%s — Žilet' },
-  description: 'Poezija, proza, književna kritika i umjetnost. Čitajte Žilet.',
-  openGraph: {
-    title: 'Žilet',
-    description: 'Časopis za književnost, umjetnost i kulturu',
-    images: [{ url: '/identity/social-preview.png', width: 1200, height: 630 }],
-  },
-  twitter: { card: 'summary_large_image', images: ['/identity/social-preview.png'] },
+  // Each public page supplies its own canonical; private routes must not inherit home.
+  alternates: undefined,
   icons: { icon: '/icon.svg' },
 };
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

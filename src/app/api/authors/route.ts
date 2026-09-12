@@ -1,7 +1,6 @@
 import { db } from '@/db';
-import { authors } from '@/db/schema';
 import { requireUser, assertOrigin, jsonBody, failure } from '@/lib/security';
-import { slugify } from '@/lib/publishing';
+import { findOrCreateAuthor } from '@/lib/author-service';
 import { z } from 'zod';
 export async function POST(req: Request) {
   try {
@@ -11,17 +10,8 @@ export async function POST(req: Request) {
       .object({ name: z.string().trim().min(1).max(120), bio: z.string().max(3000).default('') })
       .strict()
       .parse(await jsonBody(req, 20000));
-    const id = crypto.randomUUID();
-    const [author] = await db
-      .insert(authors)
-      .values({
-        id,
-        slug: `${slugify(input.name)}-${id.slice(0, 5)}`,
-        name: input.name,
-        bio: input.bio || null,
-      })
-      .returning();
-    return Response.json(author, { status: 201 });
+    const { author, created } = await findOrCreateAuthor(db, input.name, input.bio);
+    return Response.json(author, { status: created ? 201 : 200 });
   } catch (e) {
     return failure(e);
   }

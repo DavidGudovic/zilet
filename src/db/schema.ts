@@ -10,6 +10,7 @@ import {
   index,
 } from 'drizzle-orm/pg-core';
 import type { Body } from '@/lib/content';
+import { sql } from 'drizzle-orm';
 const time = (name: string) => timestamp(name, { withTimezone: true });
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -70,13 +71,23 @@ export const rateLimit = pgTable('rate_limit', {
   count: integer('count').notNull(),
   lastRequest: bigint('last_request', { mode: 'number' }).notNull(),
 });
-export const authors = pgTable('authors', {
-  id: text('id').primaryKey(),
-  slug: text('slug').notNull().unique(),
-  name: text('name').notNull(),
-  bio: text('bio'),
-  portraitId: text('portrait_id'),
-  isEditor: boolean('is_editor').notNull().default(false),
+export const authors = pgTable(
+  'authors',
+  {
+    id: text('id').primaryKey(),
+    slug: text('slug').notNull().unique(),
+    name: text('name').notNull(),
+    bio: text('bio'),
+    portraitId: text('portrait_id'),
+    isEditor: boolean('is_editor').notNull().default(false),
+  },
+  (t) => [uniqueIndex('authors_name_key_idx').on(sql`zilet_author_key(${t.name})`)],
+);
+export const authorRedirects = pgTable('author_redirects', {
+  slug: text('slug').primaryKey(),
+  authorId: text('author_id')
+    .notNull()
+    .references(() => authors.id, { onDelete: 'cascade' }),
 });
 export type ImageRef = {
   id: string;
@@ -213,4 +224,29 @@ export const submissions = pgTable(
     index('submission_queue_idx').on(t.status, t.createdAt),
     index('submission_user_idx').on(t.userId, t.createdAt),
   ],
+);
+
+export const submissionMessages = pgTable(
+  'submission_messages',
+  {
+    id: text('id').primaryKey(),
+    submissionId: text('submission_id')
+      .notNull()
+      .references(() => submissions.id, { onDelete: 'cascade' }),
+    actorId: text('actor_id')
+      .notNull()
+      .references(() => user.id),
+    recipientId: text('recipient_id')
+      .notNull()
+      .references(() => user.id),
+    kind: text('kind').$type<'question' | 'reply' | 'accepted' | 'rejected'>().notNull(),
+    body: text('body').notNull(),
+    deliveryStatus: text('delivery_status')
+      .$type<'pending' | 'sent' | 'failed' | 'unavailable'>()
+      .notNull()
+      .default('pending'),
+    sentAt: time('sent_at'),
+    createdAt: time('created_at').notNull().defaultNow(),
+  },
+  (t) => [index('submission_message_thread_idx').on(t.submissionId, t.createdAt)],
 );

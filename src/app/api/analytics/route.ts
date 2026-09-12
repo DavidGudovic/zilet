@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { assertOrigin, jsonBody } from '@/lib/security';
 import { getPost } from '@/lib/data';
 
-const trackedPath = /^\/$|^\/(tekst|rubrika|autor)\/[a-z0-9-]+$|^\/(autori|o-casopisu)$/;
+import { publicAnalyticsPath, analyticsReferrer } from '@/lib/analytics-privacy';
 
 export async function POST(req: Request) {
   if (!process.env.UMAMI_URL || !process.env.UMAMI_WEBSITE_ID)
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     assertOrigin(req);
     const input = z
       .object({
-        path: z.string().max(200).regex(trackedPath),
+        path: z.string().max(200).regex(publicAnalyticsPath),
         referrer: z.string().max(300),
         screen: z.string().regex(/^\d{1,5}x\d{1,5}$/),
         language: z.string().min(2).max(35),
@@ -20,19 +20,14 @@ export async function POST(req: Request) {
       })
       .strict()
       .parse(await jsonBody(req, 3000));
-    let referrer = '';
-    try {
-      if (input.referrer) referrer = new URL(input.referrer).origin;
-    } catch {
-      // Referrers are optional and only their origin is retained.
-    }
+    const appUrl = new URL(process.env.APP_URL || req.url);
+    const referrer = analyticsReferrer(input.referrer, appUrl.origin);
     let title = 'Žilet';
     if (input.path.startsWith('/tekst/')) {
       const post = await getPost(input.path.slice(7));
       if (!post) return new Response(null, { status: 204 });
       title = post.title;
     }
-    const appUrl = new URL(process.env.APP_URL || req.url);
     const realIp = process.env.TRUST_PROXY === 'true' ? req.headers.get('x-real-ip') : null;
     const upstream = await fetch(`${process.env.UMAMI_URL.replace(/\/$/, '')}/api/send`, {
       method: 'POST',

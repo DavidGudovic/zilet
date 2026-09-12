@@ -5,6 +5,7 @@ import { authors, media, posts, revisions, placements, user } from '../src/db/sc
 import { eq, sql as query } from 'drizzle-orm';
 import { processImage } from '../src/lib/media-store';
 import { revisionSchema, searchText } from '../src/lib/publishing';
+import { insertOrResolveAuthor } from '../src/lib/author-service';
 import bio from '../fixtures/savka-bio.json';
 import slike from '../fixtures/savka-slike.json';
 import nestajanja from '../fixtures/savka-nestajanja.json';
@@ -16,7 +17,7 @@ try {
   const origin = new URL(process.env.APP_URL || '');
   if (origin.origin !== 'https://zilet.me' && !['localhost', '127.0.0.1'].includes(origin.hostname))
     throw new Error('Neočekivana instalacija.');
-  const [actor] = await db.select().from(user).where(eq(user.email, 'editor1@zilet.me'));
+  const [actor] = await db.select().from(user).where(eq(user.email, 'savka@zilet.me'));
   if (!actor || actor.suspended || !['editor', 'maintainer'].includes(actor.role))
     throw new Error('Najprije kreirajte potvrđeni urednički nalog.');
   const [existingMedia] = await db.select().from(media).where(eq(media.id, artworkId));
@@ -25,25 +26,27 @@ try {
     : await processImage(await readFile('fixtures/breze.jpg'), artworkId);
   await db.transaction(async (tx) => {
     await tx.execute(query`select pg_advisory_xact_lock(90261003)`);
-    await tx
-      .insert(authors)
-      .values([
-        { id: 'savka-paradjina', slug: bio.slug, name: bio.name, bio: bio.bio, isEditor: true },
-        {
-          id: 'editor-dva',
-          slug: 'editor-dva',
-          name: 'Editor Dva',
-          bio: 'Član redakcije časopisa Žilet. Biografija je u pripremi.',
-          isEditor: true,
-        },
-        {
-          id: 'nadezda-petrovic',
-          slug: 'nadezda-petrovic',
-          name: 'Nadežda Petrović',
-          bio: 'Nadežda Petrović (1873–1915), slikarka. Na Žiletu predstavljamo njeno djelo „Breze”, dostupno u javnom dobru putem Wikimedia Commons.',
-        },
-      ])
-      .onConflictDoNothing();
+    const authorInputs = [
+      { id: 'savka-paradjina', slug: bio.slug, name: bio.name, bio: bio.bio, isEditor: true },
+      {
+        id: 'editor-dva',
+        slug: 'editor-dva',
+        name: 'Editor Dva',
+        bio: 'Član redakcije časopisa Žilet. Biografija je u pripremi.',
+        isEditor: true,
+      },
+      {
+        id: 'nadezda-petrovic',
+        slug: 'nadezda-petrovic',
+        name: 'Nadežda Petrović',
+        bio: 'Nadežda Petrović (1873–1915), slikarka. Na Žiletu predstavljamo njeno djelo „Breze”, dostupno u javnom dobru putem Wikimedia Commons.',
+      },
+    ];
+    const authorIds = new Map<string, string>();
+    for (const input of authorInputs) {
+      const { author } = await insertOrResolveAuthor(tx, input);
+      authorIds.set(input.id, author.id);
+    }
     if (stored)
       await tx
         .insert(media)
@@ -125,7 +128,7 @@ try {
     for (const { id, slug, ...raw } of entries) {
       const [existing] = await tx.select({ id: posts.id }).from(posts).where(eq(posts.id, id));
       if (existing) continue;
-      const content = revisionSchema.parse(raw);
+      const content = revisionSchema.parse({ ...raw, authorId: authorIds.get(raw.authorId) });
       const revisionId = crypto.randomUUID();
       const [author] = await tx.select().from(authors).where(eq(authors.id, content.authorId));
       await tx.insert(posts).values({

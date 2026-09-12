@@ -33,13 +33,15 @@ export default async function Page({
         </div>
         <label className="search-rubric">
           Rubrika
-          <select name="rubrika" defaultValue={q.rubrika || ''}>
+          <select name="rubrika" defaultValue={q.rubrika === 'price' ? 'proza' : q.rubrika || ''}>
             <option value="">Sve rubrike</option>
-            {rubrics.map(([s, l]) => (
-              <option key={s} value={s}>
-                {l}
-              </option>
-            ))}
+            {rubrics
+              .filter(([s]) => s !== 'price')
+              .map(([s, l]) => (
+                <option key={s} value={s}>
+                  {l}
+                </option>
+              ))}
           </select>
         </label>
       </form>

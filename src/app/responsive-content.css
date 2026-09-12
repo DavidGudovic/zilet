@@ -1,0 +1,61 @@
+/* Long authored URLs and titles must wrap inside their columns, including flex/grid
+   children. This changes visual wrapping only; copying still preserves source text. */
+:where(.homepage, .article, .archive-page, .information-page, .menu-sheet, .footer) {
+  overflow-wrap: anywhere;
+}
+
+:where(
+    .front-spread,
+    .front-art-feature > div,
+    .reading-groups,
+    .index-row,
+    .article-grid,
+    .poem-with-art,
+    .archive-entry,
+    .author-index,
+    .rubric-grid,
+    .browse-strip,
+    .browse-strip > div,
+    .section-rule,
+    .article-colophon,
+    .footer
+  )
+  > * {
+  min-width: 0;
+}
+
+.prose,
+.author-bio,
+.poetry,
+.artworks,
+.image-dialog {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.prose :where(ul, ol) {
+  padding-inline-start: 1.5em;
+}
+
+.rubric-grid a,
+.browse-strip a {
+  gap: 12px;
+}
+
+.rubric-grid a > span,
+.browse-strip a > span {
+  flex-shrink: 0;
+}
+
+.search-form :where(input, select) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 600px) {
+  .search-rubric select {
+    display: block;
+    width: 100%;
+    margin: 8px 0 0;
+  }
+}

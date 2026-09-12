@@ -2,8 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { MediaPicker } from './media-picker';
-import type { ImageRef } from '@/db/schema';
+import { MediaUploader } from './media-uploader';
 export function PhotoLibrary({
   items,
 }: {
@@ -18,7 +17,6 @@ export function PhotoLibrary({
 }) {
   const router = useRouter();
   useEffect(() => setLibraryItems(items), [items]);
-  const [selected, setSelected] = useState<ImageRef[]>([]);
   const [libraryItems, setLibraryItems] = useState(items);
   const [message, setMessage] = useState('');
   const [removing, setRemoving] = useState<string | null>(null);
@@ -45,11 +43,10 @@ export function PhotoLibrary({
   }
   return (
     <>
-      <MediaPicker
-        items={selected}
-        onChange={(next) => {
-          setSelected(next);
-          if (next.some((m) => !libraryItems.some((item) => item.id === m.id))) router.refresh();
+      <MediaUploader
+        onUploaded={() => {
+          router.replace('/redakcija/fotografije');
+          router.refresh();
         }}
       />
       <p className="hint">
@@ -69,6 +66,8 @@ export function PhotoLibrary({
               width={m.width}
               height={m.height}
               alt={m.filename}
+              loading="lazy"
+              decoding="async"
             />
             <figcaption>
               {m.filename} · {m.width} × {m.height}

@@ -15,10 +15,14 @@ function Profile({ author }: { author: Author }) {
         setBusy(true);
         setMessage('');
         try {
+          const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(saved));
+          const previousBioHash = Array.from(new Uint8Array(digest), (byte) =>
+            byte.toString(16).padStart(2, '0'),
+          ).join('');
           const response = await fetch(`/api/authors/${author.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bio, previousBio: saved }),
+            body: JSON.stringify({ bio, previousBioHash }),
           });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || 'Biografija nije sačuvana.');

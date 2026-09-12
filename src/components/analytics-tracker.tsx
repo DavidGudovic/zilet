@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 
-const publicPath = /^\/$|^\/(tekst|rubrika|autor)\/[a-z0-9-]+$|^\/(autori|o-casopisu)$/;
+import { publicAnalyticsPath, analyticsReferrer } from '@/lib/analytics-privacy';
 const cacheKey = 'zilet-umami-cache';
 
 export function AnalyticsTracker() {
@@ -12,17 +12,18 @@ export function AnalyticsTracker() {
 
   useEffect(() => {
     if (last.current === pathname) return;
+    const firstPage = last.current === '';
     last.current = pathname;
-    if (!publicPath.test(pathname)) return;
+    if (!publicAnalyticsPath.test(pathname)) return;
+    if (
+      navigator.doNotTrack === '1' ||
+      (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl
+    )
+      return;
 
     const send = async () => {
       try {
-        let referrer = '';
-        try {
-          referrer = document.referrer ? new URL(document.referrer).origin : '';
-        } catch {
-          // An invalid referrer must not stop a public pageview.
-        }
+        const referrer = firstPage ? analyticsReferrer(document.referrer, location.origin) : '';
         let cache = '';
         try {
           cache = sessionStorage.getItem(cacheKey) || '';
@@ -34,13 +35,14 @@ export function AnalyticsTracker() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             path: pathname,
-            referrer: referrer === location.origin ? '' : referrer,
+            referrer,
             screen: `${screen.width}x${screen.height}`,
             language: navigator.language,
             cache,
           }),
           keepalive: true,
         });
+        if (!response.ok || response.status === 204) return;
         const data = (await response.json()) as { cache?: unknown };
         if (typeof data.cache === 'string' && data.cache) {
           try {

@@ -11,6 +11,7 @@ type PostRow = {
   post: typeof posts.$inferSelect;
   content: RevisionContent;
   editorialNoteBy?: string | null;
+  revisionCreatedAt?: Date;
 };
 async function viewPosts(rows: PostRow[]): Promise<PostView[]> {
   if (!rows.length) return [];
@@ -38,7 +39,7 @@ async function viewPosts(rows: PostRow[]): Promise<PostView[]> {
     ['approved-content-import', 'fixture-system'].includes(id)
       ? 'Redakcija Žileta'
       : accountMap.get(id) || 'Redakcija Žileta';
-  return rows.map(({ post, content, editorialNoteBy }) => ({
+  return rows.map(({ post, content, editorialNoteBy, revisionCreatedAt }) => ({
     id: post.id,
     slug: post.slug,
     title: content.title,
@@ -51,6 +52,7 @@ async function viewPosts(rows: PostRow[]): Promise<PostView[]> {
     rubrics: content.rubrics,
     author: authorMap.get(content.authorId)!,
     publishedAt: (post.publishedAt || post.createdAt).toISOString(),
+    modifiedAt: revisionCreatedAt?.toISOString(),
     media: content.media.flatMap((ref) => {
       const m = imageMap.get(ref.id);
       return m ? [{ ...ref, url: `/media/${m.id}`, width: m.width, height: m.height }] : [];
@@ -122,7 +124,12 @@ export async function findPosts({
     .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
     .where(where);
   const rows = await db
-    .select({ post: posts, content: revisions.content, editorialNoteBy: revisions.editorialNoteBy })
+    .select({
+      post: posts,
+      content: revisions.content,
+      editorialNoteBy: revisions.editorialNoteBy,
+      revisionCreatedAt: revisions.createdAt,
+    })
     .from(posts)
     .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
     .where(where)
@@ -143,7 +150,12 @@ export async function getFrontPage() {
   const [recent, choices] = await Promise.all([getPosts(), getPlacements()]);
   if (isDemo()) return { posts: recent, choices };
   const selected = await db
-    .select({ post: posts, content: revisions.content, editorialNoteBy: revisions.editorialNoteBy })
+    .select({
+      post: posts,
+      content: revisions.content,
+      editorialNoteBy: revisions.editorialNoteBy,
+      revisionCreatedAt: revisions.createdAt,
+    })
     .from(placements)
     .innerJoin(posts, eq(placements.postId, posts.id))
     .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
@@ -154,11 +166,16 @@ export async function getFrontPage() {
 export const getPost = cache(async (slug: string) => {
   if (isDemo()) return demoPosts.find((p) => p.slug === slug);
   const [row] = await db
-    .select({ post: posts, content: revisions.content, editorialNoteBy: revisions.editorialNoteBy })
+    .select({
+      post: posts,
+      content: revisions.content,
+      editorialNoteBy: revisions.editorialNoteBy,
+      revisionCreatedAt: revisions.createdAt,
+    })
     .from(posts)
     .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
     .where(and(eq(posts.slug, slug), eq(posts.status, 'published')));
-  return row ? viewPost(row.post, row.content, row.editorialNoteBy) : undefined;
+  return row ? (await viewPosts([row]))[0] : undefined;
 });
 export async function getRedirect(slug: string) {
   if (isDemo()) return;

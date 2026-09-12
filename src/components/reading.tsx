@@ -1,42 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
-import type { Body, MediaView, RichNode } from '@/lib/content';
-import { safeHref, mediaSrcSet } from '@/lib/content';
-export function RichText({ node }: { node: RichNode }) {
-  if (node.type === 'text') {
-    let el: React.ReactNode = node.text;
-    for (const [i, m] of (node.marks || []).entries()) {
-      if (m.type === 'bold') el = <strong key={i}>{el}</strong>;
-      if (m.type === 'italic') el = <em key={i}>{el}</em>;
-      if (m.type === 'link' && safeHref(m.attrs?.href || ''))
-        el = (
-          <a key={i} href={safeHref(m.attrs!.href)} rel="noopener noreferrer">
-            {el}
-          </a>
-        );
-    }
-    return <>{el}</>;
-  }
-  const children = node.content?.map((n, i) => <RichText key={i} node={n} />);
-  switch (node.type) {
-    case 'paragraph':
-      return <p>{children || <br />}</p>;
-    case 'heading':
-      return node.attrs?.level === 3 ? <h3>{children}</h3> : <h2>{children}</h2>;
-    case 'blockquote':
-      return <blockquote>{children}</blockquote>;
-    case 'hardBreak':
-      return <br />;
-    case 'bulletList':
-      return <ul>{children}</ul>;
-    case 'orderedList':
-      return <ol start={node.attrs?.start || 1}>{children}</ol>;
-    case 'listItem':
-      return <li>{children}</li>;
-    default:
-      return <>{children}</>;
-  }
-}
+import type { Body, MediaView } from '@/lib/content';
+import { mediaSrcSet } from '@/lib/content';
 export function VerseText({ body }: { body: Extract<Body, { kind: 'poem' }> }) {
   const boundaries = [
     ...new Set([0, body.text.length, ...body.emphasis.flatMap((m) => [m.from, m.to])]),
@@ -121,8 +86,9 @@ export function Share() {
 export function Artwork({ items }: { items: MediaView[] }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState(0);
+  const [viewerOpen, setViewerOpen] = useState(false);
   if (!items.length) return null;
-  const current = items[index];
+  const current = items[index] || items[0];
   return (
     <>
       <div className="artworks">
@@ -133,6 +99,7 @@ export function Artwork({ items }: { items: MediaView[] }) {
               aria-label={`Otvori cijelu sliku: ${m.alt}`}
               onClick={() => {
                 setIndex(i);
+                setViewerOpen(true);
                 dialog.current?.showModal();
               }}
             >
@@ -144,6 +111,7 @@ export function Artwork({ items }: { items: MediaView[] }) {
                 height={m.height}
                 alt={m.alt}
                 loading="lazy"
+                decoding="async"
               />
               <span aria-hidden="true">↗</span>
             </button>
@@ -158,6 +126,7 @@ export function Artwork({ items }: { items: MediaView[] }) {
         ref={dialog}
         className="image-dialog"
         aria-label="Pregled slike"
+        onClose={() => setViewerOpen(false)}
         onClick={(e) => {
           if (e.target === dialog.current) dialog.current.close();
         }}
@@ -170,7 +139,15 @@ export function Artwork({ items }: { items: MediaView[] }) {
             Zatvori ×
           </button>
         </div>
-        <img src={current.url} width={current.width} height={current.height} alt={current.alt} />
+        {viewerOpen && (
+          <img
+            src={current.url}
+            width={current.width}
+            height={current.height}
+            alt={current.alt}
+            decoding="async"
+          />
+        )}
         <p>
           {current.caption} — {current.credit}
         </p>

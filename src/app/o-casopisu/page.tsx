@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { getAuthors } from '@/lib/data';
+import { pageMetadata } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'O časopisu', alternates: { canonical: '/o-casopisu' } };
+export const metadata = pageMetadata(
+  'O časopisu',
+  'Žilet je časopis za književnost, umjetnost i kulturu. Upoznajte redakciju i naše autore.',
+  '/o-casopisu',
+);
 export default async function Page() {
   const editors = (await getAuthors()).filter((a) => a.isEditor);
   return (

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { dateLabel, rubricLabel, type PostView } from '@/lib/content';
-import { Poem, RichText, Artwork, Share } from './reading';
+import { Poem, Artwork, Share } from './reading';
+import { RichText } from './rich-text';
 export function Article({
   post,
   preview = false,

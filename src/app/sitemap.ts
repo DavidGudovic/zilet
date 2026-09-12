@@ -4,9 +4,10 @@ import { posts, revisions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { rubrics } from '@/lib/content';
 import { getAuthors } from '@/lib/data';
+import { siteUrl } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.APP_URL || 'http://localhost:3000';
+  const base = siteUrl().replace(/\/$/, '');
   const published = await db
     .select({ slug: posts.slug, date: revisions.createdAt })
     .from(posts)
@@ -16,6 +17,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: base },
     { url: `${base}/o-casopisu` },
+    { url: `${base}/autori` },
+    { url: `${base}/pravila` },
     { url: `${base}/rubrika/umjetnost` },
     ...rubrics.filter(([s]) => s !== 'price').map(([s]) => ({ url: `${base}/rubrika/${s}` })),
     ...names.map((a) => ({ url: `${base}/autor/${a.slug}` })),

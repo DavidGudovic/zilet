@@ -1,10 +1,9 @@
 import { rm } from 'node:fs/promises';
-import path from 'node:path';
 import { db } from '@/db';
 import { media } from '@/db/schema';
 import { desc } from 'drizzle-orm';
 import { requireUser, assertOrigin, failure, takeLimit, HttpError } from '@/lib/security';
-import { processImage, mediaRoot } from '@/lib/media-store';
+import { processImage, mediaDirectory } from '@/lib/media-store';
 export async function GET(req: Request) {
   try {
     await requireUser(req.headers, 'editor');
@@ -20,7 +19,7 @@ export async function GET(req: Request) {
         createdAt: media.createdAt,
       })
       .from(media)
-      .orderBy(desc(media.createdAt))
+      .orderBy(desc(media.createdAt), desc(media.id))
       .limit(100);
     return Response.json({ items }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (e) {
@@ -72,7 +71,7 @@ export async function POST(req: Request) {
     );
   } catch (e) {
     if (pendingId)
-      await rm(path.join(mediaRoot(), pendingId), { recursive: true, force: true }).catch(() => {});
+      await rm(mediaDirectory(pendingId), { recursive: true, force: true }).catch(() => {});
     return failure(e);
   }
 }

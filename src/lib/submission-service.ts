@@ -1,9 +1,11 @@
 import { db } from '@/db';
-import { authors, media, posts, revisions, submissions } from '@/db/schema';
+import { media, posts, revisions, submissions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { HttpError } from './security';
 import { submissionBody } from './submission-content';
 import { revisionSchema, slugify } from './publishing';
+import { findOrCreateAuthor } from './author-service';
+import { queueSubmissionMessage } from './submission-correspondence';
 export async function reviewSubmission(
   id: string,
   actorId: string,
@@ -26,15 +28,19 @@ export async function reviewSubmission(
         .update(submissions)
         .set({ status: 'rejected', reviewNote: note, reviewedBy: actorId, version: version + 1 })
         .where(eq(submissions.id, id));
-      return { status: 'rejected' };
+      const messageId = await queueSubmissionMessage(
+        tx,
+        id,
+        actorId,
+        item.userId,
+        'rejected',
+        note,
+      );
+      return { status: 'rejected', messageId, version: version + 1 };
     }
     if (!note.trim()) throw new HttpError(400, 'Napišite bilješku uz rad prije prihvatanja.');
-    const authorId = crypto.randomUUID();
-    await tx.insert(authors).values({
-      id: authorId,
-      slug: `${slugify(item.authorName)}-${authorId.slice(0, 8)}`,
-      name: item.authorName,
-    });
+    const { author } = await findOrCreateAuthor(tx, item.authorName);
+    const authorId = author.id;
     const body = submissionBody(item.text, item.rubric);
     const content = revisionSchema.parse({
       title: item.title,
@@ -83,6 +89,7 @@ export async function reviewSubmission(
         version: version + 1,
       })
       .where(eq(submissions.id, id));
-    return { status: 'accepted', postId };
+    const messageId = await queueSubmissionMessage(tx, id, actorId, item.userId, 'accepted', '');
+    return { status: 'accepted', postId, messageId, version: version + 1 };
   });
 }

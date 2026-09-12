@@ -17,6 +17,24 @@ function duration(seconds: number) {
   return remaining ? `${minutes} min ${remaining} s` : `${minutes} min`;
 }
 
+function Comparison({ current, previous }: { current: number; previous?: number }) {
+  if (previous === undefined)
+    return <small className={styles.change}>Poređenje nije dostupno</small>;
+  if (previous === 0)
+    return (
+      <small className={styles.change}>
+        {current ? 'Prethodni period: 0' : 'Bez promjene · ranije 0'}
+      </small>
+    );
+  const percent = Math.round(((current - previous) / previous) * 100);
+  return (
+    <small className={styles.change}>
+      {percent > 0 ? '+' : ''}
+      {percent}% · ranije {number(previous)}
+    </small>
+  );
+}
+
 function country(value: string) {
   try {
     return /^[A-Z]{2}$/.test(value) ? countryNames.of(value) || value : value;
@@ -29,10 +47,12 @@ function Breakdown({
   title,
   rows,
   rename = (value) => value,
+  total,
 }: {
   title: string;
   rows: { name: string; views: number }[];
   rename?: (value: string) => string;
+  total: number;
 }) {
   const headingId = `${title.replaceAll(' ', '-')}-heading`;
   return (
@@ -43,7 +63,10 @@ function Breakdown({
           {rows.map((row) => (
             <li key={row.name}>
               <span>{rename(row.name)}</span>
-              <strong>{number(row.views)}</strong>
+              <strong>
+                {number(row.views)}{' '}
+                <small>· {total ? Math.round((row.views / total) * 100) : 0}%</small>
+              </strong>
             </li>
           ))}
         </ol>
@@ -88,18 +111,44 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ d
             Pregled za posljednjih {days} dana. Brojevi se prikupljaju bez kolačića i služe za
             urednički uvid, a ne za prepoznavanje čitalaca.
           </p>
+          <div className={styles.updated}>
+            <span>
+              Osvježeno:{' '}
+              {new Intl.DateTimeFormat('sr-Latn-ME', {
+                dateStyle: 'short',
+                timeStyle: 'short',
+                timeZone: 'Europe/Podgorica',
+              }).format(new Date(data.updatedAt))}{' '}
+              (Crna Gora)
+            </span>
+            <form>
+              <input type="hidden" name="dani" value={days} />
+              <button type="submit" className="text-button">
+                Osvježi podatke ↻
+              </button>
+            </form>
+          </div>
           <dl className={styles.summary}>
             <div>
               <dt>Prikazi</dt>
-              <dd>{number(data.pageviews)}</dd>
+              <dd>
+                {number(data.pageviews)}
+                <Comparison current={data.pageviews} previous={data.previous?.pageviews} />
+              </dd>
             </div>
             <div>
               <dt>Posjetioci</dt>
-              <dd>{number(data.visitors)}</dd>
+              <dd>
+                {number(data.visitors)}
+                <Comparison current={data.visitors} previous={data.previous?.visitors} />
+              </dd>
             </div>
             <div>
               <dt>Posjete</dt>
-              <dd>{number(data.visits)}</dd>
+              <dd>
+                {number(data.visits)}
+                <Comparison current={data.visits} previous={data.previous?.visits} />
+              </dd>
             </div>
             <div>
               <dt>Prosječno trajanje stranice</dt>
@@ -111,7 +160,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ d
           <p className={styles.intro}>
             Prikazi broje otvaranja stranica, uključujući ponovna. Posjetioci su procjena broja
             različitih čitalaca; jedan čitalac može doći više puta i napraviti više posjeta. Uz
-            izvore, zemlje i uređaje prikazan je broj otvaranja stranica.
+            izvore, zemlje i uređaje prikazani su broj otvaranja i udio u svim prikazima. Promjena
+            se poredi sa prethodnih {days} dana iste dužine.
           </p>
           <section className={styles.reading} aria-labelledby="reading-heading">
             <div>
@@ -137,11 +187,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ d
             )}
           </section>
           <div className={styles.breakdowns}>
-            <Breakdown title="Izvori posjeta" rows={data.sources} />
-            <Breakdown title="Zemlje" rows={data.countries} rename={country} />
+            <Breakdown title="Izvori posjeta" rows={data.sources} total={data.pageviews} />
+            <Breakdown
+              title="Zemlje"
+              rows={data.countries}
+              rename={country}
+              total={data.pageviews}
+            />
             <Breakdown
               title="Uređaji"
               rows={data.devices}
+              total={data.pageviews}
               rename={(name) =>
                 ({ mobile: 'Telefon', laptop: 'Računar', desktop: 'Računar', tablet: 'Tablet' })[
                   name as 'mobile' | 'laptop' | 'desktop' | 'tablet'

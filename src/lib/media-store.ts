@@ -4,12 +4,18 @@ import path from 'node:path';
 import { HttpError } from './security';
 export const mediaRoot = () =>
   path.resolve(/* turbopackIgnore: true */ process.env.MEDIA_DIR || 'media');
+export function mediaDirectory(id: string) {
+  if (!/^[a-f0-9-]{36}$/.test(id)) throw new HttpError(404, 'Fotografija nije pronađena.');
+  // Uploaded files live in the runtime volume, never in the deployment bundle.
+  return path.join(/* turbopackIgnore: true */ mediaRoot(), id);
+}
 export function storagePath(key: string) {
   if (!/^[a-f0-9-]+\/(original|display|small)\.(jpg|webp)$/.test(key))
     throw new HttpError(400, 'Neispravna putanja.');
   return path.join(/* turbopackIgnore: true */ mediaRoot(), key);
 }
 export async function processImage(bytes: Buffer, id: string) {
+  const directory = mediaDirectory(id);
   if (bytes.length > 12 * 1024 * 1024)
     throw new HttpError(413, 'Fotografija može imati najviše 12 MB.');
   const image = sharp(bytes, { limitInputPixels: 40000000, animated: false, failOn: 'error' });
@@ -37,7 +43,7 @@ export async function processImage(bytes: Buffer, id: string) {
     .resize({ width: 640, height: 640, fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 80 })
     .toBuffer();
-  await mkdir(path.join(mediaRoot(), id), { recursive: true });
+  await mkdir(directory, { recursive: true });
   try {
     const writes = await Promise.allSettled([
       writeFile(storagePath(originalPath), original),
@@ -47,7 +53,7 @@ export async function processImage(bytes: Buffer, id: string) {
     const failed = writes.find((result) => result.status === 'rejected');
     if (failed?.status === 'rejected') throw failed.reason;
   } catch (error) {
-    await rm(path.join(mediaRoot(), id), { recursive: true, force: true }).catch(() => {});
+    await rm(directory, { recursive: true, force: true }).catch(() => {});
     throw error;
   }
   return {

@@ -6,6 +6,7 @@ export const rubrics = [
   ['eseji', 'Eseji'],
   ['knjizevna-kritika', 'Književna kritika'],
   ['novosti', 'Novosti'],
+  ['zanimljivosti-o-poznatim-licnostima', 'Zanimljivosti o poznatim ličnostima'],
   ['zabava', 'Zabava'],
   ['slikarstvo', 'Slikarstvo'],
   ['muzika', 'Muzika'],
@@ -176,6 +177,7 @@ export type PostView = {
   rubrics: string[];
   author: Author;
   publishedAt: string;
+  modifiedAt?: string;
   media: MediaView[];
   commentsOpen: boolean;
   version: number;

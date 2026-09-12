@@ -1,5 +1,6 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
+import { MediaUploader } from './media-uploader';
 import { SelectField } from './select-field';
 import type { ImageRef } from '@/db/schema';
 export function MediaPicker({
@@ -9,8 +10,6 @@ export function MediaPicker({
   items: ImageRef[];
   onChange: (items: ImageRef[]) => void;
 }) {
-  const input = useRef<HTMLInputElement>(null);
-  const [progress, setProgress] = useState<number | null>(null);
   const [message, setMessage] = useState('');
   const [library, setLibrary] = useState<
     { id: string; filename: string; alt: string; caption: string; credit: string }[] | null
@@ -31,82 +30,29 @@ export function MediaPicker({
     ]);
     setLibrary(null);
   }
-  function upload(file?: File) {
-    if (!file) return;
-    setMessage('');
-    if (file.size > 12 * 1024 * 1024) {
-      setMessage('Fotografija može imati najviše 12 MB.');
-      return;
-    }
-    const form = new FormData();
-    form.set('file', file);
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/media');
-    xhr.upload.onprogress = (e) =>
-      setProgress(e.lengthComputable ? Math.round((e.loaded / e.total) * 100) : 0);
-    xhr.onerror = () => {
-      setMessage('Veza je prekinuta. Pokušajte ponovo.');
-      setProgress(null);
-    };
-    xhr.onload = () => {
-      setProgress(null);
-      try {
-        const result = JSON.parse(xhr.responseText);
-        if (xhr.status >= 400) setMessage(result.error);
-        else add(result);
-      } catch {
-        setMessage('Fotografija nije sačuvana.');
-      }
-    };
-    setProgress(0);
-    xhr.send(form);
-  }
   return (
     <div className="media-picker">
-      <div
-        className="upload-zone"
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault();
-          upload(e.dataTransfer.files[0]);
-        }}
-      >
-        <p>Fotografija je izbor, ne obaveza.</p>
-        <div>
-          <button
-            type="button"
-            className="button secondary"
-            onClick={() => input.current?.click()}
-            disabled={progress !== null}
-          >
-            Dodaj fotografiju ↑
-          </button>
-          <button
-            type="button"
-            onClick={async () => {
+      <MediaUploader onUploaded={add}>
+        <button
+          type="button"
+          onClick={async () => {
+            try {
               const r = await fetch('/api/media');
-              if (r.ok) setLibrary((await r.json()).items);
-              else setMessage('Fotografije trenutno nijesu dostupne.');
-            }}
-          >
-            Iz biblioteke
-          </button>
-        </div>
-        <span className="hint">JPG, PNG ili WebP · do 12 MB. Možete prevući fajl ovdje.</span>
-        <input
-          ref={input}
-          hidden
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={(e) => upload(e.target.files?.[0])}
-        />
-        {progress !== null && <p role="status">Slanje fotografije… {progress}%</p>}
-        {message && (
-          <p className="form-error" role="alert">
-            {message}
-          </p>
-        )}
-      </div>
+              if (!r.ok) throw new Error();
+              setLibrary((await r.json()).items);
+            } catch {
+              setMessage('Fotografije trenutno nijesu dostupne.');
+            }
+          }}
+        >
+          Iz biblioteke
+        </button>
+      </MediaUploader>
+      {message && (
+        <p className="form-error" role="alert">
+          {message}
+        </p>
+      )}
       {library && (
         <div className="media-library">
           <button type="button" onClick={() => setLibrary(null)}>

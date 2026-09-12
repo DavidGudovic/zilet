@@ -33,6 +33,8 @@ export function ArchiveList({ items }: { items: PostView[] }) {
                 width={p.media[0].width}
                 height={p.media[0].height}
                 alt=""
+                loading="lazy"
+                decoding="async"
               />
             </Link>
           )}

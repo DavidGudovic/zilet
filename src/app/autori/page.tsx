@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { getAuthors } from '@/lib/data';
+import { pageMetadata } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Autori' };
+export const metadata = pageMetadata(
+  'Autori',
+  'Autori Žileta. Otkrijte poeziju, prozu, kritiku i priloge naših saradnika.',
+  '/autori',
+);
 export default async function Page() {
   const authors = await getAuthors();
   return (

@@ -83,3 +83,28 @@ the combined `COMPOSE_FILE` stops both while preserving their volumes.
 The publication backup script does not back up Umami. Keep a separate backup and
 retention policy for `analytics_database`; do not reuse the content database or
 its credentials. No production service is started by these documentation changes.
+
+
+## Editorial reporting and collection accuracy
+
+The dashboard compares the selected rolling seven/thirty-day window with the
+immediately preceding window of the same length. A zero previous count is shown
+without an invented percentage increase. Comparison failure leaves the current
+period available. The refresh time uses Europe/Podgorica; the refresh control
+requests the page again. Breakdown percentages use all pageviews as their denominator,
+so a list of the ten largest sources or countries need not add up to 100%.
+
+Popular articles are filtered by `/tekst/` at Umami before applying the ten-row
+limit, so homepage and author-page traffic cannot crowd them out. Titles come
+from published revisions in one lightweight database query. Historical paths
+without a current published title remain visible as their paths.
+
+Only the first page of a document reports its external entry referrer; client
+navigation does not attribute every subsequent page to that external source.
+The same allowlist and HTTP-origin sanitizer run in the browser and the proxy.
+The browser respects Do Not Track and Global Privacy Control signals. Private
+routes, queries, fragments, credentials and non-HTTP referrers are excluded.
+
+The filtered ranking uses Umami 3.3.1's supported `search` parameter in the
+[expanded metrics route](https://github.com/umami-software/umami/blob/v3.3.1/src/app/api/websites/%5BwebsiteId%5D/metrics/expanded/route.ts).
+The existing pinned Umami image is unchanged.

@@ -46,17 +46,39 @@ async function sitemap() {
   assert.equal(new Set(urls).size, urls.length);
   assert.ok(!urls.some((u) => u.includes('/rubrika/price')));
   assert.ok(urls.includes(base + '/rubrika/umjetnost'));
+  assert.ok(urls.includes(base + '/rubrika/zanimljivosti-o-poznatim-licnostima'));
+  assert.ok(urls.includes(base + '/autori'));
   return xml;
 }
 assert.ok(!(await sitemap()).includes('/tekst/' + post.slug));
 let current = await call(`/api/posts/${post.id}/publish`, 'POST', { version: post.version });
 const published = await sitemap();
 assert.ok(published.includes('/tekst/' + post.slug));
+async function publicArticle() {
+  const response = await fetch(base + '/tekst/' + post.slug, {
+    headers: { 'User-Agent': 'Twitterbot' },
+  });
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.ok(html.includes(`property="og:url" content="${base}/tekst/${post.slug}"`));
+  assert.ok(html.includes('property="og:description" content="Riječi na papiru."'));
+  assert.ok(html.includes('name="twitter:description" content="Riječi na papiru."'));
+  const json = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)![1]);
+  assert.equal(json.author.url, base + '/autor/' + author.slug);
+  assert.equal(json.mainEntityOfPage, base + '/tekst/' + post.slug);
+  return json;
+}
+const liveSchema = await publicArticle();
 current = await call('/api/posts/' + post.id, 'PUT', {
   version: current.version,
   content: { ...content, title: 'Privatni nacrt' },
 });
 assert.equal(await sitemap(), published, 'Autosave must not change public sitemap lastModified');
+assert.deepEqual(
+  await publicArticle(),
+  liveSchema,
+  'Autosave must not change public article metadata',
+);
 await call(`/api/posts/${post.id}/unpublish`, 'POST', { version: current.version });
 assert.ok(!(await sitemap()).includes('/tekst/' + post.slug));
 await call('/api/posts/' + post.id, 'DELETE', { version: current.version + 1 });

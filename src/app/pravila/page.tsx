@@ -1,4 +1,9 @@
-export const metadata = { title: 'Pravila i privatnost' };
+import { pageMetadata } from '@/lib/seo';
+export const metadata = pageMetadata(
+  'Pravila i privatnost',
+  'Pravila čitanja, komentarisanja i slanja radova i informacije o privatnosti u Žiletu.',
+  '/pravila',
+);
 export default function Page() {
   return (
     <article className="wrap information-page">

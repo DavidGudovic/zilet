@@ -6,6 +6,8 @@ import { media, submissions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { editorSession } from '@/lib/editor-session';
 import { dateLabel, rubricLabel } from '@/lib/content';
+import { SubmissionConversation } from '@/components/submission-conversation';
+import { getSubmissionMessages } from '@/lib/submission-correspondence';
 import { SubmissionReview } from '@/components/submission-review';
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   await editorSession();
@@ -15,6 +17,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     .where(eq(submissions.id, (await params).id));
   if (!s) notFound();
   const [photo] = s.mediaId ? await db.select().from(media).where(eq(media.id, s.mediaId)) : [];
+  const messages = await getSubmissionMessages(s.id);
   return (
     <article className="submission-review">
       <Link href="/redakcija/prilozi#radni-prostor">← Prilozi čitalaca</Link>
@@ -40,12 +43,19 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           <figcaption>{photo.credit}</figcaption>
         </figure>
       )}
+      <SubmissionConversation
+        id={s.id}
+        version={s.version}
+        pending={s.status === 'pending'}
+        editor
+        messages={messages.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }))}
+      />
       {s.status === 'pending' ? (
         <SubmissionReview id={s.id} version={s.version} />
       ) : (
         <section className="notice">
           <p>{s.status === 'accepted' ? 'Prilog je prihvaćen.' : 'Prilog nije izabran.'}</p>
-          {s.reviewNote && <p>{s.reviewNote}</p>}
+          {s.reviewNote && !messages.some((m) => m.kind === 'rejected') && <p>{s.reviewNote}</p>}
           {s.postId && (
             <Link href={`/redakcija/tekst/${s.postId}#radni-prostor`}>Otvori nacrt / objavu ↗</Link>
           )}

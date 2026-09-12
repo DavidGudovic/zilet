@@ -2,6 +2,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import { rubrics, rubricLabel } from '@/lib/content';
 import { findPosts } from '@/lib/data';
+import { pageMetadata } from '@/lib/seo';
 import { InkLines } from '@/components/ink-lines';
 import { ArchiveList, Pagination } from '@/components/archive';
 export const dynamic = 'force-dynamic';
@@ -18,9 +19,11 @@ export async function generateMetadata({
   const page = Math.max(1, Math.min(10000, Math.floor(Number(q.page)) || 1));
   const title = slug === 'umjetnost' ? 'Umjetnost' : rubricLabel(slug);
   return {
-    title: page > 1 ? `${title} — stranica ${page}` : title,
-    description: `${title} u Žiletu. Čitajte objavljene radove i otkrijte autore.`,
-    alternates: { canonical: `/rubrika/${slug}${page > 1 ? `?page=${page}` : ''}` },
+    ...pageMetadata(
+      page > 1 ? `${title} — stranica ${page}` : title,
+      `${title} u Žiletu. Čitajte objavljene radove i otkrijte autore.`,
+      `/rubrika/${slug}${page > 1 ? `?page=${page}` : ''}`,
+    ),
     ...(q.sort === 'oldest' ? { robots: { index: false, follow: true } } : {}),
   };
 }

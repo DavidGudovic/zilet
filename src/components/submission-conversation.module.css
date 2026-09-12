@@ -1,0 +1,40 @@
+.thread {
+  margin: 2rem 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.messages {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+.message {
+  border-left: 3px solid var(--forest, #173a2b);
+  background: #f6f2e9;
+  margin: 1rem 0;
+  padding: 1rem;
+}
+.body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0.75rem 0;
+}
+.meta {
+  font-size: 0.85rem;
+  color: #626359;
+  margin: 0;
+}
+.form {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.form button {
+  justify-self: start;
+}

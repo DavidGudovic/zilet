@@ -5,6 +5,7 @@ import { deleteUnusedMedia } from '@/lib/storage-cleanup';
 import { HttpError } from '@/lib/security';
 import { z } from 'zod';
 import { requireUser, assertOrigin, failure, jsonBody } from '@/lib/security';
+import { attemptSubmissionDelivery } from '@/lib/submission-correspondence';
 import { reviewSubmission } from '@/lib/submission-service';
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -18,8 +19,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       })
       .strict()
       .parse(await jsonBody(req, 20000));
+    const result = await reviewSubmission(
+      (await params).id,
+      u.id,
+      body.version,
+      body.action,
+      body.note,
+    );
+    const deliveryStatus = await attemptSubmissionDelivery(result.messageId);
     return Response.json(
-      await reviewSubmission((await params).id, u.id, body.version, body.action, body.note),
+      { ...result, deliveryStatus },
       { headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (e) {
