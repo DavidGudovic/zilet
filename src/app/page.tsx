@@ -1,11 +1,17 @@
 import Link from 'next/link';
-import { getFrontPage } from '@/lib/data';
+import { getFrontPage, getAuthors } from '@/lib/data';
 import { InkLines } from '@/components/ink-lines';
 import { bodyText, rubricLabel, mediaSrcSet } from '@/lib/content';
-export const metadata = { alternates: { canonical: '/' } };
+import { pageMetadata, siteTitle, siteDescription, absoluteUrl, publisherEntity } from '@/lib/seo';
+import { StructuredData } from '@/components/structured-data';
+export const metadata = pageMetadata(siteTitle, siteDescription, '/');
 export const dynamic = 'force-dynamic';
 export default async function Home() {
-  const { posts, choices: placements } = await getFrontPage();
+  const [{ posts, choices: placements }, authors] = await Promise.all([
+    getFrontPage(),
+    getAuthors(),
+  ]);
+  const editors = authors.filter((author) => author.isEditor);
   const placed = (slot: string) =>
     posts.find((p) => p.id === placements.find((x) => x.slot === slot)?.postId);
   const lead = placed('lead') || posts.find((p) => p.type === 'prose') || posts[0];
@@ -23,6 +29,44 @@ export default async function Home() {
     .slice(0, 8);
   return (
     <div className="wrap homepage">
+      <StructuredData
+        value={{
+          '@context': 'https://schema.org',
+          '@graph': [
+            publisherEntity(),
+            {
+              '@type': 'WebSite',
+              '@id': absoluteUrl('/#sajt'),
+              name: 'Žilet',
+              alternateName: 'Zilet',
+              url: absoluteUrl('/'),
+              description: siteDescription,
+              publisher: { '@id': absoluteUrl('/#izdavac') },
+              inLanguage: 'cnr-Latn',
+            },
+          ],
+        }}
+      />
+      <header className="publication-intro">
+        <h1>Poezija, književnost i kultura</h1>
+        <p>
+          Žilet je časopis za <Link href="/rubrika/poezija">poeziju</Link>,{' '}
+          <Link href="/rubrika/proza">prozu</Link>,{' '}
+          <Link href="/rubrika/eseji">eseje i književnu kritiku</Link>,{' '}
+          <Link href="/rubrika/umjetnost">umjetnost</Link> i glasove čitalaca širom regiona.
+        </p>
+        {editors.length > 0 && (
+          <p className="publication-editors">
+            Redakcija:{' '}
+            {editors.map((author, index) => (
+              <span key={author.id}>
+                {index > 0 && ' · '}
+                <Link href={`/autor/${author.slug}`}>{author.name}</Link>
+              </span>
+            ))}
+          </p>
+        )}
+      </header>
       <div className="section-rule">
         <span>U fokusu</span>
         <span>Žilet / izbor tekstova</span>
@@ -33,10 +77,12 @@ export default async function Home() {
             <Link href={`/rubrika/${lead.rubrics[0]}`} className="eyebrow">
               {rubricLabel(lead.rubrics[0])}
             </Link>
-            <h1>
+            <h2>
               <Link href={`/tekst/${lead.slug}`}>{lead.title}</Link>
-            </h1>
-            <p className="lead-byline">{lead.author.name}</p>
+            </h2>
+            <p className="lead-byline">
+              <Link href={`/autor/${lead.author.slug}`}>{lead.author.name}</Link>
+            </p>
             <p className="lead-excerpt">
               {lead.intro ||
                 bodyText(lead.body).split('\n\n')[0].split('. ').slice(0, 2).join('. ') + '.'}
@@ -72,7 +118,9 @@ export default async function Home() {
               <h2>
                 <Link href={`/tekst/${poem.slug}`}>{poem.title}</Link>
               </h2>
-              <p className="lead-byline">{poem.author.name}</p>
+              <p className="lead-byline">
+                <Link href={`/autor/${poem.author.slug}`}>{poem.author.name}</Link>
+              </p>
               <div className="poem-excerpt">
                 {bodyText(poem.body).split('\n\n').slice(0, 8).join('\n\n')}
               </div>
@@ -90,7 +138,7 @@ export default async function Home() {
         </div>
       ) : (
         <section className="empty">
-          <h1>Žilet</h1>
+          <h2>Žilet</h2>
           <p>Prvi tekstovi su u pripremi.</p>
           <Link href="/o-casopisu">O časopisu ↗</Link>
         </section>
@@ -127,7 +175,9 @@ export default async function Home() {
               <h2>
                 <Link href={`/tekst/${art.slug}`}>{art.title}</Link>
               </h2>
-              <p>{art.author.name}</p>
+              <p className="lead-byline">
+                <Link href={`/autor/${art.author.slug}`}>{art.author.name}</Link>
+              </p>
               {art.intro && <p className="intro">{art.intro}</p>}
               <Link className="read-link" href={`/tekst/${art.slug}`}>
                 Otvori djelo ↗
@@ -149,7 +199,9 @@ export default async function Home() {
                   <h3>
                     <Link href={`/tekst/${p.slug}`}>{p.title}</Link>
                   </h3>
-                  <p className="group-byline">{p.author.name}</p>
+                  <p className="group-byline">
+                    <Link href={`/autor/${p.author.slug}`}>{p.author.name}</Link>
+                  </p>
                   <p className="group-verse">
                     {bodyText(p.body).split('\n\n').slice(0, 2).join('\n\n')}
                   </p>
@@ -160,7 +212,7 @@ export default async function Home() {
           {proseGroup.length > 0 && (
             <div>
               <div className="section-rule">
-                <h2>Proza i kritika</h2>
+                <h2>Proza i eseji</h2>
                 <Link href="/rubrika/proza">Proza ↗</Link>
               </div>
               {proseGroup.map((p) => (
@@ -169,7 +221,9 @@ export default async function Home() {
                   <h3>
                     <Link href={`/tekst/${p.slug}`}>{p.title}</Link>
                   </h3>
-                  <p className="group-byline">{p.author.name}</p>
+                  <p className="group-byline">
+                    <Link href={`/autor/${p.author.slug}`}>{p.author.name}</Link>
+                  </p>
                   {p.intro && <p className="group-intro">{p.intro}</p>}
                 </article>
               ))}
@@ -188,7 +242,9 @@ export default async function Home() {
               <h3>
                 <Link href={`/tekst/${p.slug}`}>{p.title}</Link>
               </h3>
-              <span>{p.author.name}</span>
+              <span className="index-byline">
+                <Link href={`/autor/${p.author.slug}`}>{p.author.name}</Link>
+              </span>
             </article>
           ))}
         </section>
@@ -200,7 +256,7 @@ export default async function Home() {
           {[
             ['poezija', 'Poezija'],
             ['proza', 'Proza'],
-            ['knjizevna-kritika', 'Književna kritika'],
+            ['eseji', 'Eseji'],
             ['umjetnost', 'Umjetnost'],
             ['citaoci', 'Radovi čitalaca'],
             ['zanimljivosti-o-poznatim-licnostima', 'Zanimljivosti o poznatim ličnostima'],

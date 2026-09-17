@@ -4,7 +4,7 @@ import { pageMetadata } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
 export const metadata = pageMetadata(
   'O časopisu',
-  'Žilet je časopis za književnost, umjetnost i kulturu. Upoznajte redakciju i naše autore.',
+  'Upoznajte Žilet, časopis za književnost, umjetnost i kulturu, njegovu redakciju i autore.',
   '/o-casopisu',
 );
 export default async function Page() {

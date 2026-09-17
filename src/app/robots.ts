@@ -1,5 +1,5 @@
+import { absoluteUrl } from '@/lib/seo';
 import type { MetadataRoute } from 'next';
-import { siteUrl } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -13,11 +13,11 @@ export default function robots(): MetadataRoute.Robots {
         '/posalji',
         '/oporavak',
         '/nova-lozinka',
-        '/pretraga',
         '/specimen',
         '/dev-art',
+        '/specimen-fonts',
       ],
     },
-    sitemap: siteUrl('/sitemap.xml'),
+    sitemap: absoluteUrl('/sitemap.xml'),
   };
 }

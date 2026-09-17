@@ -26,6 +26,7 @@ async function call(path: string, method = 'GET', data?: unknown) {
   return r.json();
 }
 const author = await call('/api/authors', 'POST', { name: 'SEO provjera' });
+assert.equal(author.name, 'SEO PROVJERA');
 const content = {
   title: 'Provjera mape sajta',
   intro: '',
@@ -48,10 +49,16 @@ async function sitemap() {
   assert.ok(urls.includes(base + '/rubrika/umjetnost'));
   assert.ok(urls.includes(base + '/rubrika/zanimljivosti-o-poznatim-licnostima'));
   assert.ok(urls.includes(base + '/autori'));
+  assert.ok(urls.includes(base + '/pravila'));
+  assert.ok(!urls.some((u) => u.includes('knjizevna-kritika')));
   return xml;
 }
 assert.ok(!(await sitemap()).includes('/tekst/' + post.slug));
 let current = await call(`/api/posts/${post.id}/publish`, 'POST', { version: post.version });
+const article = await (await fetch(base + '/tekst/' + post.slug)).text();
+assert.ok(article.includes('<title>Provjera mape sajta — SEO PROVJERA — Žilet</title>'));
+assert.ok(article.includes('property="og:description"'));
+assert.ok(article.includes(`property="og:url" content="${base}/tekst/${post.slug}"`));
 const published = await sitemap();
 assert.ok(published.includes('/tekst/' + post.slug));
 async function publicArticle() {
@@ -61,8 +68,8 @@ async function publicArticle() {
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.ok(html.includes(`property="og:url" content="${base}/tekst/${post.slug}"`));
-  assert.ok(html.includes('property="og:description" content="Riječi na papiru."'));
-  assert.ok(html.includes('name="twitter:description" content="Riječi na papiru."'));
+  assert.ok(html.includes('property="og:description" content="SEO PROVJERA: Riječi na papiru."'));
+  assert.ok(html.includes('name="twitter:description" content="SEO PROVJERA: Riječi na papiru."'));
   const json = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)![1]);
   assert.equal(json.author.url, base + '/autor/' + author.slug);
   assert.equal(json.mainEntityOfPage, base + '/tekst/' + post.slug);
@@ -113,3 +120,13 @@ assert.match(privateResponse.headers.get('cache-control') || '', /no-store/);
 console.log(
   'PASS canonical URLs, live-only sitemap with stable draft dates, author 404s, robots, font/logo caching and private no-store',
 );
+
+const retired = await fetch(base + '/rubrika/knjizevna-kritika', { redirect: 'manual' });
+assert.equal(retired.status, 308);
+assert.equal(new URL(retired.headers.get('location')!, base).pathname, '/rubrika/eseji');
+const llms = await fetch(base + '/llms.txt');
+assert.match(llms.headers.get('content-type') || '', /text\/plain/);
+const guide = await llms.text();
+assert.ok(guide.startsWith('# Žilet\n'));
+assert.ok(guide.includes(base + '/autori'));
+assert.ok(!guide.includes('knjizevna-kritika'));

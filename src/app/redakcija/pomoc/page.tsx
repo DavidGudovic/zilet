@@ -55,6 +55,18 @@ export default async function Page() {
           <strong>Objavi izmjene</strong>. U Dodatnim mogućnostima možete istaknuti tekst na
           početnoj stranici ili ga povući iz javnosti.
         </p>
+        <h2>Kako će čitaoci pronaći tekst</h2>
+        <p>
+          Naslov za Google, kratak opis, potpis autora i prikaz za dijeljenje nastaju automatski
+          kada pritisnete <strong>Objavi</strong>. Ne morate popunjavati dodatna polja. Napišite
+          naslov djela, izaberite tačnog autora i rubriku. Ako dodate kratak uvod, koristiće se kao
+          opis; inače se opis uzima iz teksta.
+        </p>
+        <p>
+          U biografiji autora navedite stvarne podatke o radu i objavljenim djelima. Fotografiju
+          opišite onako kako je vidite. Nacrti ostaju privatni; pojavljivanje u Google pretrazi može
+          potrajati.
+        </p>
         <h2>Vaša stranica i lozinka</h2>
         <p>
           U <Link href="/redakcija/autori">Autorima</Link> uredite biografiju. U{' '}

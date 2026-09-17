@@ -479,6 +479,10 @@ export function Editor({
         )}
         <details className="advanced">
           <summary>Dodatne mogućnosti</summary>
+          <p className="field-help">
+            Naslov i opis za pretragu pripremamo automatski iz objavljenog teksta. Ako napišete
+            kratak uvod, koristićemo njega kao opis.
+          </p>
           <label>
             Kratak uvod (opciono)
             <textarea

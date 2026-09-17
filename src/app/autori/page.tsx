@@ -4,7 +4,7 @@ import { pageMetadata } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
 export const metadata = pageMetadata(
   'Autori',
-  'Autori Žileta. Otkrijte poeziju, prozu, kritiku i priloge naših saradnika.',
+  'Upoznajte autore Žileta, pročitajte njihove biografije i istražite objavljene pjesme, prozu, eseje i umjetnička djela.',
   '/autori',
 );
 export default async function Page() {

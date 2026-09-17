@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 import { requireUser } from '@/lib/security';
 import { AnalyticsTracker } from '@/components/analytics-tracker';
 import type { Metadata } from 'next';
-import { pageMetadata, siteDescription, siteUrl } from '@/lib/seo';
+import { siteUrl, siteTitle, siteDescription } from '@/lib/seo';
 import './fonts.css';
 import './globals.css';
 import './atmosphere.css';
@@ -13,11 +13,17 @@ import { PageAtmosphere } from '@/components/page-atmosphere';
 import { Header, Footer } from '@/components/header';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
-  ...pageMetadata('Žilet — književnost, umjetnost i kultura', siteDescription, '/'),
   metadataBase: new URL(siteUrl()),
-  title: { default: 'Žilet — književnost, umjetnost i kultura', template: '%s — Žilet' },
-  // Each public page supplies its own canonical; private routes must not inherit home.
-  alternates: undefined,
+  title: { default: siteTitle, template: '%s — Žilet' },
+  description: siteDescription,
+  openGraph: {
+    title: siteTitle,
+    siteName: 'Žilet',
+    type: 'website',
+    description: siteDescription,
+    images: [{ url: '/identity/social-preview.png', width: 1200, height: 630 }],
+  },
+  twitter: { card: 'summary_large_image', images: ['/identity/social-preview.png'] },
   icons: { icon: '/icon.svg' },
 };
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

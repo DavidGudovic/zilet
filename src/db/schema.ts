@@ -122,6 +122,7 @@ export const posts = pgTable('posts', {
   createdAt: time('created_at').notNull().defaultNow(),
   updatedAt: time('updated_at').notNull().defaultNow(),
   publishedAt: time('published_at'),
+  publishedUpdatedAt: time('published_updated_at'),
   searchText: text('search_text').notNull().default(''),
 });
 export const revisions = pgTable(

@@ -4,7 +4,6 @@ export const rubrics = [
   ['proza', 'Proza'],
   ['price', 'Proza'],
   ['eseji', 'Eseji'],
-  ['knjizevna-kritika', 'Književna kritika'],
   ['novosti', 'Novosti'],
   ['zanimljivosti-o-poznatim-licnostima', 'Zanimljivosti o poznatim ličnostima'],
   ['zabava', 'Zabava'],
@@ -191,3 +190,5 @@ export function mediaSrcSet(media: Pick<MediaView, 'url' | 'width' | 'height'>) 
   const smallWidth = Math.max(1, Math.round((media.width * 640) / longest));
   return `${media.url}${media.url.includes('?') ? '&' : '?'}size=small ${smallWidth}w, ${media.url} ${media.width}w`;
 }
+
+export const authorName = (name: string) => name.trim().toUpperCase();

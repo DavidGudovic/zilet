@@ -1,3 +1,4 @@
+import { authorName } from './content';
 import { db } from '@/db';
 import { authors, authorRedirects } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
@@ -12,7 +13,11 @@ export async function insertOrResolveAuthor(
   tx: AuthorDatabase,
   input: typeof authors.$inferInsert,
 ) {
-  const [created] = await tx.insert(authors).values(input).onConflictDoNothing().returning();
+  const [created] = await tx
+    .insert(authors)
+    .values({ ...input, name: authorName(input.name) })
+    .onConflictDoNothing()
+    .returning();
   if (created) return { author: created, created: true };
   const [existingId] = await tx.select().from(authors).where(eq(authors.id, input.id));
   if (existingId) return { author: existingId, created: false };

@@ -152,6 +152,10 @@ export async function publishPost(id: string, version: number, slot?: string, ne
         status: 'published',
         publishedRevisionId: revision.id,
         publishedAt: post.publishedAt || new Date(),
+        publishedUpdatedAt:
+          post.publishedRevisionId === revision.id && post.status === 'published'
+            ? post.publishedUpdatedAt || post.publishedAt || new Date()
+            : new Date(),
         searchText: searchText(content, author.name),
         version: post.version + 1,
         updatedAt: new Date(),

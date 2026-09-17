@@ -280,13 +280,13 @@ button svg {
 .lead-story {
   min-width: 0;
 }
-.lead-story h1 {
+.lead-story h2 {
   font-size: clamp(40px, 4.4vw, 64px);
   font-weight: 500;
   margin-top: 20px;
   max-width: 660px;
 }
-.lead-story h1 a:hover,
+.lead-story h2 a:hover,
 .poem-selection h2 a:hover {
   text-decoration: none;
   color: var(--green);
@@ -864,7 +864,7 @@ figcaption span {
     padding-block: 28px 35px;
     gap: 38px;
   }
-  .lead-story h1 {
+  .lead-story h2 {
     font-size: 44px;
     max-width: 600px;
     margin-top: 15px;
@@ -1059,7 +1059,7 @@ figcaption span {
   .primary-links a {
     font-size: 15px;
   }
-  .lead-story h1 {
+  .lead-story h2 {
     font-size: 39px;
   }
   .article-heading h1 {
@@ -1183,7 +1183,7 @@ figcaption span {
   .front-spread {
     grid-template-columns: 1.45fr 1fr;
   }
-  .lead-story h1 {
+  .lead-story h2 {
     max-width: 590px;
     font-size: 58px;
   }
@@ -1266,7 +1266,7 @@ figcaption span {
   .poem-selection {
     padding-left: 25px;
   }
-  .lead-story h1 {
+  .lead-story h2 {
     font-size: 43px;
   }
   .poem-selection h2 {
@@ -2866,4 +2866,82 @@ td:last-child {
     opacity: 1;
     transform: none;
   }
+}
+
+/* Consistent, readable contributor credits across the publication. */
+.lead-byline,
+.archive-byline,
+.group-byline,
+.index-byline,
+.article-colophon > span,
+.article-rail .byline {
+  font-family: var(--sans);
+  font-weight: 650;
+  font-size: 17px;
+  line-height: 1.5;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.lead-byline,
+.article-rail .byline {
+  font-size: 19px;
+}
+.author-index > a {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.author-index > a span {
+  flex-shrink: 0;
+}
+.editor-people > a {
+  font-weight: 600;
+}
+@media (max-width: 767px) {
+  .lead-byline,
+  .article-rail .byline {
+    font-size: 18px;
+  }
+}
+
+.publication-intro {
+  padding-block: 32px;
+  max-width: 900px;
+}
+.publication-intro h1 {
+  font: 500 clamp(27px, 3vw, 36px)/1.2 var(--serif);
+}
+.publication-intro p,
+.archive-introduction {
+  margin-top: 14px;
+  font-size: 18px;
+  line-height: 1.65;
+  max-width: 70ch;
+}
+.publication-intro a {
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 4px;
+}
+.publication-intro .publication-editors {
+  font-size: 14px;
+}
+.publication-editors a {
+  font-weight: 650;
+}
+.related-reading {
+  margin-block: 40px;
+  padding-block: 24px;
+  border-block: 1px solid var(--rule);
+}
+.related-reading h2 {
+  font: 500 27px var(--serif);
+}
+.related-reading ul {
+  padding-left: 20px;
+  margin-top: 18px;
+}
+.related-reading li + li {
+  margin-top: 12px;
 }

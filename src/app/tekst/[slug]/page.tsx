@@ -1,12 +1,21 @@
+import { articleMetadata, articleStructuredData, breadcrumbData } from '@/lib/seo';
+import { StructuredData } from '@/components/structured-data';
+import type { Metadata } from 'next';
 import { Comments } from '@/components/comments';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { getPost, getRedirect } from '@/lib/data';
+import { getPost, getRedirect, findPosts } from '@/lib/data';
 import { Article } from '@/components/article';
-import { postMetadata, postStructuredData } from '@/lib/seo';
+import { rubricLabel } from '@/lib/content';
+import Link from 'next/link';
 export const dynamic = 'force-dynamic';
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const p = await getPost((await params).slug);
-  return p ? postMetadata(p) : { title: 'Tekst nije pronađen', robots: { index: false } };
+  if (!p) return { title: 'Tekst nije pronađen', robots: { index: false } };
+  return articleMetadata(p);
 }
 export default async function Page({
   params,
@@ -23,14 +32,31 @@ export default async function Page({
     notFound();
   }
   const page = Math.max(1, Math.min(10000, Math.floor(Number((await searchParams).page)) || 1));
-  const json = postStructuredData(p);
+  const more = (await findPosts({ author: p.author.id, limit: 4 })).items
+    .filter((item) => item.id !== p.id)
+    .slice(0, 3);
+  const crumbs = [
+    { name: 'Žilet', path: '/' },
+    { name: rubricLabel(p.rubrics[0]), path: `/rubrika/${p.rubrics[0]}` },
+    { name: p.title, path: `/tekst/${p.slug}` },
+  ];
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(json).replace(/</g, '\\u003c') }}
-      />
+      <StructuredData value={articleStructuredData(p)} />
+      <StructuredData value={breadcrumbData(crumbs)} />
       <Article post={p}>
+        {more.length > 0 && (
+          <section className="related-reading" aria-labelledby="related-heading">
+            <h2 id="related-heading">Još od autora</h2>
+            <ul>
+              {more.map((item) => (
+                <li key={item.id}>
+                  <Link href={`/tekst/${item.slug}`}>{item.title}</Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <Comments post={p} page={page} />
       </Article>
     </>

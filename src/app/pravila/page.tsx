@@ -1,7 +1,7 @@
 import { pageMetadata } from '@/lib/seo';
 export const metadata = pageMetadata(
   'Pravila i privatnost',
-  'Pravila čitanja, komentarisanja i slanja radova i informacije o privatnosti u Žiletu.',
+  'Pravila komentarisanja, slanja radova i zaštite privatnosti čitalaca i autora časopisa Žilet.',
   '/pravila',
 );
 export default function Page() {

@@ -12,6 +12,9 @@ try {
       '005_reader_submissions.sql',
       '006_submission_correspondence.sql',
       '007_author_identity.sql',
+      '006_uppercase_authors.sql',
+      '007_retire_criticism.sql',
+      '008_published_updated_at.sql',
     ]) {
       const exists = await tx`SELECT name FROM zilet_migrations WHERE name=${name}`;
       if (!exists.length) {

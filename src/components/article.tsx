@@ -31,6 +31,11 @@ export function Article({
               {post.author.name}
             </Link>
             <time dateTime={post.publishedAt}>{dateLabel(post.publishedAt)}</time>
+            {post.modifiedAt && post.modifiedAt.slice(0, 10) !== post.publishedAt.slice(0, 10) && (
+              <p className="posting-credit">
+                Ažurirano <time dateTime={post.modifiedAt}>{dateLabel(post.modifiedAt)}</time>
+              </p>
+            )}
             {post.postedBy && (
               <p className="posting-credit">
                 <span>Objavu pripremio/la</span>

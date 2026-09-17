@@ -52,7 +52,7 @@ async function viewPosts(rows: PostRow[]): Promise<PostView[]> {
     rubrics: content.rubrics,
     author: authorMap.get(content.authorId)!,
     publishedAt: (post.publishedAt || post.createdAt).toISOString(),
-    modifiedAt: revisionCreatedAt?.toISOString(),
+    modifiedAt: (post.publishedUpdatedAt || post.publishedAt || post.createdAt).toISOString(),
     media: content.media.flatMap((ref) => {
       const m = imageMap.get(ref.id);
       return m ? [{ ...ref, url: `/media/${m.id}`, width: m.width, height: m.height }] : [];

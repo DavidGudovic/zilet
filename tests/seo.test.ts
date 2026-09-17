@@ -1,51 +1,54 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  descriptionText,
-  pageMetadata,
-  postMetadata,
-  postStructuredData,
-  siteUrl,
-} from '../src/lib/seo';
+import { test } from 'node:test';
+import { authorName } from '../src/lib/content';
+import { description, pageMetadata, siteDescription } from '../src/lib/seo';
+import { revisionSchema } from '../src/lib/publishing';
+import { submissionSchema } from '../src/lib/submission-content';
 import { demoPosts } from '../src/lib/fixtures';
 
-test('search snippets collapse whitespace without changing canonical verse', () => {
-  const text = '  Śuma\n\nriječi\tna papiru.\u200b';
-  assert.equal(descriptionText(text), 'Śuma riječi na papiru.\u200b');
-  const long = 'Jedna riječ '.repeat(30);
-  assert.ok(descriptionText(long).length <= 160);
-  assert.ok(descriptionText(long).endsWith('…'));
-  assert.equal(descriptionText('', 'Rezervni opis'), 'Rezervni opis');
+test('uppercase author names retain Latin diacritics and Cyrillic', () => {
+  assert.equal(authorName('  Željko Đurić čćš śź  '), 'ŽELJKO ĐURIĆ ČĆŠ ŚŹ');
+  assert.equal(authorName('Милена'), 'МИЛЕНА');
 });
 
-test('article search and sharing metadata use the public author, image and revision date', () => {
-  const post = {
-    ...demoPosts[0],
-    intro: 'Uvod za pretraživače i dijeljenje.',
-    modifiedAt: '2026-09-12T12:00:00.000Z',
+test('SEO descriptions flatten verse whitespace and fit a snippet without changing the source', () => {
+  assert.equal(description('  Prvi stih\n\nDrugi\tstih  '), 'Prvi stih Drugi stih');
+  assert.equal(description('   '), siteDescription);
+  const text = description('Duga pjesma '.repeat(40));
+  assert.ok(text.length <= 160);
+  assert.ok(text.endsWith('…'));
+  const meta = pageMetadata('Poezija', 'Pjesme u Žiletu.', '/rubrika/poezija?page=2');
+  assert.equal(meta.alternates?.canonical, '/rubrika/poezija?page=2');
+  assert.equal(meta.openGraph?.title, 'Poezija — Žilet');
+  assert.equal(meta.twitter?.description, meta.description);
+});
+
+test('retired criticism cannot be selected in publishing or reader submissions', () => {
+  const post = demoPosts[0];
+  const content = {
+    title: post.title,
+    intro: post.intro,
+    authorId: post.author.id,
+    type: post.type,
+    body: post.body,
+    rubrics: post.rubrics,
+    media: [],
+    commentsOpen: true,
   };
-  const metadata = postMetadata(post);
-  assert.equal(metadata.description, post.intro);
-  assert.equal(metadata.alternates?.canonical, `/tekst/${post.slug}`);
-  assert.equal(metadata.openGraph?.description, post.intro);
-  assert.equal(metadata.twitter?.description, post.intro);
-  assert.equal(metadata.openGraph?.url, `/tekst/${post.slug}`);
-  assert.equal((metadata.openGraph as { modifiedTime: string }).modifiedTime, post.modifiedAt);
-  const json = postStructuredData(post);
-  assert.equal(json.author.url, siteUrl(`/autor/${post.author.slug}`));
-  assert.equal(json.dateModified, post.modifiedAt);
-  assert.equal(json.mainEntityOfPage, siteUrl(`/tekst/${post.slug}`));
-  assert.ok(json.image.every((image) => /^https?:\/\//.test(image)));
-  assert.equal(post.body, demoPosts[0].body);
-});
-
-test('author and archive previews identify the exact page, including pagination', () => {
-  const metadata = pageMetadata(
-    'Poezija — stranica 2',
-    'Objavljene pjesme.',
-    '/rubrika/poezija?page=2',
+  assert.ok(revisionSchema.safeParse(content).success);
+  assert.equal(
+    revisionSchema.safeParse({ ...content, rubrics: ['knjizevna-kritika'] }).success,
+    false,
   );
-  assert.equal(metadata.openGraph?.title, 'Poezija — stranica 2');
-  assert.equal(metadata.twitter?.title, 'Poezija — stranica 2');
-  assert.equal(metadata.openGraph?.url, metadata.alternates?.canonical);
+  assert.equal(
+    submissionSchema.safeParse({
+      title: 'Rad',
+      text: 'Tekst',
+      rubric: 'knjizevna-kritika',
+      consent: 'yes',
+      alt: '',
+      credit: '',
+    }).success,
+    false,
+  );
 });

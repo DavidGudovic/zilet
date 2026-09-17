@@ -57,12 +57,6 @@ export function Header({ isEditor = false }: { isEditor?: boolean }) {
               Poezija
             </Link>
             <Link
-              href="/rubrika/knjizevna-kritika"
-              aria-current={path === '/rubrika/knjizevna-kritika' ? 'page' : undefined}
-            >
-              Književna kritika
-            </Link>
-            <Link
               href="/rubrika/proza"
               aria-current={
                 path === '/rubrika/proza' || path === '/rubrika/price' ? 'page' : undefined

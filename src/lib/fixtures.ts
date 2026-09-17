@@ -1,7 +1,7 @@
 import poem from '../../fixtures/poem.json';
 import criticism from '../../fixtures/criticism.json';
 import { type PostView, type RichNode } from './content';
-const author = { id: 'zoran-djurovic', slug: 'zoran-djurovic', name: 'Zoran Đurović', bio: null };
+const author = { id: 'zoran-djurovic', slug: 'zoran-djurovic', name: 'ZORAN ĐUROVIĆ', bio: null };
 export const demoPosts: PostView[] = [
   {
     id: 'sample-criticism',
@@ -22,7 +22,7 @@ export const demoPosts: PostView[] = [
           ) as RichNode[],
       },
     },
-    rubrics: ['knjizevna-kritika'],
+    rubrics: ['eseji'],
     author,
     publishedAt: '2026-09-05T12:00:00Z',
     media: [
