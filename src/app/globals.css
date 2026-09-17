@@ -283,6 +283,8 @@ button svg {
 .lead-story h2 {
   font-size: clamp(40px, 4.4vw, 64px);
   font-weight: 500;
+  line-height: 1.09;
+  letter-spacing: -0.035em;
   margin-top: 20px;
   max-width: 660px;
 }
