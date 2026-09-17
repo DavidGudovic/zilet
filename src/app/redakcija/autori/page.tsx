@@ -16,7 +16,8 @@ export default async function Page() {
       </div>
       <p className="desk-intro">
         Ovdje uredite kratke biografije. Sačuvane izmjene odmah se vide na javnim stranicama
-        urednika i objavljenih autora.
+        urednika i objavljenih autora. Autora možete izbrisati samo ako nema povezanih radova,
+        uključujući nacrte i ranije sačuvane verzije.
       </p>
       <AuthorProfiles authors={list} />
     </>

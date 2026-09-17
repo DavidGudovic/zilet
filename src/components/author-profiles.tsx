@@ -2,11 +2,12 @@
 import { useState } from 'react';
 import type { Author } from '@/lib/content';
 
-function Profile({ author }: { author: Author }) {
+function Profile({ author, onDeleted }: { author: Author; onDeleted: () => void }) {
   const [bio, setBio] = useState(author.bio || '');
   const [saved, setSaved] = useState(author.bio || '');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   return (
     <form
       className="profile-form"
@@ -50,23 +51,64 @@ function Profile({ author }: { author: Author }) {
         />
       </label>
       <div className="profile-actions">
-        <button className="button" disabled={busy || bio === saved}>
+        <button className="button" disabled={busy || deleting || bio === saved}>
           {busy ? 'Čuvanje…' : 'Sačuvaj biografiju'}
         </button>
         <a href={`/autor/${author.slug}`} target="_blank" rel="noopener noreferrer">
           Javna stranica ↗
         </a>
+        <button
+          type="button"
+          className="text-button danger"
+          disabled={busy || deleting}
+          onClick={async () => {
+            if (
+              !window.confirm(
+                `Trajno izbrisati autora ${author.name} i njegovu biografiju? Brisanje je moguće samo ako autor nema povezanih radova.`,
+              )
+            )
+              return;
+            setDeleting(true);
+            setMessage('');
+            try {
+              const response = await fetch(`/api/authors/${author.id}`, { method: 'DELETE' });
+              const result = await response.json();
+              if (!response.ok) throw new Error(result.error || 'Autor nije izbrisan.');
+              onDeleted();
+            } catch (error) {
+              setMessage(
+                error instanceof Error ? error.message : 'Veza nije dostupna. Pokušajte ponovo.',
+              );
+            } finally {
+              setDeleting(false);
+            }
+          }}
+        >
+          {deleting ? 'Brisanje…' : 'Izbriši autora'}
+        </button>
       </div>
       <p role="status">{message}</p>
     </form>
   );
 }
 export function AuthorProfiles({ authors }: { authors: Author[] }) {
+  const [deleted, setDeleted] = useState<string[]>([]);
+  const [message, setMessage] = useState('');
   return (
     <div className="profile-list">
-      {authors.map((author) => (
-        <Profile key={author.id} author={author} />
-      ))}
+      <p role="status">{message}</p>
+      {authors
+        .filter((author) => !deleted.includes(author.id))
+        .map((author) => (
+          <Profile
+            key={author.id}
+            author={author}
+            onDeleted={() => {
+              setDeleted((ids) => [...ids, author.id]);
+              setMessage(`Autor ${author.name} je izbrisan.`);
+            }}
+          />
+        ))}
     </div>
   );
 }

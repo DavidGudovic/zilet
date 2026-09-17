@@ -4,6 +4,18 @@ import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { createHash } from 'node:crypto';
 import { requireUser, assertOrigin, jsonBody, failure, HttpError } from '@/lib/security';
+import { deleteAuthor } from '@/lib/author-service';
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    assertOrigin(req);
+    await requireUser(req.headers, 'editor');
+    await deleteAuthor((await params).id);
+    return Response.json({ deleted: true }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch (error) {
+    return failure(error);
+  }
+}
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {

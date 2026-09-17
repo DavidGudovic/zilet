@@ -95,7 +95,7 @@ try {
       };
       const first = await insertOrResolveAuthor(tx, profile);
       assert.equal(first.created, true);
-      assert.deepEqual(first.author, profile);
+      assert.deepEqual(first.author, { ...profile, name: profile.name.toUpperCase() });
       const duplicate = await insertOrResolveAuthor(tx, {
         ...profile,
         id: crypto.randomUUID(),
@@ -105,7 +105,7 @@ try {
         isEditor: false,
       });
       assert.equal(duplicate.created, false);
-      assert.deepEqual(duplicate.author, profile);
+      assert.deepEqual(duplicate.author, { ...profile, name: profile.name.toUpperCase() });
       const retry = await insertOrResolveAuthor(tx, profile);
       assert.equal(retry.created, false);
       assert.equal(retry.author.id, profile.id);
@@ -190,6 +190,75 @@ try {
     await sql`DELETE FROM author_redirects WHERE slug=${oldSlug}`;
     await sql`DELETE FROM authors WHERE id=${author.id}`;
   }
+  async function api(path: string, method = 'GET', body?: unknown) {
+    const response = await fetch(base + path, {
+      method,
+      headers: { Origin: base, Cookie: cookie, 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return { status: response.status, data: await response.json() };
+  }
+  const unused = (await api('/api/authors', 'POST', { name: `Brisanje čćžšđ ${Date.now()}` })).data;
+  assert.equal(unused.name, unused.name.toUpperCase());
+  assert.equal(
+    (
+      await fetch(base + `/api/authors/${unused.id}`, {
+        method: 'DELETE',
+        headers: { Origin: base },
+      })
+    ).status,
+    401,
+  );
+  assert.equal(
+    (
+      await fetch(base + `/api/authors/${unused.id}`, {
+        method: 'DELETE',
+        headers: { Origin: 'https://example.invalid', Cookie: cookie },
+      })
+    ).status,
+    403,
+  );
+  assert.equal((await api(`/api/authors/${unused.id}`, 'DELETE')).status, 200);
+  assert.equal((await api(`/api/authors/${unused.id}`, 'DELETE')).status, 404);
+  const connected = (await api('/api/authors', 'POST', { name: `Povezani autor ${Date.now()}` }))
+    .data;
+  const replacement = (await api('/api/authors', 'POST', { name: `Drugi autor ${Date.now()}` }))
+    .data;
+  const work = {
+    title: 'Zaštita autora',
+    intro: '',
+    authorId: connected.id,
+    type: 'poem',
+    body: { kind: 'poem', text: 'Stih', emphasis: [], align: 'left' },
+    rubrics: ['poezija'],
+    media: [],
+    commentsOpen: true,
+  };
+  let draft = (await api('/api/posts', 'POST', work)).data;
+  let refusal = await api(`/api/authors/${connected.id}`, 'DELETE');
+  assert.equal(refusal.status, 409);
+  assert.match(refusal.data.error, /povezane radove/);
+  let live = (await api(`/api/posts/${draft.id}/publish`, 'POST', { version: draft.version })).data;
+  assert.equal((await api(`/api/authors/${connected.id}`, 'DELETE')).status, 409);
+  await api(`/api/posts/${draft.id}/unpublish`, 'POST', { version: live.version });
+  assert.equal((await api(`/api/authors/${connected.id}`, 'DELETE')).status, 409);
+  draft = (
+    await api(`/api/posts/${draft.id}`, 'PUT', {
+      version: live.version + 1,
+      content: { ...work, authorId: replacement.id },
+    })
+  ).data;
+  // The first author is now used only by a historical revision and must remain.
+  assert.equal((await api(`/api/authors/${connected.id}`, 'DELETE')).status, 409);
+  assert.equal(
+    (await api(`/api/posts/${draft.id}`, 'DELETE', { version: draft.version })).status,
+    200,
+  );
+  assert.equal((await api(`/api/authors/${connected.id}`, 'DELETE')).status, 200);
+  assert.equal((await api(`/api/authors/${replacement.id}`, 'DELETE')).status, 200);
+  console.log(
+    'PASS Author deletion rejects unauthorized requests and all connected work, including drafts, unpublished work and historical revisions',
+  );
 } finally {
   await sql.end();
 }

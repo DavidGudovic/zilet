@@ -6,7 +6,11 @@ import { HttpError } from './security';
 export async function savePost(actorId: string, input: unknown, id?: string, expected = 0) {
   const content = revisionSchema.parse(input);
   return db.transaction(async (tx) => {
-    const [author] = await tx.select().from(authors).where(eq(authors.id, content.authorId));
+    const [author] = await tx
+      .select()
+      .from(authors)
+      .where(eq(authors.id, content.authorId))
+      .for('key share');
     if (!author) throw new HttpError(400, 'Izaberite autora.');
     let post;
     if (id) {

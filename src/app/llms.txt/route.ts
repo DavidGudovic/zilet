@@ -1,5 +1,5 @@
 import { rubrics } from '@/lib/content';
-import { absoluteUrl } from '@/lib/seo';
+import { absoluteUrl, rubricTitle, rubricDescriptions } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +23,13 @@ export function GET() {
     '',
     ...rubrics
       .filter(([slug]) => slug !== 'price')
-      .map(([slug, title]) => link(title, `/rubrika/${slug}`, `Arhiva rubrike ${title}.`)),
+      .map(([slug, title]) =>
+        link(
+          rubricTitle(slug),
+          `/rubrika/${slug}`,
+          rubricDescriptions[slug] || `Arhiva rubrike ${title}.`,
+        ),
+      ),
     link('Umjetnost', '/rubrika/umjetnost', 'Slikarstvo, muzika i film.'),
     '',
     '## Izvori i pravila',

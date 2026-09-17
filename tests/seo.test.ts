@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { authorName } from '../src/lib/content';
-import { description, pageMetadata, siteDescription } from '../src/lib/seo';
+import {
+  description,
+  pageMetadata,
+  siteDescription,
+  articleMetadata,
+  articleStructuredData,
+  absoluteUrl,
+  authorEntity,
+} from '../src/lib/seo';
 import { revisionSchema } from '../src/lib/publishing';
 import { submissionSchema } from '../src/lib/submission-content';
 import { demoPosts } from '../src/lib/fixtures';
@@ -51,4 +59,27 @@ test('retired criticism cannot be selected in publishing or reader submissions',
     }).success,
     false,
   );
+});
+
+test('publication SEO uses the work author, public dates and media without changing the work', () => {
+  const post = {
+    ...demoPosts[0],
+    intro: 'Uvod za čitaoce.',
+    modifiedAt: '2026-09-17T12:00:00.000Z',
+  };
+  const metadata = articleMetadata(post);
+  assert.equal(metadata.title, `${post.title} — ${post.author.name}`);
+  assert.equal(metadata.description, `${post.author.name}: Uvod za čitaoce.`);
+  assert.equal(metadata.twitter?.description, metadata.description);
+  assert.equal((metadata.openGraph as { modifiedTime: string }).modifiedTime, post.modifiedAt);
+  const schema = articleStructuredData(post);
+  assert.equal(schema.author.url, absoluteUrl(`/autor/${post.author.slug}`));
+  assert.equal(schema.dateModified, post.modifiedAt);
+  assert.equal(schema.datePublished, post.publishedAt);
+  assert.equal(schema.mainEntityOfPage, absoluteUrl(`/tekst/${post.slug}`));
+  assert.ok(schema.image.every((url) => /^https?:\/\//.test(url)));
+  assert.equal(post.body, demoPosts[0].body);
+  const withoutImage = articleStructuredData({ ...post, media: [] });
+  assert.deepEqual(withoutImage.image, [absoluteUrl('/identity/social-preview.png')]);
+  assert.equal(authorEntity({ ...post.author, name: 'REDAKCIJA' })['@type'], 'Organization');
 });

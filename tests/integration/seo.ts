@@ -86,6 +86,19 @@ assert.deepEqual(
   liveSchema,
   'Autosave must not change public article metadata',
 );
+// Publishing a revision updates SEO immediately; clicking publish again does not fake freshness.
+current = await call(`/api/posts/${post.id}/publish`, 'POST', { version: current.version });
+const revisedSchema = await publicArticle();
+assert.equal(revisedSchema.headline, 'Privatni nacrt');
+assert.equal(revisedSchema.datePublished, liveSchema.datePublished);
+assert.ok(
+  new Date(revisedSchema.dateModified).getTime() > new Date(liveSchema.dateModified).getTime(),
+);
+const revisedMap = await sitemap();
+assert.notEqual(revisedMap, published);
+current = await call(`/api/posts/${post.id}/publish`, 'POST', { version: current.version });
+assert.equal(await sitemap(), revisedMap);
+assert.deepEqual(await publicArticle(), revisedSchema);
 await call(`/api/posts/${post.id}/unpublish`, 'POST', { version: current.version });
 assert.ok(!(await sitemap()).includes('/tekst/' + post.slug));
 await call('/api/posts/' + post.id, 'DELETE', { version: current.version + 1 });
@@ -117,9 +130,6 @@ assert.equal(logo.headers.get('content-type'), 'image/webp');
 assert.equal(logo.headers.get('cache-control'), 'public, max-age=86400');
 const privateResponse = await fetch(base + '/redakcija', { headers: { Cookie: cookie } });
 assert.match(privateResponse.headers.get('cache-control') || '', /no-store/);
-console.log(
-  'PASS canonical URLs, live-only sitemap with stable draft dates, author 404s, robots, font/logo caching and private no-store',
-);
 
 const retired = await fetch(base + '/rubrika/knjizevna-kritika', { redirect: 'manual' });
 assert.equal(retired.status, 308);
@@ -130,3 +140,7 @@ const guide = await llms.text();
 assert.ok(guide.startsWith('# Žilet\n'));
 assert.ok(guide.includes(base + '/autori'));
 assert.ok(!guide.includes('knjizevna-kritika'));
+
+console.log(
+  'PASS automatic SEO on publication, stable draft dates, canonical URLs, author profiles, crawler files, retired category redirect and cache headers',
+);

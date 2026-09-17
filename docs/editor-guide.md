@@ -43,3 +43,11 @@ U **Prilozi čitalaca** otvorite rad, pročitajte ga i pregledajte fotografiju. 
 Sačuvani nacrt ili povučeni tekst možete trajno izbrisati dugmetom **Trajno izbriši tekst**. Brisanje se potvrđuje i ne može se vratiti. U **Fotografije** možete trajno izbrisati nekorišćene slike. Oznaka **U upotrebi** znači da sliku još koristi tekst, ranija verzija, portret ili prilog čitaoca.
 
 U **Moj nalog** možete promijeniti ime za prikaz i lozinku.
+
+## Automatska priprema za Google i dijeljenje
+
+Napišite naslov djela, izaberite autora i rubriku, pa pritisnite **Objavi**. Sajt sam priprema naslov za pretragu, kratak opis, potpis autora, prikaz za dijeljenje i unos u mapu sajta. Nema dodatnih SEO polja. Kratak uvod je opcioni opis; ako ga nema, koristi se početak teksta. Nacrt ne mijenja javni prikaz.
+
+Biografija i portret pomažu čitaocima da upoznaju autora. U **Autori** unesite stvarne podatke o radu i djelima. Fotografije opišite jasno i tačno. Ne dodajte nizove ključnih riječi u naslov ili tekst. Google sam određuje kada i kako će prikazati objavu.
+
+**Brisanje autora.** U **Autori** izaberite **Izbriši autora** i potvrdite. Ako autor ima povezan tekst, nacrt ili raniju verziju, sajt će objasniti da brisanje nije moguće. Brisanje praznog profila uklanja i njegovu biografiju.

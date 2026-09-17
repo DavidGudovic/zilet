@@ -11,7 +11,6 @@ type PostRow = {
   post: typeof posts.$inferSelect;
   content: RevisionContent;
   editorialNoteBy?: string | null;
-  revisionCreatedAt?: Date;
 };
 async function viewPosts(rows: PostRow[]): Promise<PostView[]> {
   if (!rows.length) return [];
@@ -39,7 +38,7 @@ async function viewPosts(rows: PostRow[]): Promise<PostView[]> {
     ['approved-content-import', 'fixture-system'].includes(id)
       ? 'Redakcija Žileta'
       : accountMap.get(id) || 'Redakcija Žileta';
-  return rows.map(({ post, content, editorialNoteBy, revisionCreatedAt }) => ({
+  return rows.map(({ post, content, editorialNoteBy }) => ({
     id: post.id,
     slug: post.slug,
     title: content.title,
@@ -128,7 +127,6 @@ export async function findPosts({
       post: posts,
       content: revisions.content,
       editorialNoteBy: revisions.editorialNoteBy,
-      revisionCreatedAt: revisions.createdAt,
     })
     .from(posts)
     .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
@@ -154,7 +152,6 @@ export async function getFrontPage() {
       post: posts,
       content: revisions.content,
       editorialNoteBy: revisions.editorialNoteBy,
-      revisionCreatedAt: revisions.createdAt,
     })
     .from(placements)
     .innerJoin(posts, eq(placements.postId, posts.id))
@@ -170,7 +167,6 @@ export const getPost = cache(async (slug: string) => {
       post: posts,
       content: revisions.content,
       editorialNoteBy: revisions.editorialNoteBy,
-      revisionCreatedAt: revisions.createdAt,
     })
     .from(posts)
     .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
