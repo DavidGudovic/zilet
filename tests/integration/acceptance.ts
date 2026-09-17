@@ -230,7 +230,8 @@ try {
   assert.equal((await request(`/media/${media.id}`)).r.status, 200);
   assert.ok((await request('/rubrika/poezija')).text.includes('Provjera: pjesma'));
   ok('Publishing with image appears in SSR article and archive without rebuild');
-  assert.ok(publicPage.text.includes('Razvojni autor (test)'));
+  assert.equal(testAuthor.data.name, 'RAZVOJNI AUTOR (TEST)');
+  assert.ok(publicPage.text.includes(testAuthor.data.name));
   assert.ok(publicPage.text.includes('Objavu pripremio/la'));
   assert.ok(publicPage.text.includes('Provjera editor'));
   assert.ok(publicPage.text.includes('Moj osvrt uz pjesmu.'));

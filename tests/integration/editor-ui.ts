@@ -55,7 +55,7 @@ try {
   await page.waitForTimeout(2200);
   assert.equal(await author.getAttribute('aria-expanded'), 'true');
   await page.screenshot({ path: `${dir}/author-menu-390.png` });
-  await page.getByRole('option', { name: 'Razvojni autor (test)', exact: true }).first().tap();
+  await page.getByRole('option', { name: 'RAZVOJNI AUTOR (TEST)', exact: true }).first().tap();
   assert.equal(await author.getAttribute('aria-expanded'), 'false');
   await page.getByLabel('Sadržaj pjesme', { exact: true }).fill(poem.text);
   const note = 'Ovo je zasebna urednička bilješka.\n\nPjesma ostaje u izvornom obliku.';
@@ -116,7 +116,7 @@ try {
   assert.equal(await page.locator('.editorial-note-text').innerText(), note);
   assert.match(await page.locator('.editorial-note-signature').innerText(), /Provjera editor/);
   assert.match(await page.locator('.posting-credit').innerText(), /Provjera editor/);
-  assert.ok((await page.locator('.article-rail .byline').innerText()).includes('Razvojni autor'));
+  assert.ok((await page.locator('.article-rail .byline').innerText()).includes('RAZVOJNI AUTOR'));
   await page.locator('.editorial-note').scrollIntoViewIfNeeded();
   await page.waitForTimeout(1100);
   await page.screenshot({ path: `${dir}/editorial-note-390.png` });

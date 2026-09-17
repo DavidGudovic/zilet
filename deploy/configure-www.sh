@@ -71,10 +71,24 @@ fi
 install -m 644 "$work/final.conf" "$site"
 nginx -t
 systemctl reload nginx
-# --resolve avoids a stale local DNS cache while still verifying TLS for the real hostname.
-location=$(curl --fail --silent --show-error --max-time 15 --resolve www.zilet.me:443:127.0.0.1 \
-    -o /dev/null -w '%{redirect_url}' 'https://www.zilet.me/rubrika/citaoci?proba=1')
-[[ $location == 'https://zilet.me/rubrika/citaoci?proba=1' ]]
+# A graceful reload returns before new workers necessarily accept connections.
+# Keep TLS verification enabled, but allow the new virtual host time to become active.
+# --resolve avoids a stale local DNS cache while verifying the real hostname.
+ready=false
+for attempt in {1..15}; do
+    if location=$(curl --fail --silent --show-error --max-time 5 --resolve www.zilet.me:443:127.0.0.1 \
+        -o /dev/null -w '%{redirect_url}' 'https://www.zilet.me/rubrika/citaoci?proba=1' 2>"$work/tls-error") \
+        && [[ $location == 'https://zilet.me/rubrika/citaoci?proba=1' ]]; then
+        ready=true
+        break
+    fi
+    sleep 1
+done
+if [[ $ready != true ]]; then
+    cat "$work/tls-error" >&2
+    echo 'The www HTTPS redirect did not become ready; restoring the previous configuration.' >&2
+    exit 1
+fi
 curl --fail --silent --show-error --max-time 15 --resolve zilet.me:443:127.0.0.1 https://zilet.me/api/health
 complete=true
 printf '\nwww HTTPS and canonical redirect are configured. Original Nginx file: %s\n' "$backup"

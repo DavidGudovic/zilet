@@ -30,7 +30,7 @@ async function start(rubric: string, title: string) {
   await page.getByRole('option', { name: rubric, exact: true }).click();
   await page.getByLabel('Naslov', { exact: true }).fill(title);
   await page.getByRole('combobox', { name: 'Autor djela', exact: true }).click();
-  await page.getByRole('option', { name: 'Razvojni autor (test)', exact: true }).first().click();
+  await page.getByRole('option', { name: 'RAZVOJNI AUTOR (TEST)', exact: true }).first().click();
 }
 try {
   await page.goto(base + '/redakcija');
