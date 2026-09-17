@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getFrontPage, getAuthors } from '@/lib/data';
+import { getFrontPage } from '@/lib/data';
 import { InkLines } from '@/components/ink-lines';
 import { bodyText, rubricLabel, mediaSrcSet } from '@/lib/content';
 import { pageMetadata, siteTitle, siteDescription, absoluteUrl, publisherEntity } from '@/lib/seo';
@@ -7,11 +7,7 @@ import { StructuredData } from '@/components/structured-data';
 export const metadata = pageMetadata(siteTitle, siteDescription, '/');
 export const dynamic = 'force-dynamic';
 export default async function Home() {
-  const [{ posts, choices: placements }, authors] = await Promise.all([
-    getFrontPage(),
-    getAuthors(),
-  ]);
-  const editors = authors.filter((author) => author.isEditor);
+  const { posts, choices: placements } = await getFrontPage();
   const placed = (slot: string) =>
     posts.find((p) => p.id === placements.find((x) => x.slot === slot)?.postId);
   const lead = placed('lead') || posts.find((p) => p.type === 'prose') || posts[0];
@@ -47,26 +43,6 @@ export default async function Home() {
           ],
         }}
       />
-      <header className="publication-intro">
-        <h1>Poezija, književnost i kultura</h1>
-        <p>
-          Žilet je časopis za <Link href="/rubrika/poezija">poeziju</Link>,{' '}
-          <Link href="/rubrika/proza">prozu</Link>,{' '}
-          <Link href="/rubrika/eseji">eseje i književnu kritiku</Link>,{' '}
-          <Link href="/rubrika/umjetnost">umjetnost</Link> i glasove čitalaca širom regiona.
-        </p>
-        {editors.length > 0 && (
-          <p className="publication-editors">
-            Redakcija:{' '}
-            {editors.map((author, index) => (
-              <span key={author.id}>
-                {index > 0 && ' · '}
-                <Link href={`/autor/${author.slug}`}>{author.name}</Link>
-              </span>
-            ))}
-          </p>
-        )}
-      </header>
       <div className="section-rule">
         <span>U fokusu</span>
         <span>Žilet / izbor tekstova</span>
@@ -77,9 +53,9 @@ export default async function Home() {
             <Link href={`/rubrika/${lead.rubrics[0]}`} className="eyebrow">
               {rubricLabel(lead.rubrics[0])}
             </Link>
-            <h2>
+            <h1>
               <Link href={`/tekst/${lead.slug}`}>{lead.title}</Link>
-            </h2>
+            </h1>
             <p className="lead-byline">
               <Link href={`/autor/${lead.author.slug}`}>{lead.author.name}</Link>
             </p>
@@ -138,7 +114,7 @@ export default async function Home() {
         </div>
       ) : (
         <section className="empty">
-          <h2>Žilet</h2>
+          <h1>Žilet</h1>
           <p>Prvi tekstovi su u pripremi.</p>
           <Link href="/o-casopisu">O časopisu ↗</Link>
         </section>

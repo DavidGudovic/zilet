@@ -3,7 +3,7 @@ import { getAuthors } from '@/lib/data';
 import { pageMetadata } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
 export const metadata = pageMetadata(
-  'O časopisu',
+  'O časopisu: književnost, umjetnost i redakcija',
   'Upoznajte Žilet, časopis za književnost, umjetnost i kulturu, njegovu redakciju i autore.',
   '/o-casopisu',
 );

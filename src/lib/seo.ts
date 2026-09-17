@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { bodyText, rubricLabel, type Author, type PostView } from './content';
 
-export const siteTitle = 'Žilet — poezija, književnost, umjetnost i kultura';
+export const siteTitle = 'Žilet | poezija, književnost, umjetnost i kultura';
 export const siteDescription =
   'Poezija, proza, eseji i književna kritika. Žilet je časopis za književnost, umjetnost i kulturu, otvoren autorima i čitaocima širom regiona.';
 export const siteUrl = () => new URL(process.env.APP_URL || 'https://zilet.me').origin;
@@ -19,10 +19,15 @@ export function description(text: string, fallback = siteDescription) {
     .trimEnd()}…`;
 }
 export function pageMetadata(title: string, summary: string, path: string): Metadata {
-  const fullTitle = title === siteTitle ? title : `${title} — Žilet`;
+  const cleanTitle = title
+    .replace(/[\u200B-\u200D\uFEFF]/gu, '')
+    .replace(/—/gu, '-')
+    .replace(/\s+/gu, ' ')
+    .trim();
+  const fullTitle = cleanTitle === siteTitle ? cleanTitle : `${cleanTitle} | Žilet`;
   const text = description(summary);
   return {
-    title: title === siteTitle ? { absolute: title } : title,
+    title: cleanTitle === siteTitle ? { absolute: cleanTitle } : cleanTitle,
     description: text,
     alternates: { canonical: path },
     robots: {
@@ -41,7 +46,7 @@ export function pageMetadata(title: string, summary: string, path: string): Meta
           url: '/identity/social-preview.png',
           width: 1200,
           height: 630,
-          alt: 'Žilet — književnost, umjetnost i kultura',
+          alt: 'Žilet | književnost, umjetnost i kultura',
         },
       ],
     },
@@ -82,6 +87,22 @@ export const rubricTitle = (slug: string) =>
       ? 'Umjetnost'
       : rubricLabel(slug);
 
+// Browser/search titles provide context without lengthening visible rubric headings.
+const rubricSeoTitles: Record<string, string> = {
+  poezija: 'Poezija: pjesme i stihovi autora',
+  proza: 'Proza: priče i pripovijedanje',
+  eseji: 'Eseji i književna kritika: osvrti na djela',
+  novosti: 'Novosti iz književnosti, umjetnosti i kulture',
+  'zanimljivosti-o-poznatim-licnostima': 'Poznate ličnosti: život i stvaralaštvo',
+  zabava: 'Zabava: kratke forme i književne zanimljivosti',
+  umjetnost: 'Umjetnost: slikarstvo, muzika i film',
+  slikarstvo: 'Slikarstvo: slike, slikari i umjetnička djela',
+  muzika: 'Muzika: muzičari, djela i osvrti',
+  film: 'Film: filmska umjetnost i osvrti',
+  citaoci: 'Radovi čitalaca: pjesme, proza i prilozi',
+};
+export const rubricSeoTitle = (slug: string) => rubricSeoTitles[slug] || rubricTitle(slug);
+
 export const authorEntity = (author: Author) => ({
   '@type': /^(redakcija(?: žileta)?|izvori)$/iu.test(author.name.trim())
     ? 'Organization'
@@ -108,7 +129,7 @@ export function articleSummary(post: PostView) {
 }
 export function articleMetadata(post: PostView): Metadata {
   const metadata = pageMetadata(
-    `${post.title} — ${post.author.name}`,
+    `${post.title} | ${post.author.name}`,
     articleSummary(post),
     `/tekst/${post.slug}`,
   );

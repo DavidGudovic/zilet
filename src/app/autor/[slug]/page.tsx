@@ -26,7 +26,7 @@ export async function generateMetadata({
   if (!author) return { title: 'Autor nije pronađen', robots: { index: false } };
   const portrait = await getPortrait(author.portraitId);
   const metadata = pageMetadata(
-    `${author.name} — ${author.isEditor ? 'redakcija Žileta' : 'radovi i biografija'}${page > 1 ? ` — stranica ${page}` : ''}`,
+    `${author.name}: biografija i radovi${page > 1 ? ` | stranica ${page}` : ''}`,
     author.bio || `Čitajte objavljene radove autora ${author.name} u časopisu Žilet.`,
     `/autor/${slug}${page > 1 ? `?page=${page}` : ''}`,
   );

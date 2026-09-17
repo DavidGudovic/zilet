@@ -3,7 +3,7 @@ import { getAuthors } from '@/lib/data';
 import { pageMetadata } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
 export const metadata = pageMetadata(
-  'Autori',
+  'Autori: biografije i objavljeni radovi',
   'Upoznajte autore Žileta, pročitajte njihove biografije i istražite objavljene pjesme, prozu, eseje i umjetnička djela.',
   '/autori',
 );

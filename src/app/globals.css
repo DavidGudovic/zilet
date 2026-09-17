@@ -280,7 +280,7 @@ button svg {
 .lead-story {
   min-width: 0;
 }
-.lead-story h2 {
+.lead-story h1 {
   font-size: clamp(40px, 4.4vw, 64px);
   font-weight: 500;
   line-height: 1.09;
@@ -288,7 +288,7 @@ button svg {
   margin-top: 20px;
   max-width: 660px;
 }
-.lead-story h2 a:hover,
+.lead-story h1 a:hover,
 .poem-selection h2 a:hover {
   text-decoration: none;
   color: var(--green);
@@ -866,7 +866,7 @@ figcaption span {
     padding-block: 28px 35px;
     gap: 38px;
   }
-  .lead-story h2 {
+  .lead-story h1 {
     font-size: 44px;
     max-width: 600px;
     margin-top: 15px;
@@ -1061,7 +1061,7 @@ figcaption span {
   .primary-links a {
     font-size: 15px;
   }
-  .lead-story h2 {
+  .lead-story h1 {
     font-size: 39px;
   }
   .article-heading h1 {
@@ -1185,7 +1185,7 @@ figcaption span {
   .front-spread {
     grid-template-columns: 1.45fr 1fr;
   }
-  .lead-story h2 {
+  .lead-story h1 {
     max-width: 590px;
     font-size: 58px;
   }
@@ -1268,7 +1268,7 @@ figcaption span {
   .poem-selection {
     padding-left: 25px;
   }
-  .lead-story h2 {
+  .lead-story h1 {
     font-size: 43px;
   }
   .poem-selection h2 {
@@ -2907,30 +2907,11 @@ td:last-child {
   }
 }
 
-.publication-intro {
-  padding-block: 32px;
-  max-width: 900px;
-}
-.publication-intro h1 {
-  font: 500 clamp(27px, 3vw, 36px)/1.2 var(--serif);
-}
-.publication-intro p,
 .archive-introduction {
   margin-top: 14px;
   font-size: 18px;
   line-height: 1.65;
   max-width: 70ch;
-}
-.publication-intro a {
-  text-decoration: underline;
-  text-decoration-color: var(--rule);
-  text-underline-offset: 4px;
-}
-.publication-intro .publication-editors {
-  font-size: 14px;
-}
-.publication-editors a {
-  font-weight: 650;
 }
 .related-reading {
   margin-block: 40px;

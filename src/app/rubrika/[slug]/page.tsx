@@ -1,5 +1,11 @@
 import { notFound, permanentRedirect } from 'next/navigation';
-import { pageMetadata, rubricTitle, rubricDescriptions, breadcrumbData } from '@/lib/seo';
+import {
+  pageMetadata,
+  rubricTitle,
+  rubricSeoTitle,
+  rubricDescriptions,
+  breadcrumbData,
+} from '@/lib/seo';
 import { StructuredData } from '@/components/structured-data';
 import Link from 'next/link';
 import { rubrics, rubricLabel } from '@/lib/content';
@@ -19,10 +25,10 @@ export async function generateMetadata({
     requested === 'price' ? 'proza' : requested === 'knjizevna-kritika' ? 'eseji' : requested;
   const q = await searchParams;
   const page = Math.max(1, Math.min(10000, Math.floor(Number(q.page)) || 1));
-  const title = rubricTitle(slug);
+  const title = rubricSeoTitle(slug);
   return {
     ...pageMetadata(
-      page > 1 ? `${title} — stranica ${page}` : title,
+      page > 1 ? `${title} | stranica ${page}` : title,
       rubricDescriptions[slug] || `${title} u Žiletu.`,
       `/rubrika/${slug}${page > 1 ? `?page=${page}` : ''}`,
     ),

@@ -56,7 +56,7 @@ async function sitemap() {
 assert.ok(!(await sitemap()).includes('/tekst/' + post.slug));
 let current = await call(`/api/posts/${post.id}/publish`, 'POST', { version: post.version });
 const article = await (await fetch(base + '/tekst/' + post.slug)).text();
-assert.ok(article.includes('<title>Provjera mape sajta — SEO PROVJERA — Žilet</title>'));
+assert.ok(article.includes('<title>Provjera mape sajta | SEO PROVJERA | Žilet</title>'));
 assert.ok(article.includes('property="og:description"'));
 assert.ok(article.includes(`property="og:url" content="${base}/tekst/${post.slug}"`));
 const published = await sitemap();
@@ -104,6 +104,20 @@ assert.ok(!(await sitemap()).includes('/tekst/' + post.slug));
 await call('/api/posts/' + post.id, 'DELETE', { version: current.version + 1 });
 const home = await (await fetch(base)).text();
 assert.ok(home.includes(`rel="canonical" href="${base}"`));
+assert.ok(!home.includes('publication-intro'));
+assert.ok(!home.includes('glasove čitalaca širom regiona'));
+assert.ok(home.includes('<h1>'), 'The featured work remains the homepage main heading');
+for (const [path, title] of [
+  ['/rubrika/poezija', 'Poezija: pjesme i stihovi autora | Žilet'],
+  ['/rubrika/proza', 'Proza: priče i pripovijedanje | Žilet'],
+  ['/rubrika/umjetnost', 'Umjetnost: slikarstvo, muzika i film | Žilet'],
+  ['/autori', 'Autori: biografije i objavljeni radovi | Žilet'],
+  ['/o-casopisu', 'O časopisu: književnost, umjetnost i redakcija | Žilet'],
+]) {
+  const html = await (await fetch(base + path, { headers: { 'User-Agent': 'Twitterbot' } })).text();
+  assert.ok(html.includes(`<title>${title}</title>`), `Descriptive browser title: ${path}`);
+  assert.ok(html.includes(`property="og:title" content="${title}"`));
+}
 const paginationPosts = [];
 for (let i = 0; i < 13; i++) {
   const draft = await call('/api/posts', 'POST', { ...content, title: `Stranica arhive ${i}` });
@@ -114,6 +128,7 @@ const rubricResponse = await fetch(base + '/rubrika/poezija?page=2');
 assert.equal(rubricResponse.status, 200);
 const rubric = await rubricResponse.text();
 assert.ok(rubric.includes(`rel="canonical" href="${base}/rubrika/poezija?page=2"`));
+assert.ok(rubric.includes('<title>Poezija: pjesme i stihovi autora | stranica 2 | Žilet</title>'));
 for (const item of paginationPosts) {
   await call(`/api/posts/${item.id}/unpublish`, 'POST', { version: item.version });
   await call('/api/posts/' + item.id, 'DELETE', { version: item.version + 1 });

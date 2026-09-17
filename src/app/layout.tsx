@@ -14,7 +14,7 @@ import { Header, Footer } from '@/components/header';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
-  title: { default: siteTitle, template: '%s — Žilet' },
+  title: { default: siteTitle, template: '%s | Žilet' },
   description: siteDescription,
   openGraph: {
     title: siteTitle,
