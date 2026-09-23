@@ -16,8 +16,10 @@ SMTP_FROM=Žilet <your-verified-sender@example.com>
 REGISTRATION_ENABLED=true
 ```
 
-With port 587, Nodemailer negotiates STARTTLS. Port 465 instead requires
-`SMTP_SECURE=true`. After editing the runtime environment, recreate the app
+With port 587, or whenever `SMTP_USER` is set without `SMTP_SECURE=true`,
+Nodemailer requires STARTTLS and refuses to send in plaintext. Port 465 instead
+requires `SMTP_SECURE=true`. Only the local mail sink (port 1025, no login) is
+used without encryption. After editing the runtime environment, recreate the app
 container with the installation's normal `make up` workflow; a plain restart does
 not reload Compose environment values. Keep production's existing release image
 configuration. No rebuild is required solely for credentials.

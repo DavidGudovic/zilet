@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { brandedMail } from '../src/lib/mail-template';
+import { smtpOptions } from '../src/lib/mail';
 
 test('branded mail preserves plain text and escapes authored text and action attributes', () => {
   const text = 'Naslov: <img src=x onerror=alert(1)> & "Žilet"\n\nСоба\n  Śutnja';
@@ -32,4 +33,16 @@ test('mail action only allows links to this installation', () => {
       url: 'http://localhost:3000/posalji',
     }),
   );
+});
+test('SMTP requires STARTTLS whenever it logs in or uses the submission port', () => {
+  const options = (env: Record<string, string>) => smtpOptions({ SMTP_HOST: 'mail', ...env });
+  const sink = options({ SMTP_PORT: '1025', SMTP_SECURE: 'false', SMTP_USER: '' });
+  assert.equal(sink.requireTLS, false);
+  assert.equal(sink.auth, undefined);
+  assert.equal(options({ SMTP_PORT: '587', SMTP_SECURE: 'false' }).requireTLS, true);
+  assert.equal(options({}).requireTLS, true);
+  assert.equal(options({ SMTP_PORT: '2525', SMTP_USER: 'login' }).requireTLS, true);
+  const implicit = options({ SMTP_PORT: '465', SMTP_SECURE: 'true', SMTP_USER: 'login' });
+  assert.equal(implicit.secure, true);
+  assert.equal(implicit.requireTLS, false);
 });
