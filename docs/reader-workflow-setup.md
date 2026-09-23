@@ -16,8 +16,10 @@ SMTP_FROM=Žilet <your-verified-sender@example.com>
 REGISTRATION_ENABLED=true
 ```
 
-With port 587, Nodemailer negotiates STARTTLS. Port 465 instead requires
-`SMTP_SECURE=true`. After editing the runtime environment, recreate the app
+With port 587, or whenever `SMTP_USER` is set without `SMTP_SECURE=true`,
+Nodemailer requires STARTTLS and refuses to send in plaintext. Port 465 instead
+requires `SMTP_SECURE=true`. Only the local mail sink (port 1025, no login) is
+used without encryption. After editing the runtime environment, recreate the app
 container with the installation's normal `make up` workflow; a plain restart does
 not reload Compose environment values. Keep production's existing release image
 configuration. No rebuild is required solely for credentials.
@@ -42,8 +44,11 @@ Editors review `/redakcija/prilozi`. Acceptance creates exactly one private draf
 and requires a signed editorial note. Publishing uses the existing explicit
 publication workflow and retains the `citaoci` rubric. Reader work appears under
 `/rubrika/citaoci`. Rejection may include a private reply; readers see their
-status and can delete pending/rejected submissions. No new outbound mail is sent
-for review decisions.
+status and can delete pending/rejected submissions. Both decisions email the
+reader when mail is configured: acceptance sends a short notice, rejection sends
+the decision with the editor's private reply, if any. Before deciding, an editor
+can send the reader a question; the reader's reply is emailed to that editor.
+Each message links to the submission page, where the conversation continues.
 
 Configure optional screening:
 
@@ -54,9 +59,10 @@ FACEBOOK_URL=https://www.facebook.com/<your-page>
 ```
 
 The key is server-only. Only the submitted title and text are sent to Gemini;
-account fields and photos are not included. An eight-second timeout, quota error,
-missing key, invalid response, or uncertain verdict sends the work to manual
-review. Only recognized, explicit spam/language/abuse verdicts block submission.
+account fields and photos are not included. A fifteen-second timeout, quota error,
+missing key, invalid response, safety refusal by the model, or uncertain verdict
+sends the work to manual review. Only recognized, explicit spam/language/abuse
+verdicts block submission.
 Both scripts and Montenegrin/Serbian/Croatian/Bosnian are accepted; the prompt
 excludes literary quality, viewpoint, and ordinary literary profanity as reasons
 for rejection. The editor always makes the publication decision and reviews the

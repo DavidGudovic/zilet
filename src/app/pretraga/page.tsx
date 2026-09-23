@@ -1,14 +1,14 @@
 import { findPosts } from '@/lib/data';
 import { ArchiveList, Pagination } from '@/components/archive';
 import { Arrow } from '@/components/arrow';
-import { rubrics } from '@/lib/content';
+import { firstParams, rubrics, type SearchParams } from '@/lib/content';
 export const metadata = { title: 'Pretraga', robots: { index: false, follow: true } };
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; rubrika?: string; page?: string }>;
+  searchParams: SearchParams<'q' | 'rubrika' | 'page'>;
 }) {
-  const q = await searchParams;
+  const q = firstParams(await searchParams);
   const term = (q.q || '').slice(0, 200);
   const result = term
     ? await findPosts({ q: term, rubric: q.rubrika, page: Number(q.page) || 1 })

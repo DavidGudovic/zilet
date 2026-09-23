@@ -182,7 +182,13 @@ try {
     (r) =>
       r.url() === `${base}/api/submissions/${submissionId}` && r.request().method() === 'PATCH',
   );
+  let rejectConfirmation = '';
+  editorPage.once('dialog', (dialog) => {
+    rejectConfirmation = `${dialog.type()}: ${dialog.message()}`;
+    void dialog.accept();
+  });
   await editorPage.getByRole('button', { name: 'Ne izaberi ovaj rad', exact: true }).click();
+  assert.match(rejectConfirmation, /^confirm: .*e-poruku o odluci/);
   const decided = await decisionRequest;
   assert.equal(decided.status(), 200);
   assert.equal((await decided.json()).deliveryStatus, 'sent');

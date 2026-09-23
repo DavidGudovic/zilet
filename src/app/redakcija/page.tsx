@@ -3,15 +3,15 @@ import Link from 'next/link';
 import { db } from '@/db';
 import { posts, revisions, user, authors } from '@/db/schema';
 import { eq, desc, sql, and } from 'drizzle-orm';
-import { dateLabel } from '@/lib/content';
+import { dateLabel, firstParams, type SearchParams } from '@/lib/content';
 import { Pagination } from '@/components/archive';
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; page?: string; q?: string }>;
+  searchParams: SearchParams<'status' | 'page' | 'q'>;
 }) {
   const editor = await editorSession();
-  const q = await searchParams;
+  const q = firstParams(await searchParams);
   const status = ['draft', 'published', 'unpublished'].includes(q.status || '')
     ? q.status
     : undefined;

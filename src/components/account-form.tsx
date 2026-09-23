@@ -20,17 +20,15 @@ export function AccountForm({
     setMessage('');
     const data = new FormData(event.currentTarget);
     let endpoint = 'sign-in/email';
+    // Signing in before confirming the address sends a new link that returns here.
     let payload: Record<string, unknown> = {
       email: data.get('email'),
       password: data.get('password'),
+      callbackURL: `${location.origin}/nalog?verified=true&returnTo=${encodeURIComponent(returnTo)}`,
     };
     if (view === 'register') {
       endpoint = 'sign-up/email';
-      payload = {
-        ...payload,
-        name: data.get('name'),
-        callbackURL: `${location.origin}/nalog?verified=true&returnTo=${encodeURIComponent(returnTo)}`,
-      };
+      payload = { ...payload, name: data.get('name') };
     }
     if (view === 'recover') {
       endpoint = 'request-password-reset';
@@ -53,9 +51,11 @@ export function AccountForm({
       if (!res.ok) {
         setError(true);
         setMessage(
-          view === 'login'
-            ? 'Prijava nije uspjela. Provjerite podatke i potvrdu adrese.'
-            : 'Zahtjev nije uspio. Provjerite podatke i pokušajte ponovo.',
+          view === 'login' && result?.code === 'EMAIL_NOT_VERIFIED'
+            ? 'Adresa e-pošte još nije potvrđena. Poslali smo vam novi link za potvrdu; otvorite ga iz poruke, pa se prijavite.'
+            : view === 'login'
+              ? 'Prijava nije uspjela. Provjerite adresu i lozinku.'
+              : 'Zahtjev nije uspio. Provjerite podatke i pokušajte ponovo.',
         );
       } else {
         setError(false);
@@ -181,22 +181,42 @@ export function AccountForm({
   );
 }
 export function SignOut() {
+  const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
   return (
-    <button
-      className="text-button"
-      onClick={async () => {
-        const r = await fetch('/api/auth/sign-out', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: '{}',
-        });
-        if (r.ok) {
-          sessionStorage.clear();
-          location.assign('/');
-        }
-      }}
-    >
-      Odjavi se <Arrow />
-    </button>
+    <>
+      <button
+        className="text-button"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          setMessage('');
+          try {
+            const r = await fetch('/api/auth/sign-out', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: '{}',
+            });
+            if (r.ok) {
+              sessionStorage.clear();
+              location.assign('/');
+              return;
+            }
+            setMessage('Odjava nije uspjela. Pokušajte ponovo.');
+          } catch {
+            setMessage('Veza nije dostupna. Još ste prijavljeni; pokušajte ponovo.');
+          }
+          setBusy(false);
+        }}
+      >
+        Odjavi se <Arrow />
+      </button>
+      {/* Not a span: the desk header hides its spans on narrow screens. */}
+      {message && (
+        <p className="form-error" role="alert">
+          {message}
+        </p>
+      )}
+    </>
   );
 }

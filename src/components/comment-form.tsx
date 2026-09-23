@@ -93,23 +93,38 @@ export function CommentForm({
 export function CommentDelete({ id }: { id: string }) {
   const router = useRouter();
   const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
   return (
     <>
       <button
         className="text-button"
+        disabled={busy}
         onClick={async () => {
-          const res = await fetch(`/api/comments/${id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'delete' }),
-          });
-          if (res.ok) router.refresh();
-          else setMessage('Komentar nije izbrisan.');
+          if (!window.confirm('Izbrisati svoj komentar? Ova radnja se ne može vratiti.')) return;
+          setBusy(true);
+          setMessage('');
+          try {
+            const res = await fetch(`/api/comments/${id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'delete' }),
+            });
+            if (res.ok) router.refresh();
+            else setMessage('Komentar nije izbrisan. Pokušajte ponovo.');
+          } catch {
+            setMessage('Veza nije dostupna. Komentar nije izbrisan.');
+          } finally {
+            setBusy(false);
+          }
         }}
       >
-        Izbriši svoj komentar
+        {busy ? 'Brisanje…' : 'Izbriši svoj komentar'}
       </button>
-      {message && <span role="status">{message}</span>}
+      {message && (
+        <span className="form-error" role="alert">
+          {message}
+        </span>
+      )}
     </>
   );
 }

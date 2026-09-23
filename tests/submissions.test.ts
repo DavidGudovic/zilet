@@ -9,6 +9,46 @@ test('submission conversion preserves exact whitespace and both scripts', () => 
   for (const rubric of ['poezija', 'proza', 'slikarstvo'])
     assert.equal(bodyText(submissionBody(text, rubric)), text);
 });
+test('Windows line endings from the form become paragraphs and count as one character', () => {
+  const input = {
+    title: 'Naslov',
+    text: 'Prvi pasus,\r\ndrugi red.\r\n\r\nDrugi pasus.\rStari Mac red.',
+    rubric: 'proza',
+    consent: 'yes',
+    alt: '',
+    credit: '',
+  };
+  const { text } = submissionSchema.parse(input);
+  assert.equal(text, 'Prvi pasus,\ndrugi red.\n\nDrugi pasus.\nStari Mac red.');
+  assert.deepEqual(submissionBody(text, 'proza'), {
+    kind: 'prose',
+    doc: {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'Prvi pasus,' },
+            { type: 'hardBreak' },
+            { type: 'text', text: 'drugi red.' },
+          ],
+        },
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'Drugi pasus.' },
+            { type: 'hardBreak' },
+            { type: 'text', text: 'Stari Mac red.' },
+          ],
+        },
+      ],
+    },
+  });
+  // 45,000 characters as sent, 30,000 as written.
+  const limit = 'a\r\n'.repeat(15000);
+  assert.ok(submissionSchema.safeParse({ ...input, text: limit }).success);
+  assert.equal(submissionSchema.safeParse({ ...input, text: `${limit}a` }).success, false);
+});
 test('submission bounds and rubric/consent validation', () => {
   const valid = {
     title: 'Naslov',
@@ -28,7 +68,7 @@ test('submission bounds and rubric/consent validation', () => {
   ])
     assert.equal(submissionSchema.safeParse({ ...valid, ...change }).success, false);
 });
-test('Gemini screening blocks only recognized decisions and fails open to manual review', async () => {
+test('Gemini screening blocks only explicit verdicts and sends everything else to an editor', async () => {
   const fetchOriginal = globalThis.fetch,
     key = process.env.INTEL_KEY;
   try {
@@ -54,13 +94,18 @@ test('Gemini screening blocks only recognized decisions and fails open to manual
       };
       assert.equal((await screenSubmission('Naslov', 'tekst')).status, expected);
     }
+    // Safety refusals carry no verdict, so an editor reads the work.
     for (const payload of [
       { promptFeedback: { blockReason: 'SAFETY' } },
+      { promptFeedback: { blockReason: 'PROHIBITED_CONTENT' } },
       { candidates: [{ finishReason: 'SAFETY' }] },
       { candidates: [{ finishReason: 'PROHIBITED_CONTENT' }] },
+      { candidates: [{ finishReason: 'BLOCKLIST' }] },
     ]) {
       globalThis.fetch = async () => Response.json(payload);
-      assert.equal((await screenSubmission('Naslov', 'tekst')).status, 'blocked');
+      const screening = await screenSubmission('Naslov', 'tekst');
+      assert.equal(screening.status, 'manual', JSON.stringify(payload));
+      assert.ok(screening.reason);
     }
     globalThis.fetch = async () =>
       Response.json({

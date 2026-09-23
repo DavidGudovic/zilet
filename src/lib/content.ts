@@ -154,14 +154,22 @@ export function fold(s: string) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
 }
+// Browsers drop tabs and newlines and read "\" as "/", so "/\t/host" leaves the site.
 export function safeReturn(s: unknown) {
-  return typeof s === 'string' &&
-    s.startsWith('/') &&
-    !s.startsWith('//') &&
-    !s.includes('\\') &&
-    !/[\r\n]/.test(s)
-    ? s
-    : '/';
+  if (typeof s !== 'string' || !s.startsWith('/') || /[\u0000-\u001f\u007f\\]/.test(s)) return '/';
+  const origin = 'https://zilet.invalid';
+  try {
+    return new URL(s, origin).origin === origin ? s : '/';
+  } catch {
+    return '/';
+  }
+}
+// Next passes a repeated query parameter (?q=a&q=b) as an array; pages read its first value.
+export type SearchParams<K extends string> = Promise<Partial<Record<K, string | string[]>>>;
+export function firstParams<K extends string>(params: Partial<Record<K, string | string[]>>) {
+  return Object.fromEntries(
+    Object.entries(params).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value]),
+  ) as Partial<Record<K, string>>;
 }
 export function safeHref(s: string) {
   return /^(https?:\/\/|mailto:)/i.test(s) ? s : undefined;

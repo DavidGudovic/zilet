@@ -12,6 +12,13 @@ export function SubmissionReview({ id, version }: { id: string; version: number 
       document.getElementById('review-note')?.focus();
       return;
     }
+    if (
+      action === 'reject' &&
+      !window.confirm(
+        'Ne izabrati ovaj rad? Čitalac odmah dobija e-poruku o odluci, a odluka se ne može poništiti.',
+      )
+    )
+      return;
     setBusy(true);
     setMessage('');
     try {

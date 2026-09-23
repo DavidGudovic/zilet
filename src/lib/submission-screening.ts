@@ -58,13 +58,16 @@ Allow (none) content that passes all three checks. Do not judge literary quality
       throw new Error('unavailable');
     }
     const data = await response.json();
-    // Safety refusals contain no JSON verdict. They must not silently enter the queue.
+    // A safety refusal is not a verdict: literary work about violence or sex trips it too.
     const candidate = data.candidates?.[0];
     if (
       ['SAFETY', 'PROHIBITED_CONTENT', 'BLOCKLIST'].includes(data.promptFeedback?.blockReason) ||
       ['SAFETY', 'PROHIBITED_CONTENT', 'BLOCKLIST'].includes(candidate?.finishReason)
     )
-      return { status: 'blocked', reason: screeningReasons.abuse };
+      return {
+        status: 'manual',
+        reason: 'Automatska provjera odbila je da ocijeni tekst; pregledajte prilog ručno.',
+      };
     if (candidate?.finishReason && candidate.finishReason !== 'STOP') {
       console.warn('Submission screening incomplete', { finishReason: candidate.finishReason });
       throw new Error('incomplete');
