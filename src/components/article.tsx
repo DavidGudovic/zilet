@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from './link';
 import { dateLabel, rubricLabel, type PostView } from '@/lib/content';
 import { Poem, Artwork } from './reading';
 import { ShareLinks } from './share-links';

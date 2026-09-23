@@ -1,6 +1,6 @@
 import { ProfileForm } from '@/components/profile-form';
 import { headers } from 'next/headers';
-import Link from 'next/link';
+import { Link } from '@/components/link';
 import { Arrow } from '@/components/arrow';
 import { auth, registrationEnabled } from '@/lib/auth';
 import { firstParams, safeReturn, type SearchParams } from '@/lib/content';

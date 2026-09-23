@@ -1,6 +1,6 @@
 import { SubmissionConversation } from '@/components/submission-conversation';
 import { DeleteSubmissionButton } from '@/components/delete-submission-button';
-import Link from 'next/link';
+import { Link } from '@/components/link';
 import { Arrow } from '@/components/arrow';
 import { headers } from 'next/headers';
 import { db } from '@/db';

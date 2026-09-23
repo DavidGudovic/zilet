@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/components/link';
 import { Arrow } from '@/components/arrow';
 import { getAuthors } from '@/lib/data';
 import { pageMetadata } from '@/lib/seo';

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/components/link';
 import { getFrontPage } from '@/lib/data';
 import { Arrow } from '@/components/arrow';
 import { bodyText, excerpt, rubricLabel, mediaSrcSet } from '@/lib/content';

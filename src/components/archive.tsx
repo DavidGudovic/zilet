@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from './link';
 import { Arrow } from './arrow';
 import { dateLabel, rubricLabel, bodyText, type PostView } from '@/lib/content';
 export function ArchiveList({ items }: { items: PostView[] }) {

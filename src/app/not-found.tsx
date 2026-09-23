@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/components/link';
 import { Arrow } from '@/components/arrow';
 export const metadata = {
   title: 'Stranica nije pronađena',

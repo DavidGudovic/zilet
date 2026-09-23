@@ -7,7 +7,7 @@ import {
   breadcrumbData,
 } from '@/lib/seo';
 import { StructuredData } from '@/components/structured-data';
-import Link from 'next/link';
+import { Link } from '@/components/link';
 import { rubrics, rubricLabel } from '@/lib/content';
 import { findPosts, publishedRubrics } from '@/lib/data';
 import { Arrow } from '@/components/arrow';

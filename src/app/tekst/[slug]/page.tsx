@@ -6,7 +6,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { getPost, getRedirect, moreByAuthor } from '@/lib/data';
 import { Article } from '@/components/article';
 import { rubricLabel } from '@/lib/content';
-import Link from 'next/link';
+import { Link } from '@/components/link';
 export const dynamic = 'force-dynamic';
 export async function generateMetadata({
   params,
