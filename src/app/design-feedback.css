@@ -1,0 +1,173 @@
+/* Design feedback (September 2026): fewer type sizes, one arrow, calmer page furniture.
+   Loaded last, so it can be read, and reverted, as one layer above the earlier revisions. */
+
+/* Type scale. Every text on the front page uses one of these sizes (the lead headline keeps
+   its own); weight, colour, capitals and italics make the remaining distinctions. */
+:root {
+  --size-meta: 14px; /* rubric labels, captions, metadata, "see all" links */
+  --size-ui: 17px; /* navigation, bylines, reading links */
+  --size-read: 20px; /* excerpts, verse previews, intros */
+  --size-title: 30px; /* section headings, card and list titles */
+  --size-feature: 40px; /* the poem and the artwork given a place of their own */
+}
+@media (max-width: 1100px) {
+  :root {
+    --size-feature: 34px;
+  }
+}
+@media (max-width: 1000px) {
+  :root {
+    --size-feature: 30px;
+  }
+}
+@media (max-width: 767px) {
+  :root {
+    --size-ui: 16px;
+    --size-title: 27px;
+    --size-feature: 32px;
+  }
+}
+@media (max-width: 359px) {
+  :root {
+    --size-title: 25px;
+    --size-feature: 29px;
+  }
+}
+
+/* Arrows and chevrons are drawn (components/arrow.tsx) and sized with the text they follow. */
+.arrow,
+.chevron {
+  display: inline-block;
+  width: 0.75em;
+  height: 0.75em;
+  flex: none;
+  vertical-align: -0.05em;
+}
+.chevron {
+  transition: transform 160ms ease;
+}
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Navigation: centre the Ž on its letter rather than on letter and caron together, and lift the
+   magnifier's lens to the words beside it. */
+.nav-home svg {
+  transform: translateY(-4px);
+}
+.nav-tools svg {
+  transform: translateY(-2px);
+}
+@media (max-width: 767px) {
+  /* Phones reach "O časopisu" from the rubric menu and the footer. */
+  .nav-tools .nav-about {
+    display: none;
+  }
+}
+
+/* Every front-page section opens with the same ruled heading. */
+.homepage .section-rule > :first-child {
+  margin: 0;
+  font: 500 var(--size-title) / 1.2 var(--serif);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.section-rule > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--size-meta);
+}
+.homepage .browse-strip > p {
+  font-size: var(--size-title);
+}
+
+/* Rubric labels that lead to their rubric look like links. */
+a.eyebrow {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+a.eyebrow:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Front page sizes. */
+.lead-byline,
+.archive-byline,
+.group-byline,
+.index-byline,
+.article-colophon > span,
+.article-rail .byline {
+  font-size: var(--size-ui);
+}
+.lead-excerpt,
+.poem-excerpt,
+.group-verse,
+.group-intro,
+.front-art-feature article .intro {
+  font-size: var(--size-read);
+}
+.poem-selection h2,
+.front-art-feature article h2 {
+  font-size: var(--size-feature);
+  font-weight: 500;
+  line-height: 1.15;
+}
+.reading-groups h3,
+.index-row h3 {
+  font-size: var(--size-title);
+}
+.front-art-feature figcaption {
+  font-size: var(--size-meta);
+}
+.read-link {
+  font-size: var(--size-ui);
+  gap: 8px;
+}
+.read-link span {
+  display: inline-flex;
+  font-size: inherit;
+}
+
+/* Teasers show a few lines of the text itself and stop with an ellipsis. */
+.lead-excerpt,
+.group-intro,
+.group-verse {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.lead-excerpt {
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+}
+.group-intro,
+.group-verse {
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+}
+
+/* Article rail: every fact is a small label over its value; the actions sit close below. */
+.article-rail .rail-fact time {
+  display: inline;
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+}
+.rail-actions > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+}
+@media (min-width: 1001px) {
+  .article-rail .rail-actions {
+    margin-top: 28px;
+    gap: 2px;
+  }
+  .rail-actions > a {
+    justify-self: start;
+  }
+}

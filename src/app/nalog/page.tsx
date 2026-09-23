@@ -1,6 +1,7 @@
 import { ProfileForm } from '@/components/profile-form';
 import { headers } from 'next/headers';
 import Link from 'next/link';
+import { Arrow } from '@/components/arrow';
 import { auth, registrationEnabled } from '@/lib/auth';
 import { safeReturn } from '@/lib/content';
 import { AccountForm, SignOut } from '@/components/account-form';
@@ -22,11 +23,17 @@ export default async function Page({
           <h1>{session.user.name}</h1>
           <p>Vaša adresa ostaje privatna.</p>
           <div className="account-links">
-            <Link href={safeReturn(q.returnTo)}>Nastavite sa čitanjem ↗</Link>
+            <Link href={safeReturn(q.returnTo)}>
+              Nastavite sa čitanjem <Arrow />
+            </Link>
             {['editor', 'maintainer'].includes(session.user.role || '') && (
-              <Link href="/redakcija">Otvorite redakciju ↗</Link>
+              <Link href="/redakcija">
+                Otvorite redakciju <Arrow />
+              </Link>
             )}
-            <Link href="/posalji">Pošaljite svoj rad ↗</Link>
+            <Link href="/posalji">
+              Pošaljite svoj rad <Arrow />
+            </Link>
             <SignOut />
           </div>
           <ProfileForm name={session.user.name} email={session.user.email} />

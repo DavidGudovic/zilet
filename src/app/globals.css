@@ -1,5 +1,5 @@
 :root {
-  --paper: #f6f2e9;
+  --paper: #faf8f3;
   --ink: #20251f;
   --green: #173a2b;
   --burgundy: #4a181b;
@@ -142,18 +142,6 @@ button svg {
   line-height: 1.5;
   max-width: 235px;
 }
-.masthead-right {
-  justify-self: end;
-  font-size: 15px;
-  display: grid;
-  gap: 10px;
-}
-.masthead-right > span {
-  color: var(--muted);
-}
-.masthead-right a {
-  text-align: right;
-}
 .nav-rule {
   border-block: 1px solid var(--green);
 }
@@ -197,15 +185,11 @@ button svg {
   width: 100%;
 }
 .rubric-toggle {
-  gap: 12px;
+  gap: 7px;
   white-space: nowrap;
 }
-.rubric-toggle span {
-  font-size: 25px;
-  transition: transform 0.2s;
-}
-.rubric-toggle .rotated {
-  transform: rotate(45deg);
+.rubric-toggle[aria-expanded='true'] {
+  color: var(--green);
 }
 .nav-tools {
   display: flex;
@@ -339,15 +323,6 @@ figcaption span {
   padding-left: 45px;
   min-width: 0;
 }
-.poem-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.poem-label > span {
-  font-size: 21px;
-  color: var(--burgundy);
-}
 .poem-selection h2 {
   font-size: 37px;
   line-height: 1.18;
@@ -363,19 +338,6 @@ figcaption span {
 }
 .poem-selection .read-link {
   margin-top: 30px;
-}
-.poetry-index {
-  border-top: 1px solid var(--rule);
-  margin-top: 42px;
-  padding-top: 20px;
-  display: grid;
-  gap: 14px;
-}
-.poetry-index a {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--serif);
-  font-size: 24px;
 }
 .browse-strip {
   border-top: 1px solid var(--green);
@@ -809,9 +771,6 @@ figcaption span {
     justify-self: end;
     max-width: 150px;
   }
-  .masthead-right {
-    display: none;
-  }
   .main-nav {
     min-height: 58px;
     gap: 20px;
@@ -839,7 +798,6 @@ figcaption span {
   }
   .rubric-toggle {
     font-size: 16px;
-    gap: 8px;
   }
   .rubric-grid {
     grid-template-columns: 1fr 1fr;
@@ -903,9 +861,6 @@ figcaption span {
   .poem-excerpt {
     font-size: 21px;
     margin-top: 28px;
-  }
-  .poetry-index {
-    margin-top: 30px;
   }
   .browse-strip {
     grid-template-columns: 1fr;
@@ -2546,9 +2501,6 @@ td:last-child {
   border-left: 1px solid var(--green);
   padding-left: 18px;
 }
-.masthead-right {
-  font-size: 14px;
-}
 .nav-rule {
   position: relative;
   border-top: 0;
@@ -2586,11 +2538,6 @@ td:last-child {
 .read-link:hover span {
   transform: translate(3px, -3px);
 }
-.front-art-feature {
-  position: relative;
-  border-top: 1px solid var(--green);
-  padding-top: 18px;
-}
 .front-art-feature figure {
   padding: 22px;
   border: 1px solid var(--rule);
@@ -2602,20 +2549,6 @@ td:last-child {
 }
 .front-art-feature article {
   padding-inline: 12px;
-}
-.front-art-feature article::before {
-  content: '';
-  display: block;
-  width: 38px;
-  height: 58px;
-  background: linear-gradient(
-    115deg,
-    transparent 48%,
-    var(--burgundy) 49%,
-    var(--burgundy) 50%,
-    transparent 51%
-  );
-  margin-bottom: 22px;
 }
 .front-art-feature article h2 {
   font-size: clamp(42px, 5vw, 72px);
@@ -2773,13 +2706,6 @@ td:last-child {
   .brand {
     animation: ink-in 650ms ease-out both;
   }
-  @supports (animation-timeline: view()) {
-    .front-art-feature article::before {
-      animation: ink-in linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 90%;
-    }
-  }
 }
 @keyframes rule-draw {
   from {
@@ -2819,10 +2745,6 @@ td:last-child {
   .front-art-feature article {
     padding: 0;
   }
-  .front-art-feature article::before {
-    margin-bottom: 0;
-    font-size: 36px;
-  }
   .front-art-feature article h2 {
     margin-block: 8px 18px;
   }
@@ -2859,8 +2781,7 @@ td:last-child {
   }
 }
 @media print {
-  .nav-rule::before,
-  .front-art-feature article::before {
+  .nav-rule::before {
     display: none;
   }
   .brand {

@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
-import { InkLines } from './ink-lines';
+import { Arrow, Chevron } from './arrow';
 import { rubrics } from '@/lib/content';
 export function Header({ isEditor = false }: { isEditor?: boolean }) {
   const path = usePathname();
@@ -15,7 +15,6 @@ export function Header({ isEditor = false }: { isEditor?: boolean }) {
   return (
     <header className="site-header">
       <div className="masthead wrap">
-        <InkLines className="masthead-lines" />
         <p className="descriptor">
           Časopis za književnost,
           <br />
@@ -24,12 +23,6 @@ export function Header({ isEditor = false }: { isEditor?: boolean }) {
         <Link href="/" className="brand" aria-label="Žilet — Početna">
           <img src="/identity/wordmark-generated.webp" width="1881" height="836" alt="Žilet" />
         </Link>
-        <div className="masthead-right">
-          <span>Književnost i umjetnost</span>
-          <Link href="/o-casopisu">
-            O časopisu <span aria-hidden="true">↗</span>
-          </Link>
-        </div>
       </div>
       <div className="nav-rule">
         <nav className="main-nav wrap" aria-label="Glavna navigacija">
@@ -88,12 +81,16 @@ export function Header({ isEditor = false }: { isEditor?: boolean }) {
             aria-controls="rubric-menu"
             onClick={() => setOpen(!open)}
           >
-            Sve rubrike{' '}
-            <span className={open ? 'rotated' : ''} aria-hidden="true">
-              +
-            </span>
+            Sve rubrike <Chevron open={open} />
           </button>
           <div className="nav-tools">
+            <Link
+              className="nav-about"
+              href="/o-casopisu"
+              aria-current={path === '/o-casopisu' ? 'page' : undefined}
+            >
+              O časopisu
+            </Link>
             <Link href="/pretraga" aria-label="Pretraga">
               <svg
                 width="19"
@@ -144,7 +141,9 @@ export function Header({ isEditor = false }: { isEditor?: boolean }) {
                     aria-current={path === `/rubrika/${slug}` ? 'page' : undefined}
                   >
                     {label}
-                    <span aria-hidden="true">↗</span>
+                    <span aria-hidden="true">
+                      <Arrow />
+                    </span>
                   </Link>
                 ))}
             </div>
@@ -164,7 +163,6 @@ export function Footer() {
   return (
     <div className="footer-surface">
       <footer className="footer wrap">
-        <InkLines className="footer-lines" />
         <Link href="/" aria-label="Žilet — Početna">
           <img src="/identity/wordmark-generated.webp" width="100" height="45" alt="Žilet" />
         </Link>
@@ -195,7 +193,7 @@ export function Footer() {
           by David Gudović
         </a>
         <a href="#vrh" className="to-top">
-          Na vrh ↑
+          Na vrh <Arrow to="up" />
         </a>
       </footer>
     </div>

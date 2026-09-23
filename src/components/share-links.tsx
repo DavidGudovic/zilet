@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useId, useRef, useState } from 'react';
+import { Arrow, Chevron } from './arrow';
 
 export const facebookShareUrl = (url: string) =>
   `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
@@ -36,11 +37,11 @@ export function ShareLinks({
         </span>
       )}
       <a href={facebookShareUrl(url)} target="_blank" rel="noopener noreferrer">
-        Facebook <span aria-hidden="true">↗</span>
+        Facebook <Arrow />
         <span className="sr-only"> (otvara se u novom prozoru)</span>
       </a>
       <a href={viberShareUrl(url)}>
-        Viber <span aria-hidden="true">↗</span>
+        Viber <Arrow />
       </a>
       <button
         type="button"
@@ -88,7 +89,7 @@ export function ShareLinks({
         aria-controls={open ? id : undefined}
         onClick={() => setOpen(!open)}
       >
-        Podijeli <span aria-hidden="true">{open ? '−' : '↗'}</span>
+        Podijeli <Chevron open={open} />
       </button>
       {open && choices}
     </div>

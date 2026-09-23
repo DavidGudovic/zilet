@@ -4,6 +4,7 @@ import { Poem, Artwork } from './reading';
 import { ShareLinks } from './share-links';
 import { absoluteUrl } from '@/lib/seo';
 import { RichText } from './rich-text';
+import { Arrow } from './arrow';
 export function Article({
   post,
   preview = false,
@@ -32,14 +33,20 @@ export function Article({
             <Link className="byline" href={`/autor/${post.author.slug}`}>
               {post.author.name}
             </Link>
-            <time dateTime={post.publishedAt}>{dateLabel(post.publishedAt)}</time>
-            {post.modifiedAt && post.modifiedAt.slice(0, 10) !== post.publishedAt.slice(0, 10) && (
-              <p className="posting-credit">
-                Ažurirano <time dateTime={post.modifiedAt}>{dateLabel(post.modifiedAt)}</time>
+            {/* Every fact below the byline is a label over its value, set alike. */}
+            <p className="rail-fact">
+              <span>Objavljeno</span>
+              <time dateTime={post.publishedAt}>{dateLabel(post.publishedAt)}</time>
+            </p>
+            {/* Compare calendar days as readers see them, in Podgorica time, not UTC. */}
+            {post.modifiedAt && dateLabel(post.modifiedAt) !== dateLabel(post.publishedAt) && (
+              <p className="rail-fact">
+                <span>Ažurirano</span>
+                <time dateTime={post.modifiedAt}>{dateLabel(post.modifiedAt)}</time>
               </p>
             )}
             {post.postedBy && (
-              <p className="posting-credit">
+              <p className="rail-fact posting-credit">
                 <span>Objavu pripremio/la</span>
                 {post.postedBy}
               </p>
@@ -48,7 +55,9 @@ export function Article({
               {!preview && (
                 <ShareLinks url={absoluteUrl(`/tekst/${post.slug}`)} title={post.title} collapsed />
               )}
-              <a href="#komentari">Komentari ↓</a>
+              <a href="#komentari">
+                Komentari <Arrow to="down" />
+              </a>
             </div>
             {post.demo && (
               <p className="demo-note">
@@ -85,7 +94,9 @@ export function Article({
             )}
             <div className="article-colophon">
               <span>{post.author.name}</span>
-              <Link href={`/autor/${post.author.slug}`}>Svi radovi autora ↗</Link>
+              <Link href={`/autor/${post.author.slug}`}>
+                Svi radovi autora <Arrow />
+              </Link>
             </div>
             {post.editorialNote?.trim() && (
               <section className="editorial-note" aria-label="Bilješka urednika">
@@ -101,7 +112,7 @@ export function Article({
                 <h2>Komentari</h2>
                 <p>Još nema komentara.</p>
                 <Link href={`/nalog?returnTo=/tekst/${post.slug}%23komentari`}>
-                  Prijavite se da ostavite komentar ↗
+                  Prijavite se da ostavite komentar <Arrow />
                 </Link>
               </section>
             )}

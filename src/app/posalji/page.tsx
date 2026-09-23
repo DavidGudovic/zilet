@@ -1,6 +1,7 @@
 import { SubmissionConversation } from '@/components/submission-conversation';
 import { DeleteSubmissionButton } from '@/components/delete-submission-button';
 import Link from 'next/link';
+import { Arrow } from '@/components/arrow';
 import { headers } from 'next/headers';
 import { db } from '@/db';
 import { posts, submissions, submissionMessages, user } from '@/db/schema';
@@ -69,12 +70,19 @@ export default async function Page({
       {u ? (
         <>
           <p className="hint">
-            Potpis: <strong>{u.name}</strong>. <Link href="/nalog">Promijenite ime u nalogu ↗</Link>
+            Potpis: <strong>{u.name}</strong>.{' '}
+            <Link href="/nalog">
+              Promijenite ime u nalogu <Arrow />
+            </Link>
           </p>
           <SubmissionForm facebookUrl={facebookUrl} screening={Boolean(process.env.INTEL_KEY)} />
           <section className="submission-history">
             <h2>{prilog ? 'Vaš prilog' : 'Vaši prilozi'}</h2>
-            {prilog && <Link href="/posalji">← Svi vaši prilozi</Link>}
+            {prilog && (
+              <Link href="/posalji">
+                <Arrow to="left" /> Svi vaši prilozi
+              </Link>
+            )}
             {!items.length && <p>Ovdje ćete pratiti odgovor redakcije.</p>}
             {items.map(({ submission: s, slug, postStatus }) => (
               <article key={s.id} id={`prilog-${s.id}`}>
@@ -105,7 +113,9 @@ export default async function Page({
                     .map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }))}
                 />
                 {postStatus === 'published' && slug && (
-                  <Link href={`/tekst/${slug}`}>Pročitajte objavljeni rad ↗</Link>
+                  <Link href={`/tekst/${slug}`}>
+                    Pročitajte objavljeni rad <Arrow />
+                  </Link>
                 )}
               </article>
             ))}
@@ -120,7 +130,7 @@ export default async function Page({
               Prijavi se
             </Link>
             <Link href={`/nalog?mode=register&returnTo=${encodeURIComponent(returnTo)}`}>
-              Otvori nalog ↗
+              Otvori nalog <Arrow />
             </Link>
           </div>
         </section>

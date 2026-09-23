@@ -104,5 +104,5 @@ test('all text colours meet AA contrast on the paper background', () => {
     return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
   };
   for (const ink of ['20251f', '173a2b', '4a181b', '626359'])
-    assert.ok((luminance('f6f2e9') + 0.05) / (luminance(ink) + 0.05) >= 4.5, ink);
+    assert.ok((luminance('faf8f3') + 0.05) / (luminance(ink) + 0.05) >= 4.5, ink);
 });
