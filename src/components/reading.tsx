@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react';
 import type { Body, MediaView } from '@/lib/content';
 import { mediaSrcSet } from '@/lib/content';
+import { Arrow } from './arrow';
 export function VerseText({ body }: { body: Extract<Body, { kind: 'poem' }> }) {
   const boundaries = [
     ...new Set([0, body.text.length, ...body.emphasis.flatMap((m) => [m.from, m.to])]),
@@ -95,7 +96,9 @@ export function Artwork({ items }: { items: MediaView[] }) {
                 loading="lazy"
                 decoding="async"
               />
-              <span aria-hidden="true">↗</span>
+              <span aria-hidden="true">
+                <Arrow />
+              </span>
             </button>
             <figcaption>
               {m.caption}
@@ -136,10 +139,10 @@ export function Artwork({ items }: { items: MediaView[] }) {
         {items.length > 1 && (
           <div className="viewer-tools">
             <button disabled={index === 0} onClick={() => setIndex(index - 1)}>
-              ← Prethodna
+              <Arrow to="left" /> Prethodna
             </button>
             <button disabled={index === items.length - 1} onClick={() => setIndex(index + 1)}>
-              Sljedeća →
+              Sljedeća <Arrow to="right" />
             </button>
           </div>
         )}

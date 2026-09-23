@@ -10,7 +10,7 @@ import { StructuredData } from '@/components/structured-data';
 import Link from 'next/link';
 import { rubrics, rubricLabel } from '@/lib/content';
 import { findPosts } from '@/lib/data';
-import { InkLines } from '@/components/ink-lines';
+import { Arrow } from '@/components/arrow';
 import { ArchiveList, Pagination } from '@/components/archive';
 export const dynamic = 'force-dynamic';
 export async function generateMetadata({
@@ -58,7 +58,6 @@ export default async function Page({
         ])}
       />
       <header className="archive-heading rubric-heading">
-        <InkLines className="rubric-lines" />
         <span className="eyebrow">Rubrike / Žilet</span>
         <h1>{rubricTitle(slug)}</h1>
         <p className="archive-introduction">{rubricDescriptions[slug]}</p>
@@ -66,7 +65,10 @@ export default async function Page({
           <div className="reader-invitation">
             <p>Vaše riječi, naše stranice.</p>
             <Link className="button secondary submission-link" href="/posalji">
-              Pošaljite rad <span aria-hidden="true">↗</span>
+              Pošaljite rad{' '}
+              <span aria-hidden="true">
+                <Arrow />
+              </span>
             </Link>
           </div>
         )}
@@ -74,7 +76,7 @@ export default async function Page({
           <div className="subrubrics">
             {['slikarstvo', 'muzika', 'film'].map((s) => (
               <Link key={s} href={`/rubrika/${s}`}>
-                {rubricLabel(s)} ↗
+                {rubricLabel(s)} <Arrow />
               </Link>
             ))}
           </div>
@@ -91,7 +93,9 @@ export default async function Page({
             <option value="oldest">Najstarije prvo</option>
           </select>
         </label>
-        <button type="submit">Prikaži →</button>
+        <button type="submit">
+          Prikaži <Arrow to="right" />
+        </button>
       </form>
       {result.items.length ? (
         <ArchiveList items={result.items} />
@@ -99,7 +103,9 @@ export default async function Page({
         <section className="empty">
           <h2>Ova stranica čeka prve tekstove.</h2>
           <p>Do tada, pogledajte ostale rubrike.</p>
-          <Link href="/">Povratak na početnu ↗</Link>
+          <Link href="/">
+            Povratak na početnu <Arrow />
+          </Link>
         </section>
       )}
       <Pagination {...result} path={`/rubrika/${slug}`} query={{ sort: q.sort || 'newest' }} />

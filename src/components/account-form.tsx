@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { Arrow } from './arrow';
 export function AccountForm({
   returnTo,
   registration,
@@ -172,7 +173,7 @@ export function AccountForm({
               setMessage('');
             }}
           >
-            ← Nazad na prijavu
+            <Arrow to="left" /> Nazad na prijavu
           </button>
         )}
       </div>
@@ -195,7 +196,7 @@ export function SignOut() {
         }
       }}
     >
-      Odjavi se ↗
+      Odjavi se <Arrow />
     </button>
   );
 }

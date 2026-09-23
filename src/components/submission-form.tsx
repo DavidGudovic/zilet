@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { rubrics } from '@/lib/content';
 import { SelectField } from './select-field';
+import { Arrow } from './arrow';
 export function SubmissionForm({
   facebookUrl,
   screening,
@@ -138,7 +139,7 @@ export function SubmissionForm({
         {flagged && facebookUrl && (
           <p>
             <a href={facebookUrl} target="_blank" rel="noopener noreferrer">
-              Javite nam se na Facebooku ↗
+              Javite nam se na Facebooku <Arrow />
             </a>
           </p>
         )}

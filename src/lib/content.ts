@@ -117,6 +117,36 @@ export function bodyText(body: Body): string {
             );
   return walk(body.doc);
 }
+// A short all-capital line inside the text (e.g. "PJESNIK POETSKIH MEDALjONA.") is a subtitle.
+const isSubtitle = (text: string) => {
+  const letters = text.match(/\p{L}/gu) || [];
+  const capitals = text.match(/\p{Lu}/gu) || [];
+  return text.length <= 120 && letters.length > 0 && capitals.length / letters.length >= 0.8;
+};
+// Teaser for listings when the editor wrote no intro: the opening paragraphs without
+// subheadings, cut at a word boundary. Pages may clamp it further to a few lines.
+export function excerpt(body: Body, length = 320): string {
+  const blocks =
+    body.kind === 'poem'
+      ? body.text.split(/\n\s*\n/)
+      : (body.doc.content || [])
+          .filter((node) => node.type === 'paragraph' || node.type === 'blockquote')
+          .map((node) => bodyText({ kind: 'prose', doc: node }));
+  const paragraphs = blocks.map((block) => block.replace(/\s+/gu, ' ').trim()).filter(Boolean);
+  let text = '';
+  for (const paragraph of paragraphs) {
+    if (isSubtitle(paragraph)) continue;
+    text = text ? `${text} ${paragraph}` : paragraph;
+    if (text.length >= length) break;
+  }
+  // A text written entirely in capitals still gets its opening words.
+  text ||= paragraphs.join(' ');
+  if (text.length <= length) return text;
+  return `${text
+    .slice(0, length)
+    .replace(/\s+\S*$/u, '')
+    .replace(/[\s,;:–—-]+$/u, '')}…`;
+}
 export function fold(s: string) {
   return s
     .toLowerCase()

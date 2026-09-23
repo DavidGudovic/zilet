@@ -17,9 +17,9 @@ Assets in `public/identity`: wordmark and monogram in green, monochrome and reve
 
 The page surfaces now include fine paper grain, sage #DCE2CF, ochre #BC893A and
 terracotta #99543D. Grain is a background, so paintings and photographs stay clean.
-Drawn curves and once-only scroll entrances soften transitions between sections.
+Once-only scroll entrances soften transitions between sections.
 
-Colours: paper #F6F2E9; ink #20251F; forest #173A2B; burgundy #4A181B; metadata #626359; rules #C9C2B6. Do not use the rule colour for text. Leave clear space at least the height of the i dot on all sides. Minimum wordmark width: 120 px. Use the simplified icon at 16–32 px; use the larger outlined monogram above 32 px. Reversed artwork belongs on forest or ink, not a photographic background.
+Colours: paper #FAF8F3 (lightened from #F6F2E9 in September 2026); ink #20251F; forest #173A2B; burgundy #4A181B; metadata #626359; rules #C9C2B6. Do not use the rule colour for text. Leave clear space at least the height of the i dot on all sides. Minimum wordmark width: 120 px. Use the simplified icon at 16–32 px; use the larger outlined monogram above 32 px. Reversed artwork belongs on forest or ink, not a photographic background.
 
 Typeface selection: Source Serif 4 and Source Sans 3. Both are SIL Open Font License 1.1, sourced from the pinned Fontsource packages 5.3.0, which redistribute upstream Adobe Source typefaces. Licensing files are retained beside this document. Self-hosted Latin, extended Latin and Cyrillic subsets include the requested Ž/Č/Ć/Š/Đ/Ś/Ź, combining marks and Cyrillic contribution samples. Serif normal and italic weights are used. Source Sans provides navigation and editing controls.
 

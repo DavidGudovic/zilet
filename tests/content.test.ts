@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import poem from '../fixtures/poem.json';
-import { bodySchema, bodyText, fold, safeReturn } from '../src/lib/content';
+import { bodySchema, bodyText, excerpt, fold, safeReturn, type Body } from '../src/lib/content';
 test('poetry preserves supplied zero-width characters, blank lines and final authored line', () => {
   const body = bodySchema.parse({ kind: 'poem', text: poem.text, emphasis: [], align: 'left' });
   assert.equal(bodyText(JSON.parse(JSON.stringify(body))), poem.text);
@@ -26,4 +26,33 @@ test('search folds diacritics without changing display text', () =>
 test('account return paths stay on this site', () => {
   assert.equal(safeReturn('//evil.test'), '/');
   assert.equal(safeReturn('/tekst/pjesma'), '/tekst/pjesma');
+});
+const prose = (...blocks: [string, string][]): Body => ({
+  kind: 'prose',
+  doc: {
+    type: 'doc',
+    content: blocks.map(([type, text]) =>
+      type === 'heading'
+        ? { type, attrs: { level: 2 }, content: [{ type: 'text', text }] }
+        : { type, content: [{ type: 'text', text }] },
+    ),
+  },
+});
+test('front-page teasers skip subtitles and stop at a word with one ellipsis', () => {
+  const opening = 'Prva rečenica teksta. Druga rečenica, nešto duža od prve.';
+  assert.equal(
+    excerpt(
+      prose(
+        ['heading', 'Uvod'],
+        ['paragraph', 'PJESNIK POETSKIH MEDALjONA.'],
+        ['paragraph', opening],
+        ['paragraph', 'Treći pasus.'],
+      ),
+    ),
+    `${opening} Treći pasus.`,
+  );
+  assert.equal(excerpt(prose(['paragraph', 'Ljubav je bila ogromna.'])), 'Ljubav je bila ogromna.');
+  const long = excerpt(prose(['paragraph', 'riječ '.repeat(100)]), 40);
+  assert.ok(long.length <= 41 && long.endsWith('riječ…'), long);
+  assert.equal(excerpt(prose(['paragraph', 'SVE VELIKIM SLOVIMA.'])), 'SVE VELIKIM SLOVIMA.');
 });

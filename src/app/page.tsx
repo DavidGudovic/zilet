@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getFrontPage } from '@/lib/data';
-import { InkLines } from '@/components/ink-lines';
-import { bodyText, rubricLabel, mediaSrcSet } from '@/lib/content';
+import { Arrow } from '@/components/arrow';
+import { bodyText, excerpt, rubricLabel, mediaSrcSet } from '@/lib/content';
 import { pageMetadata, siteTitle, siteDescription, absoluteUrl, publisherEntity } from '@/lib/seo';
 import { StructuredData } from '@/components/structured-data';
 export const metadata = pageMetadata(siteTitle, siteDescription, '/');
@@ -44,8 +44,7 @@ export default async function Home() {
         }}
       />
       <div className="section-rule">
-        <span>U fokusu</span>
-        <span>Žilet / izbor tekstova</span>
+        <p>U fokusu</p>
       </div>
       {lead ? (
         <div className="front-spread">
@@ -59,12 +58,12 @@ export default async function Home() {
             <p className="lead-byline">
               <Link href={`/autor/${lead.author.slug}`}>{lead.author.name}</Link>
             </p>
-            <p className="lead-excerpt">
-              {lead.intro ||
-                bodyText(lead.body).split('\n\n')[0].split('. ').slice(0, 2).join('. ') + '.'}
-            </p>
+            <p className="lead-excerpt">{lead.intro || excerpt(lead.body)}</p>
             <Link className="read-link" href={`/tekst/${lead.slug}`}>
-              Pročitajte tekst <span aria-hidden="true">↗</span>
+              Pročitajte tekst{' '}
+              <span aria-hidden="true">
+                <Arrow />
+              </span>
             </Link>
             {lead.media[0] ? (
               <figure className="front-art">
@@ -85,12 +84,9 @@ export default async function Home() {
           </article>
           {poem && (
             <article className="poem-selection">
-              <div className="poem-label">
-                <Link href="/rubrika/poezija" className="eyebrow">
-                  Poezija
-                </Link>
-                <span aria-hidden="true">↓</span>
-              </div>
+              <Link href="/rubrika/poezija" className="eyebrow">
+                Poezija
+              </Link>
               <h2>
                 <Link href={`/tekst/${poem.slug}`}>{poem.title}</Link>
               </h2>
@@ -101,14 +97,11 @@ export default async function Home() {
                 {bodyText(poem.body).split('\n\n').slice(0, 8).join('\n\n')}
               </div>
               <Link className="read-link" href={`/tekst/${poem.slug}`}>
-                Pročitajte pjesmu <span aria-hidden="true">↗</span>
+                Pročitajte pjesmu{' '}
+                <span aria-hidden="true">
+                  <Arrow />
+                </span>
               </Link>
-              <div className="poetry-index">
-                <span className="eyebrow">Iz rubrike</span>
-                <Link href="/rubrika/poezija">
-                  Sva poezija <span aria-hidden="true">→</span>
-                </Link>
-              </div>
             </article>
           )}
         </div>
@@ -116,14 +109,18 @@ export default async function Home() {
         <section className="empty">
           <h1>Žilet</h1>
           <p>Prvi tekstovi su u pripremi.</p>
-          <Link href="/o-casopisu">O časopisu ↗</Link>
+          <Link href="/o-casopisu">
+            O časopisu <Arrow />
+          </Link>
         </section>
       )}
       {art && (
         <section className="front-art-feature">
           <div className="section-rule">
             <h2>Umjetnost</h2>
-            <Link href="/rubrika/umjetnost">Svi radovi ↗</Link>
+            <Link href="/rubrika/umjetnost">
+              Svi radovi <Arrow />
+            </Link>
           </div>
           <div>
             {art.media[0] && (
@@ -147,7 +144,9 @@ export default async function Home() {
               </figure>
             )}
             <article>
-              <span className="eyebrow">{rubricLabel(art.rubrics[0])}</span>
+              <Link href={`/rubrika/${art.rubrics[0]}`} className="eyebrow">
+                {rubricLabel(art.rubrics[0])}
+              </Link>
               <h2>
                 <Link href={`/tekst/${art.slug}`}>{art.title}</Link>
               </h2>
@@ -156,7 +155,10 @@ export default async function Home() {
               </p>
               {art.intro && <p className="intro">{art.intro}</p>}
               <Link className="read-link" href={`/tekst/${art.slug}`}>
-                Otvori djelo ↗
+                Otvori djelo{' '}
+                <span aria-hidden="true">
+                  <Arrow />
+                </span>
               </Link>
             </article>
           </div>
@@ -168,7 +170,9 @@ export default async function Home() {
             <div>
               <div className="section-rule">
                 <h2>Poezija</h2>
-                <Link href="/rubrika/poezija">Sve pjesme ↗</Link>
+                <Link href="/rubrika/poezija">
+                  Sve pjesme <Arrow />
+                </Link>
               </div>
               {poetryGroup.map((p) => (
                 <article className="group-poem" key={p.id}>
@@ -189,20 +193,27 @@ export default async function Home() {
             <div>
               <div className="section-rule">
                 <h2>Proza i eseji</h2>
-                <Link href="/rubrika/proza">Proza ↗</Link>
+                <Link href="/rubrika/proza">
+                  Proza <Arrow />
+                </Link>
               </div>
-              {proseGroup.map((p) => (
-                <article className="group-prose" key={p.id}>
-                  <span className="eyebrow">{rubricLabel(p.rubrics[0])}</span>
-                  <h3>
-                    <Link href={`/tekst/${p.slug}`}>{p.title}</Link>
-                  </h3>
-                  <p className="group-byline">
-                    <Link href={`/autor/${p.author.slug}`}>{p.author.name}</Link>
-                  </p>
-                  {p.intro && <p className="group-intro">{p.intro}</p>}
-                </article>
-              ))}
+              {proseGroup.map((p) => {
+                const teaser = p.intro || excerpt(p.body);
+                return (
+                  <article className="group-prose" key={p.id}>
+                    <Link href={`/rubrika/${p.rubrics[0]}`} className="eyebrow">
+                      {rubricLabel(p.rubrics[0])}
+                    </Link>
+                    <h3>
+                      <Link href={`/tekst/${p.slug}`}>{p.title}</Link>
+                    </h3>
+                    <p className="group-byline">
+                      <Link href={`/autor/${p.author.slug}`}>{p.author.name}</Link>
+                    </p>
+                    {teaser && <p className="group-intro">{teaser}</p>}
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>
@@ -214,7 +225,9 @@ export default async function Home() {
           </div>
           {recent.map((p) => (
             <article className="index-row" key={p.id}>
-              <span className="eyebrow">{rubricLabel(p.rubrics[0])}</span>
+              <Link href={`/rubrika/${p.rubrics[0]}`} className="eyebrow">
+                {rubricLabel(p.rubrics[0])}
+              </Link>
               <h3>
                 <Link href={`/tekst/${p.slug}`}>{p.title}</Link>
               </h3>
@@ -226,7 +239,6 @@ export default async function Home() {
         </section>
       )}
       <div className="browse-strip">
-        <InkLines className="browse-lines" />
         <p>Rubrike</p>
         <div>
           {[
@@ -239,7 +251,9 @@ export default async function Home() {
           ].map(([slug, label]) => (
             <Link key={slug} href={`/rubrika/${slug}`}>
               {label}
-              <span aria-hidden="true">↗</span>
+              <span aria-hidden="true">
+                <Arrow />
+              </span>
             </Link>
           ))}
         </div>

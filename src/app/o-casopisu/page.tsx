@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Arrow } from '@/components/arrow';
 import { getAuthors } from '@/lib/data';
 import { pageMetadata } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
@@ -24,7 +25,9 @@ export default async function Page() {
           {editors.map((editor) => (
             <Link key={editor.id} href={`/autor/${editor.slug}`}>
               {editor.name}
-              <span>O meni ↗</span>
+              <span>
+                O meni <Arrow />
+              </span>
             </Link>
           ))}
         </div>

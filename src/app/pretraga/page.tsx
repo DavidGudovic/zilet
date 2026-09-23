@@ -1,5 +1,6 @@
 import { findPosts } from '@/lib/data';
 import { ArchiveList, Pagination } from '@/components/archive';
+import { Arrow } from '@/components/arrow';
 import { rubrics } from '@/lib/content';
 export const metadata = { title: 'Pretraga', robots: { index: false, follow: true } };
 export default async function Page({
@@ -29,7 +30,9 @@ export default async function Page({
             type="search"
             placeholder="Šta želite da čitate?"
           />
-          <button className="button">Pretraži ↗</button>
+          <button className="button">
+            Pretraži <Arrow />
+          </button>
         </div>
         <label className="search-rubric">
           Rubrika

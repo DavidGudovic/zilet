@@ -9,6 +9,7 @@ import './atmosphere.css';
 import './editorial-experience.css';
 import './editorial-flourish.css';
 import './responsive-content.css';
+import './design-feedback.css';
 import { PageAtmosphere } from '@/components/page-atmosphere';
 import { Header, Footer } from '@/components/header';
 export const dynamic = 'force-dynamic';

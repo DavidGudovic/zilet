@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Arrow } from './arrow';
 import { dateLabel, rubricLabel, bodyText, type PostView } from '@/lib/content';
 export function ArchiveList({ items }: { items: PostView[] }) {
   return (
@@ -61,11 +62,23 @@ export function Pagination({
   const href = (n: number) => `${path}?${new URLSearchParams({ ...query, page: String(n) })}`;
   return (
     <nav className="pagination" aria-label="Stranice rezultata">
-      {page > 1 ? <Link href={href(page - 1)}>← Prethodna</Link> : <span />}
+      {page > 1 ? (
+        <Link href={href(page - 1)}>
+          <Arrow to="left" /> Prethodna
+        </Link>
+      ) : (
+        <span />
+      )}
       <span>
         Stranica {page} od {pages}
       </span>
-      {page < pages ? <Link href={href(page + 1)}>Sljedeća →</Link> : <span />}
+      {page < pages ? (
+        <Link href={href(page + 1)}>
+          Sljedeća <Arrow to="right" />
+        </Link>
+      ) : (
+        <span />
+      )}
     </nav>
   );
 }
