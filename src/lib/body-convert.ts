@@ -1,4 +1,5 @@
 import type { Body, RichNode } from './content';
+import { emphasisRuns } from './verse-edit';
 type Kind = Body['kind'];
 type Poem = Extract<Body, { kind: 'poem' }>;
 type Style = Poem['emphasis'][number]['style'];
@@ -13,25 +14,8 @@ const styles = (marks: RichNode['marks']): Style[] =>
 
 // Verse → text: blank lines separate paragraphs and single line breaks stay line breaks,
 // so the words and their bold/italic survive exactly.
-function verseToDoc({ text, emphasis }: Poem): RichNode {
-  const inline = (from: number, to: number): RichNode[] => {
-    const cuts = [
-      ...new Set(
-        [from, to, ...emphasis.flatMap((m) => [m.from, m.to])].filter(
-          (at) => at >= from && at <= to,
-        ),
-      ),
-    ].sort((a, b) => a - b);
-    return cuts.slice(0, -1).flatMap((start, i) => {
-      const end = cuts[i + 1];
-      const marks = (['bold', 'italic'] as const)
-        .filter((style) =>
-          emphasis.some((m) => m.style === style && m.from <= start && m.to >= end),
-        )
-        .map((type) => ({ type }));
-      return [{ type: 'text', text: text.slice(start, end), ...(marks.length ? { marks } : {}) }];
-    });
-  };
+function verseToDoc(poem: Poem): RichNode {
+  const { text } = poem;
   const blocks: [number, number][] = [];
   let start = 0;
   for (const gap of text.matchAll(/\n(?:[ \t\u00a0]*\n)+/g)) {
@@ -44,7 +28,7 @@ function verseToDoc({ text, emphasis }: Poem): RichNode {
     let line = from;
     for (const part of text.slice(from, to).split('\n')) {
       if (line > from) content.push({ type: 'hardBreak' });
-      if (part) content.push(...inline(line, line + part.length));
+      if (part) content.push(...emphasisRuns(poem, line, line + part.length));
       line += part.length + 1;
     }
     return content.length ? { type: 'paragraph', content } : { type: 'paragraph' };

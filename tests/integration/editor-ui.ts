@@ -3,6 +3,7 @@ import { chromium } from '@playwright/test';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import poem from '../../fixtures/poem.json';
+import { pasteVerse, verseText } from './verse';
 assert.equal(
   process.env.ZILET_DISPOSABLE_TEST,
   'true',
@@ -57,7 +58,8 @@ try {
   await page.screenshot({ path: `${dir}/author-menu-390.png` });
   await page.getByRole('option', { name: 'RAZVOJNI AUTOR (TEST)', exact: true }).first().tap();
   assert.equal(await author.getAttribute('aria-expanded'), 'false');
-  await page.getByLabel('Sadržaj pjesme', { exact: true }).fill(poem.text);
+  const verse = page.getByLabel('Sadržaj pjesme', { exact: true });
+  await pasteVerse(verse, poem.text);
   const note = 'Ovo je zasebna urednička bilješka.\n\nPjesma ostaje u izvornom obliku.';
   await page.getByLabel('Bilješka urednika', { exact: true }).fill(note);
   await page.getByText('Dodatne mogućnosti', { exact: true }).click();
@@ -99,7 +101,7 @@ try {
   await page.waitForURL('**/redakcija/tekst/*');
   const editorUrl = page.url();
   await page.reload();
-  assert.equal(await page.getByLabel('Sadržaj pjesme', { exact: true }).inputValue(), poem.text);
+  assert.equal(await verseText(verse), poem.text);
   assert.equal(await page.getByLabel('Bilješka urednika', { exact: true }).inputValue(), note);
   assert.match(await imagePosition.innerText(), /Iznad djela/);
   evidence.push(

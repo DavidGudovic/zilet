@@ -18,9 +18,10 @@ export default async function Page() {
         <li>
           <h2>Pišite ili nalijepite</h2>
           <p>
-            Kopirajte tekst iz svoje bilješke ili Facebook objave i nalijepite ga u Sadržaj. U
-            pjesmi Enter prelazi u novi red, a prazan red odvaja strofe. Za naglašavanje prvo
-            označite riječi, pa izaberite Kurziv ili Masno.
+            Kopirajte tekst iz svoje bilješke ili Facebook objave i nalijepite ga u Sadržaj. Redovi
+            i razmaci ostaju kao u izvoru. U pjesmi Enter prelazi u novi red, a prazan red odvaja
+            strofe. Za naglašavanje označite riječi, pa izaberite Kurziv ili Masno; promjenu odmah
+            vidite u tekstu. ↶ poništava izmjenu, a ↷ je vraća.
           </p>
         </li>
         <li>

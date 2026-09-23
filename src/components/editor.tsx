@@ -8,9 +8,11 @@ import { DeletePostButton } from './delete-post-button';
 import { SelectField } from './select-field';
 import { MediaPicker } from './media-picker';
 import { ShareLinks } from './share-links';
-import { remapEmphasis, toggleEmphasis } from '@/lib/verse-edit';
-import { VerseText } from './reading';
 const RichEditor = dynamic(() => import('./rich-editor').then((m) => m.RichEditor), {
+  ssr: false,
+  loading: () => <p>Otvaranje prostora za pisanje…</p>,
+});
+const VerseEditor = dynamic(() => import('./rich-editor').then((m) => m.VerseEditor), {
   ssr: false,
   loading: () => <p>Otvaranje prostora za pisanje…</p>,
 });
@@ -101,8 +103,6 @@ export function Editor({
   const [history, setHistory] = useState<{ id: string; createdAt: string }[] | null>(null);
   const [newAuthor, setNewAuthor] = useState(false);
   const [authorName, setAuthorName] = useState('');
-  const verse = useRef<HTMLTextAreaElement>(null);
-  const [selection, setSelection] = useState({ from: 0, to: 0 });
   const dirty = JSON.stringify(content) !== saved.current;
   const notify = useCallback(
     (text: string, tone: Toast['tone'] = 'success', shareSlug?: string) =>
@@ -291,21 +291,6 @@ export function Editor({
     } finally {
       setPending(null);
     }
-  }
-  function mark(style: 'italic' | 'bold') {
-    if (content.body.kind !== 'poem' || !verse.current) return;
-    const { from, to } = selection;
-    if (from === to) {
-      notify('Najprije označite riječi u pjesmi, pa izaberite Kurziv ili Masno.', 'info');
-      return;
-    }
-    change({
-      body: { ...content.body, emphasis: toggleEmphasis(content.body.emphasis, from, to, style) },
-    });
-    requestAnimationFrame(() => {
-      verse.current?.focus();
-      verse.current?.setSelectionRange(from, to);
-    });
   }
   // Typing shows saving at once; autosave follows a moment later.
   const shownStatus = dirty && status === 'Sačuvano' ? 'Čuvanje…' : status;
@@ -542,122 +527,18 @@ export function Editor({
         </p>
         <section className="content-field">
           <h2>Sadržaj</h2>
-          {!primaryRubric(content.rubrics) && content.body.kind === 'poem' ? (
+          {content.body.kind === 'poem' ? (
             <>
               <p className="hint">
-                Tekst možete nalijepiti odmah. Kada izaberete rubriku, prilagodiće joj se, a riječi
-                ostaju iste.
+                {primaryRubric(content.rubrics)
+                  ? 'Enter započinje novi red. Prazan red odvaja strofe. Razmaci i izvorno pismo ostaju sačuvani.'
+                  : 'Tekst možete nalijepiti odmah. Kada izaberete rubriku, prilagodiće joj se, a riječi i naglašavanje ostaju isti.'}
               </p>
-              <textarea
-                className="verse-input"
-                aria-label="Sadržaj"
-                placeholder="Ovdje napišite ili nalijepite tekst…"
-                value={content.body.text}
-                onChange={(e) => {
-                  if (content.body.kind === 'poem')
-                    change({ body: { ...content.body, text: e.target.value, emphasis: [] } });
-                }}
+              <VerseEditor
+                body={content.body}
+                poem={Boolean(primaryRubric(content.rubrics))}
+                onChange={(body) => change({ body })}
               />
-            </>
-          ) : content.body.kind === 'poem' ? (
-            <>
-              <p className="hint">
-                Enter započinje novi red. Prazan red odvaja strofe. Razmaci i izvorno pismo ostaju
-                sačuvani.
-              </p>
-              <div
-                className="editor-toolbar"
-                role="toolbar"
-                aria-label="Uređivanje pjesme"
-                onPointerDown={(event) => event.preventDefault()}
-              >
-                <button
-                  type="button"
-                  aria-pressed={
-                    selection.to > selection.from &&
-                    content.body.emphasis.some(
-                      (m) =>
-                        m.style === 'italic' && m.from <= selection.from && m.to >= selection.to,
-                    )
-                  }
-                  onClick={() => mark('italic')}
-                >
-                  <em>Kurziv</em>
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={
-                    selection.to > selection.from &&
-                    content.body.emphasis.some(
-                      (m) => m.style === 'bold' && m.from <= selection.from && m.to >= selection.to,
-                    )
-                  }
-                  onClick={() => mark('bold')}
-                >
-                  <strong>Masno</strong>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (content.body.kind !== 'poem' || !verse.current) return;
-                    const start = selection.from,
-                      end = selection.to;
-                    const text =
-                      content.body.text.slice(0, start) + '\n\n' + content.body.text.slice(end);
-                    change({
-                      body: {
-                        ...content.body,
-                        text,
-                        emphasis: remapEmphasis(content.body.text, text, content.body.emphasis),
-                      },
-                    });
-                  }}
-                >
-                  Nova strofa
-                </button>
-              </div>
-              <textarea
-                className="verse-input"
-                ref={verse}
-                onSelect={(event) =>
-                  setSelection({
-                    from: event.currentTarget.selectionStart,
-                    to: event.currentTarget.selectionEnd,
-                  })
-                }
-                aria-label="Sadržaj pjesme"
-                placeholder="Ovdje napišite ili nalijepite pjesmu…"
-                spellCheck={false}
-                autoCorrect="off"
-                autoCapitalize="off"
-                value={content.body.text}
-                onChange={(e) => {
-                  if (content.body.kind === 'poem')
-                    change({
-                      body: {
-                        ...content.body,
-                        text: e.target.value,
-                        emphasis: remapEmphasis(
-                          content.body.text,
-                          e.target.value,
-                          content.body.emphasis,
-                        ),
-                      },
-                    });
-                }}
-              />
-              {content.body.emphasis.length > 0 && (
-                <div
-                  className="verse-format-preview"
-                  role="region"
-                  aria-label="Pregled naglašavanja"
-                >
-                  <p className="hint">Pregled naglašavanja</p>
-                  <div className="verse" style={{ textAlign: content.body.align }}>
-                    <VerseText body={content.body} />
-                  </div>
-                </div>
-              )}
             </>
           ) : (
             <RichEditor

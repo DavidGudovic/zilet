@@ -2,6 +2,7 @@
 import { chromium, expect } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { pasteVerse, verseText } from './verse';
 assert.equal(process.env.ZILET_DISPOSABLE_TEST, 'true');
 const base = process.env.APP_URL || 'http://localhost:3000';
 assert.ok(['localhost', '127.0.0.1'].includes(new URL(base).hostname));
@@ -42,24 +43,32 @@ try {
   await start('Poezija', 'Kratka pjesma bez slike — Śutnja');
   const poem = page.getByLabel('Sadržaj pjesme', { exact: true });
   const text = '  Śutnja\n\nСоба\tса прозором\n\\ ~\u200b\n';
-  await poem.fill(text);
+  await pasteVerse(poem, text);
+  assert.equal(await verseText(poem), text);
   await poem.press('Control+Home');
   await poem.press('ArrowRight');
   await poem.press('ArrowRight');
   for (let i = 0; i < 6; i++) await poem.press('Shift+ArrowRight');
+  await expect
+    .poll(() => page.evaluate(() => window.getSelection()?.toString()), {
+      message: 'Keyboard selection must cover the word before using the toolbar',
+    })
+    .toBe('Śutnja');
   await page.getByRole('button', { name: 'Kurziv', exact: true }).tap();
-  assert.equal(await page.locator('.verse-format-preview em').innerText(), 'Śutnja');
+  assert.equal(await poem.locator('em').innerText(), 'Śutnja');
   assert.equal(
     await page.getByRole('button', { name: 'Kurziv', exact: true }).getAttribute('aria-pressed'),
     'true',
   );
   await page.getByRole('button', { name: 'Masno', exact: true }).tap();
-  assert.equal(await page.locator('.verse-format-preview strong em').innerText(), 'Śutnja');
+  assert.equal(await poem.locator('strong em, em strong').innerText(), 'Śutnja');
+  assert.equal(await verseText(poem), text);
   await save();
   await page.reload();
-  assert.equal(await poem.inputValue(), text);
-  assert.equal(await page.locator('.verse-format-preview strong em').innerText(), 'Śutnja');
-  await page.locator('.verse-format-preview').scrollIntoViewIfNeeded();
+  assert.equal(await verseText(poem), text);
+  assert.equal(await poem.locator('strong em, em strong').innerText(), 'Śutnja');
+  assert.equal(await poem.locator('em, strong').count(), 2);
+  await poem.scrollIntoViewIfNeeded();
   await page.screenshot({ path: dir + '/poem-formatting-390.png' });
   await page.getByRole('button', { name: 'Objavi', exact: true }).click();
   await page.getByText('Tekst je objavljen.', { exact: true }).waitFor();
@@ -67,7 +76,7 @@ try {
     .getByRole('link', { name: 'Otvori objavljeni tekst', exact: false })
     .getAttribute('href');
   evidence.push(
-    'Poem touch formatting shows bold/italic immediately and preserves exact canonical whitespace through save/reopen.',
+    'Poem touch formatting shows bold/italic in the verse itself and preserves exact canonical whitespace through save/reopen.',
   );
   await start('Proza', 'Citat, kurziv i masno u prozi');
   const prose = page.locator('[contenteditable=true]');
@@ -195,9 +204,9 @@ try {
     'Public home, reader rubric, poem and quoted prose fit 320/390/768/1440 px; submit link works; reduced motion and print verified.',
   );
   await page.goto(base + '/redakcija/novi');
-  await page
-    .getByLabel('Sadržaj', { exact: true })
-    .fill('Prvi red vijesti.\nDrugi red.\n\nNovi pasus.');
+  const draft = page.getByLabel('Sadržaj', { exact: true });
+  await pasteVerse(draft, 'Prvi red vijesti.\nDrugi red.\n\nNovi pasus.');
+  assert.equal(await verseText(draft), 'Prvi red vijesti.\nDrugi red.\n\nNovi pasus.');
   await page.getByRole('combobox', { name: 'Rubrika', exact: true }).click();
   await page.getByRole('option', { name: 'Novosti', exact: true }).click();
   const news = page.locator('[contenteditable=true]');

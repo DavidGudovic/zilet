@@ -1524,7 +1524,7 @@ figcaption span {
 .account-panel input,
 .editor-fields input:not([type='checkbox']),
 .editor-fields select,
-.editor-fields textarea:not(.verse-input),
+.editor-fields textarea,
 .comment-form textarea {
   width: 100%;
   background: #fffdf7;
@@ -1845,20 +1845,17 @@ figcaption span {
 .editor-toolbar button[aria-pressed='true'] {
   background: #dfe4d8;
 }
-.verse-input {
-  display: block;
-  width: 100%;
-  min-height: 540px;
-  resize: vertical;
+.verse-editor {
+  min-height: 360px;
   border: 1px solid var(--rule);
   background: #fffdf7;
   padding: 28px;
   font: 21px/1.65 var(--serif);
   tab-size: 4;
-  white-space: pre-wrap;
 }
-.verse-input + .hint {
-  margin-top: 10px;
+/* Each paragraph is one line of verse; an empty one is a blank line between stanzas. */
+.verse-editor p {
+  margin: 0;
 }
 .prose-editor {
   min-height: 420px;
@@ -1867,9 +1864,16 @@ figcaption span {
   max-width: none;
   border: 1px solid var(--rule);
 }
-.prose-editor:focus {
+.prose-editor:focus,
+.verse-editor:focus {
   outline: 2px solid var(--green);
   outline-offset: 1px;
+}
+.ProseMirror.is-empty::before {
+  content: attr(aria-placeholder);
+  position: absolute;
+  color: var(--muted);
+  pointer-events: none;
 }
 .upload-zone {
   border: 1px dashed #898d80;
@@ -2297,10 +2301,9 @@ td:last-child {
     padding: 10px 20px;
     font-size: 16px;
   }
-  .verse-input {
+  .verse-editor {
     padding: 18px;
     font-size: 20px;
-    min-height: 480px;
   }
   .prose-editor {
     padding: 18px;
@@ -2670,10 +2673,6 @@ td:last-child {
   max-width: 65ch;
   color: var(--muted);
   font-size: 16px;
-}
-.editor-fields .verse-input {
-  field-sizing: content;
-  min-height: 360px;
 }
 .profile-list {
   max-width: 850px;
