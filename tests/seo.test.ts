@@ -7,8 +7,11 @@ import {
   siteDescription,
   articleMetadata,
   articleStructuredData,
+  articleSummary,
   absoluteUrl,
   authorEntity,
+  breadcrumbData,
+  jsonLd,
   rubricSeoTitle,
   rubricTitle,
 } from '../src/lib/seo';
@@ -27,8 +30,10 @@ test('descriptive browser titles preserve visible labels and authored title form
   const post = { ...demoPosts[0], title: 'Šta je poezija\n\na šta nije\u200B' };
   const meta = articleMetadata(post);
   assert.equal(meta.title, `Šta je poezija a šta nije | ${post.author.name}`);
-  assert.equal(meta.openGraph?.title, `${meta.title} | Žilet`);
+  // og:site_name already names the magazine; the <title> template adds "| Žilet" itself.
+  assert.equal(meta.openGraph?.title, meta.title);
   assert.equal(meta.twitter?.title, meta.openGraph?.title);
+  assert.equal((meta.openGraph as { locale: string }).locale, 'sr_ME');
   assert.equal(post.title, 'Šta je poezija\n\na šta nije\u200B');
 });
 
@@ -40,7 +45,7 @@ test('SEO descriptions flatten verse whitespace and fit a snippet without changi
   assert.ok(text.endsWith('…'));
   const meta = pageMetadata('Poezija', 'Pjesme u Žiletu.', '/rubrika/poezija?page=2');
   assert.equal(meta.alternates?.canonical, '/rubrika/poezija?page=2');
-  assert.equal(meta.openGraph?.title, 'Poezija | Žilet');
+  assert.equal(meta.openGraph?.title, 'Poezija');
   assert.equal(meta.twitter?.description, meta.description);
 });
 
@@ -82,7 +87,7 @@ test('publication SEO uses the work author, public dates and media without chang
   };
   const metadata = articleMetadata(post);
   assert.equal(metadata.title, `${post.title} | ${post.author.name}`);
-  assert.equal(metadata.description, `${post.author.name}: Uvod za čitaoce.`);
+  assert.equal(metadata.description, 'Uvod za čitaoce.');
   assert.equal(metadata.twitter?.description, metadata.description);
   assert.equal((metadata.openGraph as { modifiedTime: string }).modifiedTime, post.modifiedAt);
   const schema = articleStructuredData(post);
@@ -91,10 +96,52 @@ test('publication SEO uses the work author, public dates and media without chang
   assert.equal(schema.datePublished, post.publishedAt);
   assert.equal(schema.mainEntityOfPage, absoluteUrl(`/tekst/${post.slug}`));
   assert.ok(schema.image.every((url) => /^https?:\/\//.test(url)));
+  assert.equal(schema.image.at(-1), absoluteUrl(`/media/${post.media[0].id}/share.jpg`));
   assert.equal(post.body, demoPosts[0].body);
   const withoutImage = articleStructuredData({ ...post, media: [] });
   assert.deepEqual(withoutImage.image, [absoluteUrl('/identity/social-preview.png')]);
-  assert.equal(authorEntity({ ...post.author, name: 'REDAKCIJA' })['@type'], 'Organization');
+  for (const name of ['REDAKCIJA', 'Redakcija Žileta', 'INTERNET IZVORI', 'izvori'])
+    assert.equal(authorEntity({ ...post.author, name })['@type'], 'Organization', name);
+  for (const name of ['IZVORINA MARKOVIĆ', 'Redakcijanović', post.author.name])
+    assert.equal(authorEntity({ ...post.author, name })['@type'], 'Person', name);
+});
+
+test('snippets quote verse with slashes and drop list glyphs and the repeated byline', () => {
+  const poem = demoPosts[1];
+  const verse = {
+    ...poem,
+    body: { ...poem.body, text: '□ Prvi stih\ndrugi stih\n\n— treći stih' },
+  };
+  assert.equal(articleSummary(verse as typeof poem), 'Prvi stih / drugi stih / — treći stih');
+  const paragraph = (text: string) => ({ type: 'paragraph', content: [{ type: 'text', text }] });
+  const aphorisms = {
+    ...demoPosts[0],
+    body: {
+      kind: 'prose' as const,
+      doc: { type: 'doc', content: [paragraph('● Prva misao.'), paragraph('■ Druga - misao.')] },
+    },
+  };
+  assert.equal(articleSummary(aphorisms), 'Prva misao. Druga - misao.');
+  assert.equal(
+    articleSummary({ ...verse, intro: 'Uvod\nu dva reda.' } as typeof poem),
+    'Uvod u dva reda.',
+  );
+  const long = articleSummary({
+    ...poem,
+    body: { ...poem.body, text: 'riječ riječ\n'.repeat(40) },
+  } as typeof poem);
+  assert.ok(long.length <= 160 && long.endsWith('riječ…'), long);
+});
+
+test('structured data text is single-line and safe inside a script tag', () => {
+  const post = { ...demoPosts[0], title: 'Razgovor sa \nMešom Selimovićem\u200B' };
+  const article = JSON.parse(jsonLd(articleStructuredData(post)));
+  assert.equal(article.headline, 'Razgovor sa Mešom Selimovićem');
+  const crumbs = JSON.parse(
+    jsonLd(breadcrumbData([{ name: 'Šta je prava poezija\na šta nije', path: '/tekst/x' }])),
+  );
+  assert.equal(crumbs.itemListElement[0].name, 'Šta je prava poezija a šta nije');
+  assert.ok(!jsonLd({ name: '</script><b>' }).includes('<'));
 });
 
 test('shared links preview the work’s first picture as a landscape JPEG', () => {

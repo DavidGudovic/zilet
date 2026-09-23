@@ -1,9 +1,11 @@
 import { rubrics } from '@/lib/content';
+import { publishedRubrics } from '@/lib/data';
 import { absoluteUrl, rubricTitle, rubricDescriptions } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
 
-export function GET() {
+export async function GET() {
+  const used = await publishedRubrics();
   const link = (title: string, path: string, summary: string) =>
     `- [${title}](${absoluteUrl(path)}): ${summary}`;
   const text = [
@@ -22,7 +24,7 @@ export function GET() {
     '## Rubrike',
     '',
     ...rubrics
-      .filter(([slug]) => slug !== 'price')
+      .filter(([slug]) => used.has(slug))
       .map(([slug, title]) =>
         link(
           rubricTitle(slug),
@@ -30,7 +32,9 @@ export function GET() {
           rubricDescriptions[slug] || `Arhiva rubrike ${title}.`,
         ),
       ),
-    link('Umjetnost', '/rubrika/umjetnost', 'Slikarstvo, muzika i film.'),
+    ...(used.has('umjetnost')
+      ? [link('Umjetnost', '/rubrika/umjetnost', 'Slikarstvo, muzika i film.')]
+      : []),
     '',
     '## Izvori i pravila',
     '',

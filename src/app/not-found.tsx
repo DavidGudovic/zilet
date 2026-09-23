@@ -1,5 +1,9 @@
 import Link from 'next/link';
 import { Arrow } from '@/components/arrow';
+export const metadata = {
+  title: 'Stranica nije pronađena',
+  description: 'Adresa je možda promijenjena ili tekst više nije dostupan.',
+};
 export default function NotFound() {
   return (
     <section className="wrap empty">

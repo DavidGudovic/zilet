@@ -6,7 +6,11 @@ import { auth, registrationEnabled } from '@/lib/auth';
 import { firstParams, safeReturn, type SearchParams } from '@/lib/content';
 import { AccountForm, SignOut } from '@/components/account-form';
 import { PasswordForm } from '@/components/password-form';
-export const metadata = { title: 'Čitalački nalog', robots: { index: false, follow: false } };
+export const metadata = {
+  title: 'Čitalački nalog',
+  description: 'Prijavite se ili otvorite čitalački nalog u časopisu Žilet.',
+  robots: { index: false, follow: false },
+};
 export default async function Page({
   searchParams,
 }: {

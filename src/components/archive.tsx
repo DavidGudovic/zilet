@@ -59,7 +59,12 @@ export function Pagination({
 }) {
   const pages = Math.ceil(total / limit);
   if (pages <= 1) return null;
-  const href = (n: number) => `${path}?${new URLSearchParams({ ...query, page: String(n) })}`;
+  // Links match canonical URLs: no empty or default parameters, and page 1 is the bare path.
+  const href = (n: number) => {
+    const params = new URLSearchParams(Object.entries(query).filter(([, value]) => value));
+    if (n > 1) params.set('page', String(n));
+    return params.size ? `${path}?${params}` : path;
+  };
   return (
     <nav className="pagination" aria-label="Stranice rezultata">
       {page > 1 ? (

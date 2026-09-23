@@ -34,11 +34,24 @@ const content = {
   authorId: author.id,
   type: 'poem',
   body: { kind: 'poem', text: 'Riječi\n\nna papiru.', emphasis: [], align: 'left' },
-  rubrics: ['poezija'],
+  rubrics: ['poezija', 'film'],
   media: [],
   commentsOpen: true,
 };
 const post = await call('/api/posts', 'POST', content);
+const rubricSlugs = [
+  'umjetnost',
+  'poezija',
+  'proza',
+  'eseji',
+  'novosti',
+  'zanimljivosti-o-poznatim-licnostima',
+  'zabava',
+  'slikarstvo',
+  'muzika',
+  'film',
+  'citaoci',
+];
 async function sitemap() {
   const r = await fetch(base + '/sitemap.xml');
   assert.equal(r.status, 200);
@@ -46,8 +59,6 @@ async function sitemap() {
   const urls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1]);
   assert.equal(new Set(urls).size, urls.length);
   assert.ok(!urls.some((u) => u.includes('/rubrika/price')));
-  assert.ok(urls.includes(base + '/rubrika/umjetnost'));
-  assert.ok(urls.includes(base + '/rubrika/zanimljivosti-o-poznatim-licnostima'));
   assert.ok(urls.includes(base + '/autori'));
   assert.ok(urls.includes(base + '/pravila'));
   assert.ok(!urls.some((u) => u.includes('knjizevna-kritika')));
@@ -61,6 +72,31 @@ assert.ok(article.includes('property="og:description"'));
 assert.ok(article.includes(`property="og:url" content="${base}/tekst/${post.slug}"`));
 const published = await sitemap();
 assert.ok(published.includes('/tekst/' + post.slug));
+// Only rubrics with a published text are listed and indexable; empty ones stay reachable.
+for (const slug of ['poezija', 'film', 'umjetnost'])
+  assert.ok(published.includes(`<loc>${base}/rubrika/${slug}</loc>`), slug);
+const emptyRubrics: string[] = [];
+for (const slug of rubricSlugs) {
+  const html = await (
+    await fetch(`${base}/rubrika/${slug}`, { headers: { 'User-Agent': 'Twitterbot' } })
+  ).text();
+  const empty = html.includes('Ova stranica čeka prve tekstove.');
+  if (empty) emptyRubrics.push(slug);
+  assert.equal(
+    html.includes('<meta name="robots" content="noindex, follow"/>'),
+    empty,
+    `Only an empty rubric is noindex: ${slug}`,
+  );
+}
+const [currentMap, guideRubrics] = await Promise.all([
+  sitemap(),
+  fetch(base + '/llms.txt').then((r) => r.text()),
+]);
+for (const slug of rubricSlugs) {
+  const listed = !emptyRubrics.includes(slug);
+  assert.equal(currentMap.includes(`<loc>${base}/rubrika/${slug}</loc>`), listed, slug);
+  assert.equal(guideRubrics.includes(`${base}/rubrika/${slug})`), listed, `llms.txt ${slug}`);
+}
 async function publicArticle() {
   const response = await fetch(base + '/tekst/' + post.slug, {
     headers: { 'User-Agent': 'Twitterbot' },
@@ -68,8 +104,10 @@ async function publicArticle() {
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.ok(html.includes(`property="og:url" content="${base}/tekst/${post.slug}"`));
-  assert.ok(html.includes('property="og:description" content="SEO PROVJERA: Riječi na papiru."'));
-  assert.ok(html.includes('name="twitter:description" content="SEO PROVJERA: Riječi na papiru."'));
+  // The byline is in the title; verse lines are quoted with slashes.
+  assert.ok(html.includes('property="og:description" content="Riječi / na papiru."'));
+  assert.ok(html.includes('name="twitter:description" content="Riječi / na papiru."'));
+  assert.ok(html.includes('property="og:locale" content="sr_ME"'));
   const json = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)![1]);
   assert.equal(json.author.url, base + '/autor/' + author.slug);
   assert.equal(json.mainEntityOfPage, base + '/tekst/' + post.slug);
@@ -116,8 +154,38 @@ for (const [path, title] of [
 ]) {
   const html = await (await fetch(base + path, { headers: { 'User-Agent': 'Twitterbot' } })).text();
   assert.ok(html.includes(`<title>${title}</title>`), `Descriptive browser title: ${path}`);
-  assert.ok(html.includes(`property="og:title" content="${title}"`));
+  // og:site_name already says Žilet.
+  assert.ok(html.includes(`property="og:title" content="${title.replace(' | Žilet', '')}"`));
 }
+// The full rubric menu is in the server HTML for crawlers, hidden until opened.
+assert.match(home, /<div class="menu-sheet" id="rubric-menu" hidden="">/);
+for (const slug of rubricSlugs.slice(1))
+  assert.ok(home.includes(`href="/rubrika/${slug}"`), `Menu link in server HTML: ${slug}`);
+const submit = await (
+  await fetch(base + '/posalji', { headers: { 'User-Agent': 'Twitterbot' } })
+).text();
+assert.ok(submit.includes('<meta name="robots" content="noindex, nofollow"/>'));
+assert.ok(submit.includes(`property="og:url" content="${base}/posalji"`));
+assert.ok(submit.includes('property="og:title" content="Pošaljite svoj rad"'));
+assert.ok(!submit.includes('property="og:title" content="Žilet |'));
+for (const path of ['/nalog', '/pretraga', '/oporavak', '/nova-lozinka']) {
+  const html = await (await fetch(base + path, { headers: { 'User-Agent': 'Twitterbot' } })).text();
+  assert.ok(!html.includes('property="og:title" content="Žilet |'), `Own share title: ${path}`);
+}
+const missing = await fetch(base + '/tekst/nepostoji-seo-provjera', {
+  headers: { 'User-Agent': 'Twitterbot' },
+});
+assert.equal(missing.status, 404);
+assert.ok((await missing.text()).includes('<title>Stranica nije pronađena | Žilet</title>'));
+for (const [path, type] of [
+  ['/favicon.ico', 'image/x-icon'],
+  ['/apple-touch-icon.png', 'image/png'],
+]) {
+  const icon = await fetch(base + path);
+  assert.equal(icon.status, 200, path);
+  assert.equal(icon.headers.get('content-type'), type);
+}
+assert.ok(home.includes('<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>'));
 const paginationPosts = [];
 for (let i = 0; i < 13; i++) {
   const draft = await call('/api/posts', 'POST', { ...content, title: `Stranica arhive ${i}` });
@@ -129,6 +197,13 @@ assert.equal(rubricResponse.status, 200);
 const rubric = await rubricResponse.text();
 assert.ok(rubric.includes(`rel="canonical" href="${base}/rubrika/poezija?page=2"`));
 assert.ok(rubric.includes('<title>Poezija: pjesme i stihovi autora | stranica 2 | Žilet</title>'));
+// Pagination links are the canonical URLs: page 1 is the bare path, the default order is implicit.
+assert.match(rubric, /class="pagination"[^]*?href="\/rubrika\/poezija"/);
+assert.ok(!rubric.includes('page=1') && !rubric.includes('sort=newest'));
+const oldest = await (await fetch(base + '/rubrika/poezija?sort=oldest&page=2')).text();
+assert.ok(oldest.includes('<meta name="robots" content="noindex, follow"/>'));
+assert.ok(oldest.includes(`rel="canonical" href="${base}/rubrika/poezija?sort=oldest&amp;page=2"`));
+assert.ok(oldest.includes('href="/rubrika/poezija?sort=oldest"'));
 for (const item of paginationPosts) {
   await call(`/api/posts/${item.id}/unpublish`, 'POST', { version: item.version });
   await call('/api/posts/' + item.id, 'DELETE', { version: item.version + 1 });
@@ -136,6 +211,10 @@ for (const item of paginationPosts) {
 assert.equal((await fetch(base + '/autor/' + author.slug + '?page=999')).status, 404);
 const robots = await (await fetch(base + '/robots.txt')).text();
 assert.ok(robots.includes('Sitemap: ' + base + '/sitemap.xml'));
+// Noindexed account and submission pages must be crawlable for their noindex to be seen.
+for (const path of ['/nalog', '/posalji', '/oporavak', '/nova-lozinka'])
+  assert.ok(!robots.includes(`Disallow: ${path}\n`), path);
+assert.ok(robots.includes('Disallow: /redakcija\n'));
 const font = await fetch(base + '/fonts/source-serif-4-latin-wght-normal.woff2', {
   method: 'HEAD',
 });
@@ -157,5 +236,5 @@ assert.ok(guide.includes(base + '/autori'));
 assert.ok(!guide.includes('knjizevna-kritika'));
 
 console.log(
-  'PASS automatic SEO on publication, stable draft dates, canonical URLs, author profiles, crawler files, retired category redirect and cache headers',
+  'PASS automatic SEO on publication, rubric indexing, pagination links, share metadata, icons, stable draft dates, canonical URLs, author profiles, crawler files, retired category redirect and cache headers',
 );

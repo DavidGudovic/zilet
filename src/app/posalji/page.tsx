@@ -9,7 +9,16 @@ import { eq, desc, asc, inArray, and } from 'drizzle-orm';
 import { requireUser } from '@/lib/security';
 import { SubmissionForm } from '@/components/submission-form';
 import { dateLabel, firstParams, type SearchParams } from '@/lib/content';
-export const metadata = { title: 'Pošaljite svoj rad', robots: { index: false, follow: false } };
+import { pageMetadata } from '@/lib/seo';
+// Not indexed, but shared as the call for submissions, so links get their own preview.
+export const metadata = {
+  ...pageMetadata(
+    'Pošaljite svoj rad',
+    'Pošaljite pjesmu, priču, esej ili umjetnički rad redakciji Žileta. Izabrane radove objavljujemo u rubrici Radovi čitalaca, uz uredničku bilješku.',
+    '/posalji',
+  ),
+  robots: { index: false, follow: false },
+};
 export default async function Page({ searchParams }: { searchParams: SearchParams<'prilog'> }) {
   const { prilog } = firstParams(await searchParams);
   const returnTo = prilog

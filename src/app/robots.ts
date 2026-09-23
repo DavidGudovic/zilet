@@ -6,17 +6,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: [
-        '/redakcija',
-        '/api',
-        '/nalog',
-        '/posalji',
-        '/oporavak',
-        '/nova-lozinka',
-        '/specimen',
-        '/dev-art',
-        '/specimen-fonts',
-      ],
+      // Account and submission pages stay crawlable so search engines can read their noindex.
+      disallow: ['/redakcija', '/api', '/specimen', '/dev-art', '/specimen-fonts'],
     },
     sitemap: absoluteUrl('/sitemap.xml'),
   };

@@ -9,7 +9,7 @@ import {
 import { StructuredData } from '@/components/structured-data';
 import Link from 'next/link';
 import { rubrics, rubricLabel } from '@/lib/content';
-import { findPosts } from '@/lib/data';
+import { findPosts, publishedRubrics } from '@/lib/data';
 import { Arrow } from '@/components/arrow';
 import { ArchiveList, Pagination } from '@/components/archive';
 export const dynamic = 'force-dynamic';
@@ -26,14 +26,18 @@ export async function generateMetadata({
   const q = await searchParams;
   const page = Math.max(1, Math.min(10000, Math.floor(Number(q.page)) || 1));
   const title = rubricSeoTitle(slug);
-  return {
-    ...pageMetadata(
-      page > 1 ? `${title} | stranica ${page}` : title,
-      rubricDescriptions[slug] || `${title} u Žiletu.`,
-      `/rubrika/${slug}${page > 1 ? `?page=${page}` : ''}`,
-    ),
-    ...(q.sort === 'oldest' ? { robots: { index: false, follow: true } } : {}),
-  };
+  const query = new URLSearchParams(q.sort === 'oldest' ? { sort: 'oldest' } : {});
+  if (page > 1) query.set('page', String(page));
+  const metadata = pageMetadata(
+    page > 1 ? `${title} | stranica ${page}` : title,
+    rubricDescriptions[slug] || `${title} u Žiletu.`,
+    `/rubrika/${slug}${query.size ? `?${query}` : ''}`,
+  );
+  // Oldest-first lists and empty rubrics stay out of the index. Their canonical is the page
+  // itself: the newest-first URL would name a page with different content.
+  if (q.sort === 'oldest' || !(await publishedRubrics()).has(slug))
+    metadata.robots = { index: false, follow: true };
+  return metadata;
 }
 export default async function Page({
   params,
@@ -108,7 +112,11 @@ export default async function Page({
           </Link>
         </section>
       )}
-      <Pagination {...result} path={`/rubrika/${slug}`} query={{ sort: q.sort || 'newest' }} />
+      <Pagination
+        {...result}
+        path={`/rubrika/${slug}`}
+        query={q.sort === 'oldest' ? { sort: 'oldest' } : {}}
+      />
     </div>
   );
 }

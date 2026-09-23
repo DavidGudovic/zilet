@@ -141,6 +141,23 @@ export async function findPosts({
     limit,
   };
 }
+// Rubrics with at least one published text; "umjetnost" gathers painting, music and film.
+export async function publishedRubrics() {
+  const keys = isDemo()
+    ? demoPosts.flatMap((p) => p.rubrics)
+    : (
+        await db
+          .selectDistinct({
+            rubric: dsql<string>`jsonb_array_elements_text(${revisions.content}->'rubrics')`,
+          })
+          .from(posts)
+          .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
+          .where(eq(posts.status, 'published'))
+      ).map((row) => row.rubric);
+  const used = new Set(keys.map((key) => (key === 'price' ? 'proza' : key)));
+  if (['slikarstvo', 'muzika', 'film'].some((key) => used.has(key))) used.add('umjetnost');
+  return used;
+}
 export async function getPosts() {
   return (await findPosts({ limit: 24 })).items;
 }

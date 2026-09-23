@@ -80,6 +80,9 @@ export function Header({ isEditor = false }: { isEditor?: boolean }) {
             aria-expanded={open}
             aria-controls="rubric-menu"
             onClick={() => setOpen(!open)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setOpen(false);
+            }}
           >
             Sve rubrike <Chevron open={open} />
           </button>
@@ -117,43 +120,43 @@ export function Header({ isEditor = false }: { isEditor?: boolean }) {
           </div>
         </nav>
       </div>
-      {open && (
-        <div
-          className="menu-sheet"
-          id="rubric-menu"
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              setOpen(false);
-              trigger.current?.focus();
-            }
-          }}
-        >
-          <div className="wrap menu-inner">
-            <p className="eyebrow">Rubrike</p>
-            <div className="rubric-grid">
-              <Link href="/">Početna</Link>
-              {rubrics
-                .filter(([slug]) => slug !== 'price')
-                .map(([slug, label]) => (
-                  <Link
-                    key={slug}
-                    href={`/rubrika/${slug}`}
-                    aria-current={path === `/rubrika/${slug}` ? 'page' : undefined}
-                  >
-                    {label}
-                    <span aria-hidden="true">
-                      <Arrow />
-                    </span>
-                  </Link>
-                ))}
-            </div>
-            <div className="menu-bottom">
-              <Link href="/autori">Autori</Link>
-              <Link href="/o-casopisu">O časopisu</Link>
-            </div>
+      {/* Rendered while closed so crawlers find every rubric link; hidden keeps it out of view. */}
+      <div
+        className="menu-sheet"
+        id="rubric-menu"
+        hidden={!open}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            setOpen(false);
+            trigger.current?.focus();
+          }
+        }}
+      >
+        <div className="wrap menu-inner">
+          <p className="eyebrow">Rubrike</p>
+          <div className="rubric-grid">
+            <Link href="/">Početna</Link>
+            {rubrics
+              .filter(([slug]) => slug !== 'price')
+              .map(([slug, label]) => (
+                <Link
+                  key={slug}
+                  href={`/rubrika/${slug}`}
+                  aria-current={path === `/rubrika/${slug}` ? 'page' : undefined}
+                >
+                  {label}
+                  <span aria-hidden="true">
+                    <Arrow />
+                  </span>
+                </Link>
+              ))}
+          </div>
+          <div className="menu-bottom">
+            <Link href="/autori">Autori</Link>
+            <Link href="/o-casopisu">O časopisu</Link>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }
