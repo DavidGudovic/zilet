@@ -5,6 +5,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
 import { mailConfigured, sendMail } from './mail';
+import { HttpError, takeLimit } from './security';
 export { mailConfigured, sendMail } from './mail';
 export const registrationEnabled = () =>
   process.env.REGISTRATION_ENABLED === 'true' && mailConfigured();
@@ -59,8 +60,17 @@ export const auth = betterAuth({
   },
   emailVerification: {
     sendOnSignUp: true,
+    // An unverified sign-in with the right password sends a fresh link.
+    sendOnSignIn: true,
+    expiresIn: 60 * 60 * 24,
     autoSignInAfterVerification: false,
     sendVerificationEmail: async ({ user, url }) => {
+      // Sign-in allows more attempts than the resend endpoint; cap links per account instead.
+      await takeLimit(`verification-mail:${user.id}`, 5, 600).catch((e) => {
+        throw e instanceof HttpError
+          ? new APIError('TOO_MANY_REQUESTS', { message: e.message })
+          : e;
+      });
       await sendMail(
         user.email,
         'Žilet — potvrdite adresu',

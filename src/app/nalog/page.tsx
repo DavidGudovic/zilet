@@ -10,13 +10,24 @@ export const metadata = { title: 'Čitalački nalog', robots: { index: false, fo
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ returnTo?: string; verified?: string; mode?: string }>;
+  searchParams: Promise<{ returnTo?: string; verified?: string; mode?: string; error?: string }>;
 }) {
   const q = await searchParams;
   const session = await auth.api.getSession({ headers: await headers() });
   return (
     <div className="wrap account-page">
-      {q.verified && <p className="notice">Adresa je potvrđena. Možete se prijaviti.</p>}
+      {/* A failed confirmation link appends error= to a callback that already says verified. */}
+      {q.error ? (
+        <p className="notice form-error" role="alert">
+          {q.error === 'TOKEN_EXPIRED'
+            ? 'Link za potvrdu adrese je istekao.'
+            : 'Link za potvrdu adrese nije ispravan.'}{' '}
+          Prijavite se svojom adresom i lozinkom; ako adresa još nije potvrđena, poslaćemo vam novi
+          link.
+        </p>
+      ) : (
+        q.verified && <p className="notice">Adresa je potvrđena. Možete se prijaviti.</p>
+      )}
       {session ? (
         <section className="account-panel">
           <span className="eyebrow">Vaš nalog</span>
