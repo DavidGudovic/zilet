@@ -44,8 +44,11 @@ Editors review `/redakcija/prilozi`. Acceptance creates exactly one private draf
 and requires a signed editorial note. Publishing uses the existing explicit
 publication workflow and retains the `citaoci` rubric. Reader work appears under
 `/rubrika/citaoci`. Rejection may include a private reply; readers see their
-status and can delete pending/rejected submissions. No new outbound mail is sent
-for review decisions.
+status and can delete pending/rejected submissions. Both decisions email the
+reader when mail is configured: acceptance sends a short notice, rejection sends
+the decision with the editor's private reply, if any. Before deciding, an editor
+can send the reader a question; the reader's reply is emailed to that editor.
+Each message links to the submission page, where the conversation continues.
 
 Configure optional screening:
 

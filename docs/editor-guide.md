@@ -1,6 +1,6 @@
 # Žilet — vodič za urednike
 
-**Otvorite Redakcija pored Nalog kada ste prijavljeni kao urednik.** Prijavite se svojom adresom i lozinkom. Ako ste dobili poziv, najprije potvrdite adresu i iz poruke za obnovu izaberite lozinku. „Zaboravljena lozinka” šalje novi link.
+**Otvorite Redakcija pored Nalog kada ste prijavljeni kao urednik.** Prijavite se svojom adresom i lozinkom. Ako ste dobili poziv, najprije potvrdite adresu i iz poruke za obnovu izaberite lozinku. „Zaboravljena lozinka” šalje novi link. Link za potvrdu adrese važi jedan dan; ako je istekao, prijavite se i poslaćemo vam novi.
 
 **Pripremite djelo.** Izaberite **Novi tekst**, zatim najprije izaberite **Rubriku**. Rubrika određuje oblik: u Poeziji svaki stih ostaje u svom redu, a u ostalim rubrikama tekst ima pasuse. Ako tekst nalijepite prije izbora rubrike, prilagodiće se kada je izaberete; riječi i naglašavanje ostaju isti. Unesite naslov i izaberite autora. „Dodaj autora” pravi autorski potpis; ne otvara korisnički nalog. Za izmjenu odobrene biografije ili portreta obratite se osobi koja održava sajt.
 
@@ -8,7 +8,7 @@
 
 **Dodajte sliku samo kada pripada djelu.** „Dodaj fotografiju” otvara izbor fajla; možete je i prevući ili izabrati iz biblioteke. Prihvaćeni su JPG, PNG i WebP do 12 MB. Sačekajte završetak slanja. Dodajte kratak opis onoga što je važno na slici i obavezan potpis: autor, izvor i prava korišćenja. Legenda je opciona. Odredite da li slika ide iznad, uz pjesmu ili ispod djela. „Ukloni iz teksta” ne briše samo djelo. Za galeriju dodajte više slika i podesite redosljed.
 
-**Provjerite, pa objavite.** Otvorite **Pregled**. Dugme **Nazad na uređivanje** vraća vas u sačuvani nacrt. Provjerite potpis, oba dijela kritike, stihove, naglašavanje i slike. Na uskom ekranu dugi stih može vizuelno preći u sljedeći red. „Izvorni prelom” prikazuje autorske redove uz pomjeranje unutar pjesme. „Kopiraj pjesmu” kopira izvorni tekst.
+**Provjerite, pa objavite.** Otvorite **Pregled**. Dugme **Nazad na uređivanje** vraća vas u sačuvani nacrt. Provjerite potpis, stihove, naglašavanje i slike. Na uskom ekranu dugi stih može vizuelno preći u sljedeći red. „Izvorni prelom” prikazuje autorske redove uz pomjeranje unutar pjesme. „Kopiraj pjesmu” kopira izvorni tekst.
 
 **Sačuvano nije isto što i objavljeno.** Nacrt se čuva tokom rada. Natpis **Sačuvano** znači da je server potvrdio čuvanje. Svako dugme potvrđuje radnju porukom pri dnu ekrana, na primjer „Nacrt je sačuvan.” ili „Tekst je objavljen.”; ako nešto nedostaje, poruka kaže šta treba dopuniti. **Objavi** prvi put otvara djelo čitaocima. Kada mijenjate već objavljeno djelo, promjene ostaju u nacrtu sve dok ne izaberete **Objavi izmjene**. „Pregled” je dostupan samo urednicima.
 
@@ -40,7 +40,7 @@ dodajte sliku, provjerite Pregled i pritisnite Objavi.
 
 ## Prilozi čitalaca i brisanje
 
-U **Prilozi čitalaca** otvorite rad, pročitajte ga i pregledajte fotografiju. Dodajte bilješku, pa izaberite **Prihvati i otvori nacrt**. Provjerite nacrt i pritisnite **Objavi**. Bilješka nosi vaše ime, a rad zadržava potpis čitaoca. Ako rad ne izaberete, možete ostaviti privatni odgovor. „Ručna provjera” znači da automatska provjera nije dala pouzdan odgovor; prilog i dalje možete pročitati i prihvatiti.
+U **Prilozi čitalaca** otvorite rad, pročitajte ga i pregledajte fotografiju. Dodajte bilješku, pa izaberite **Prihvati i otvori nacrt**. Provjerite nacrt i pritisnite **Objavi**. Bilješka nosi vaše ime, a rad zadržava potpis čitaoca. Ako rad ne izaberete, možete ostaviti privatni odgovor. O svakoj odluci čitalac dobija e-poruku, pa sajt prije odbijanja traži potvrdu. „Ručna provjera” znači da automatska provjera nije dala pouzdan odgovor; prilog i dalje možete pročitati i prihvatiti.
 
 Sačuvani nacrt ili povučeni tekst možete trajno izbrisati dugmetom **Trajno izbriši tekst**. Brisanje se potvrđuje i ne može se vratiti. U **Fotografije** možete trajno izbrisati nekorišćene slike. Oznaka **U upotrebi** znači da sliku još koristi tekst, ranija verzija, portret ili prilog čitaoca.
 
