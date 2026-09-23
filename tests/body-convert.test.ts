@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { convertBody, kindForRubric } from '../src/lib/body-convert';
-import { bodySchema, bodyText, type Body } from '../src/lib/content';
+import { bodySchema } from '../src/lib/body-schema';
+import { bodyText, type Body } from '../src/lib/content';
 
 test('each rubric has one way of writing: verse only for poetry', () => {
   assert.equal(kindForRubric('poezija'), 'poem');

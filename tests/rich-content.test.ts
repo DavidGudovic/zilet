@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bodySchema, canonicalRichNode, type RichNode } from '../src/lib/content';
+import { bodySchema } from '../src/lib/body-schema';
+import { canonicalRichNode, type RichNode } from '../src/lib/content';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { RichText } from '../src/components/rich-text';

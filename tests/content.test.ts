@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import poem from '../fixtures/poem.json';
+import { bodySchema } from '../src/lib/body-schema';
 import {
-  bodySchema,
   bodyText,
   excerpt,
   firstParams,

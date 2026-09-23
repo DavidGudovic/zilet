@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import slike from '../fixtures/savka-slike.json';
 import nestajanja from '../fixtures/savka-nestajanja.json';
-import { bodySchema } from '../src/lib/content';
+import { bodySchema } from '../src/lib/body-schema';
 test('approved Savka poems retain source whitespace, stanza breaks and emphasis', () => {
   for (const [fixture, hash] of [
     [slike, '412e577e27f6ab86b85224c88643948ed69cb122bc3681b383b148ca93e71df6'],

@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { bodySchema, bodyText, fold, rubrics } from './content';
+import { bodySchema } from './body-schema';
+import { bodyText, fold, rubrics } from './content';
 export const revisionSchema = z
   .object({
     title: z.string().trim().min(1).max(240),

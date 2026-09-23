@@ -6,7 +6,8 @@ import type { Slice } from '@tiptap/pm/model';
 import type { EditorView } from '@tiptap/pm/view';
 import { docVerse, pastedVerse, verseDoc, type Verse } from '../src/lib/verse-edit';
 import { verseClipboard, verseOptions, verseSlice } from '../src/lib/editor-tiptap';
-import { bodySchema, canonicalRichNode, type RichNode } from '../src/lib/content';
+import { bodySchema } from '../src/lib/body-schema';
+import { canonicalRichNode, type RichNode } from '../src/lib/content';
 
 const schema = getSchema(verseOptions.extensions!);
 const exact = '  Śutnja\n\nСоба\tса прозором\n\\ ~\u200b\n';
