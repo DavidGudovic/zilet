@@ -54,9 +54,10 @@ FACEBOOK_URL=https://www.facebook.com/<your-page>
 ```
 
 The key is server-only. Only the submitted title and text are sent to Gemini;
-account fields and photos are not included. An eight-second timeout, quota error,
-missing key, invalid response, or uncertain verdict sends the work to manual
-review. Only recognized, explicit spam/language/abuse verdicts block submission.
+account fields and photos are not included. A fifteen-second timeout, quota error,
+missing key, invalid response, safety refusal by the model, or uncertain verdict
+sends the work to manual review. Only recognized, explicit spam/language/abuse
+verdicts block submission.
 Both scripts and Montenegrin/Serbian/Croatian/Bosnian are accepted; the prompt
 excludes literary quality, viewpoint, and ordinary literary profanity as reasons
 for rejection. The editor always makes the publication decision and reviews the
