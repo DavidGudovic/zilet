@@ -24,8 +24,35 @@ test('whitespace and emphasis survive serialization without changing canonical t
 test('search folds diacritics without changing display text', () =>
   assert.equal(fold('Žilet Đurović Ś Ź'), 'zilet djurovic s z'));
 test('account return paths stay on this site', () => {
-  assert.equal(safeReturn('//evil.test'), '/');
-  assert.equal(safeReturn('/tekst/pjesma'), '/tekst/pjesma');
+  for (const unsafe of [
+    '//evil.test',
+    '/\\evil.test',
+    '/\t/evil.test',
+    '/\n/evil.test',
+    '/\r\n/evil.test',
+    '\t/tekst',
+    '/tekst\u0000',
+    '/tekst\u007f',
+    'https://evil.test/',
+    'tekst/pjesma',
+    '',
+    undefined,
+    ['/tekst/pjesma'],
+  ])
+    assert.equal(safeReturn(unsafe), '/', JSON.stringify(unsafe));
+  for (const path of [
+    '/',
+    '/tekst/pjesma',
+    '/tekst/pjesma#komentari',
+    '/posalji?prilog=abc#prilog-abc',
+    '/pretraga?q=%C5%BEilet&rubrika=poezija',
+    '/tekst/a?next=//evil.test',
+    // Percent-encoded tab stays a literal path segment on this site.
+    '/%09/evil.test',
+  ]) {
+    assert.equal(safeReturn(path), path);
+    assert.equal(new URL(path, 'https://zilet.me').origin, 'https://zilet.me');
+  }
 });
 const prose = (...blocks: [string, string][]): Body => ({
   kind: 'prose',

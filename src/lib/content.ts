@@ -154,14 +154,15 @@ export function fold(s: string) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
 }
+// Browsers drop tabs and newlines and read "\" as "/", so "/\t/host" leaves the site.
 export function safeReturn(s: unknown) {
-  return typeof s === 'string' &&
-    s.startsWith('/') &&
-    !s.startsWith('//') &&
-    !s.includes('\\') &&
-    !/[\r\n]/.test(s)
-    ? s
-    : '/';
+  if (typeof s !== 'string' || !s.startsWith('/') || /[\u0000-\u001f\u007f\\]/.test(s)) return '/';
+  const origin = 'https://zilet.invalid';
+  try {
+    return new URL(s, origin).origin === origin ? s : '/';
+  } catch {
+    return '/';
+  }
 }
 export function safeHref(s: string) {
   return /^(https?:\/\/|mailto:)/i.test(s) ? s : undefined;
