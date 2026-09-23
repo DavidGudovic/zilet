@@ -181,22 +181,42 @@ export function AccountForm({
   );
 }
 export function SignOut() {
+  const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
   return (
-    <button
-      className="text-button"
-      onClick={async () => {
-        const r = await fetch('/api/auth/sign-out', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: '{}',
-        });
-        if (r.ok) {
-          sessionStorage.clear();
-          location.assign('/');
-        }
-      }}
-    >
-      Odjavi se <Arrow />
-    </button>
+    <>
+      <button
+        className="text-button"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          setMessage('');
+          try {
+            const r = await fetch('/api/auth/sign-out', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: '{}',
+            });
+            if (r.ok) {
+              sessionStorage.clear();
+              location.assign('/');
+              return;
+            }
+            setMessage('Odjava nije uspjela. Pokušajte ponovo.');
+          } catch {
+            setMessage('Veza nije dostupna. Još ste prijavljeni; pokušajte ponovo.');
+          }
+          setBusy(false);
+        }}
+      >
+        Odjavi se <Arrow />
+      </button>
+      {/* Not a span: the desk header hides its spans on narrow screens. */}
+      {message && (
+        <p className="form-error" role="alert">
+          {message}
+        </p>
+      )}
+    </>
   );
 }
