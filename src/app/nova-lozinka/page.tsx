@@ -1,5 +1,9 @@
 import { AccountForm } from '@/components/account-form';
-export const metadata = { title: 'Nova lozinka', robots: { index: false, follow: false } };
+export const metadata = {
+  title: 'Nova lozinka',
+  description: 'Postavite novu lozinku čitalačkog naloga u časopisu Žilet.',
+  robots: { index: false, follow: false },
+};
 export default function Page() {
   return (
     <div className="wrap account-page">

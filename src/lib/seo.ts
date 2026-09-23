@@ -6,25 +6,24 @@ export const siteDescription =
   'Poezija, proza, eseji i književna kritika. Žilet je časopis za književnost, umjetnost i kulturu, otvoren autorima i čitaocima širom regiona.';
 export const siteUrl = () => new URL(process.env.APP_URL || 'https://zilet.me').origin;
 export const absoluteUrl = (path: string) => new URL(path, siteUrl()).href;
+// Open Graph locales pair a two-letter language with a country. Montenegrin (cnr) has no
+// two-letter code, so sites in Montenegro use Serbian for Montenegro, as CLDR does.
+export const ogLocale = 'sr_ME';
+export const plainText = (text: string) =>
+  text
+    .replace(/[\u200B-\u200D\uFEFF]/gu, '')
+    .replace(/\s+/gu, ' ')
+    .trim();
 export function description(text: string, fallback = siteDescription) {
-  const clean =
-    text
-      .replace(/[\u200B-\u200D\uFEFF]/gu, '')
-      .replace(/\s+/gu, ' ')
-      .trim() || fallback;
+  const clean = plainText(text) || fallback;
   if (clean.length <= 160) return clean;
   return `${clean
     .slice(0, 157)
     .replace(/\s+\S*$/, '')
-    .trimEnd()}…`;
+    .replace(/[\s/,;:–—-]+$/u, '')}…`;
 }
 export function pageMetadata(title: string, summary: string, path: string): Metadata {
-  const cleanTitle = title
-    .replace(/[\u200B-\u200D\uFEFF]/gu, '')
-    .replace(/—/gu, '-')
-    .replace(/\s+/gu, ' ')
-    .trim();
-  const fullTitle = cleanTitle === siteTitle ? cleanTitle : `${cleanTitle} | Žilet`;
+  const cleanTitle = plainText(title.replace(/—/gu, '-'));
   const text = description(summary);
   return {
     title: cleanTitle === siteTitle ? { absolute: cleanTitle } : cleanTitle,
@@ -35,10 +34,12 @@ export function pageMetadata(title: string, summary: string, path: string): Meta
       follow: true,
       googleBot: { 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 },
     },
+    // Social cards already show og:site_name, so the title leaves out "| Žilet".
     openGraph: {
       type: 'website',
       siteName: 'Žilet',
-      title: fullTitle,
+      locale: ogLocale,
+      title: cleanTitle,
       description: text,
       url: path,
       images: [
@@ -52,7 +53,7 @@ export function pageMetadata(title: string, summary: string, path: string): Meta
     },
     twitter: {
       card: 'summary_large_image',
-      title: fullTitle,
+      title: cleanTitle,
       description: text,
       images: ['/identity/social-preview.png'],
     },
@@ -103,10 +104,10 @@ const rubricSeoTitles: Record<string, string> = {
 };
 export const rubricSeoTitle = (slug: string) => rubricSeoTitles[slug] || rubricTitle(slug);
 
+// Collective bylines such as "Redakcija Žileta" or "INTERNET IZVORI" are not people.
+const collectiveByline = /(?<![\p{L}\p{N}])(?:redakcija|izvori)(?![\p{L}\p{N}])/iu;
 export const authorEntity = (author: Author) => ({
-  '@type': /^(redakcija(?: žileta)?|izvori)$/iu.test(author.name.trim())
-    ? 'Organization'
-    : 'Person',
+  '@type': collectiveByline.test(author.name) ? 'Organization' : 'Person',
   '@id': absoluteUrl(`/autor/${author.slug}#autor`),
   name: author.name,
   url: absoluteUrl(`/autor/${author.slug}`),
@@ -124,8 +125,17 @@ export const publisherEntity = () => ({
     height: 836,
   },
 });
+const leadingBullet = /^[\s*·•‣⁃∙\u25A0-\u25FF★☆✦✧]+/u;
+// The title already names the author, so the snippet is the work itself.
 export function articleSummary(post: PostView) {
-  return description(`${post.author.name}: ${post.intro.trim() || bodyText(post.body)}`);
+  const intro = post.intro.trim();
+  const lines = (intro || bodyText(post.body))
+    .split('\n')
+    .map((line) => line.replace(leadingBullet, '').trim())
+    .filter(Boolean);
+  // Quoted verse keeps its line breaks as slashes.
+  const text = lines.join(!intro && post.type === 'poem' ? ' / ' : ' ');
+  return description(text.replace(/^[\s‐-―-]+/u, ''));
 }
 export function articleMetadata(post: PostView): Metadata {
   const metadata = pageMetadata(
@@ -177,8 +187,12 @@ export function articleStructuredData(post: PostView) {
     headline: post.title,
     author: authorEntity(post.author),
     description: articleSummary(post),
+    // The landscape share card qualifies the work for large previews in search.
     image: post.media.length
-      ? post.media.map((m) => absoluteUrl(m.url))
+      ? [
+          ...post.media.map((m) => absoluteUrl(m.url)),
+          absoluteUrl(`/media/${post.media[0].id}/share.jpg`),
+        ]
       : [absoluteUrl('/identity/social-preview.png')],
     publisher: publisherEntity(),
     mainEntityOfPage: absoluteUrl(`/tekst/${post.slug}`),
@@ -201,3 +215,9 @@ export function breadcrumbData(items: { name: string; path: string }[]) {
     })),
   };
 }
+// Crawlers read JSON-LD text as single lines, so authored line breaks are flattened here.
+export const jsonLd = (value: unknown) =>
+  JSON.stringify(value, (_, v) => (typeof v === 'string' ? plainText(v) : v)).replace(
+    /</g,
+    '\\u003c',
+  );

@@ -25,9 +25,10 @@ export async function generateMetadata({
   const page = Math.max(1, Math.min(10000, Math.floor(Number((await searchParams).page)) || 1));
   if (!author) return { title: 'Autor nije pronađen', robots: { index: false } };
   const portrait = await getPortrait(author.portraitId);
+  const bio = author.bio?.trim();
   const metadata = pageMetadata(
-    `${author.name}: biografija i radovi${page > 1 ? ` | stranica ${page}` : ''}`,
-    author.bio || `Čitajte objavljene radove autora ${author.name} u časopisu Žilet.`,
+    `${author.name}: ${bio ? 'biografija i radovi' : 'objavljeni radovi'}${page > 1 ? ` | stranica ${page}` : ''}`,
+    bio || `Radovi objavljeni u časopisu Žilet pod potpisom ${author.name}.`,
     `/autor/${slug}${page > 1 ? `?page=${page}` : ''}`,
   );
   if (portrait) {

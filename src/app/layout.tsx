@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 import { requireUser } from '@/lib/security';
 import { AnalyticsTracker } from '@/components/analytics-tracker';
 import type { Metadata } from 'next';
-import { siteUrl, siteTitle, siteDescription } from '@/lib/seo';
+import { siteUrl, siteTitle, siteDescription, ogLocale } from '@/lib/seo';
 import './fonts.css';
 import './globals.css';
 import './atmosphere.css';
@@ -17,15 +17,22 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: { default: siteTitle, template: '%s | Žilet' },
   description: siteDescription,
+  // No og:title or og:description here: Next fills them from each page's own title and
+  // description, so pages without share metadata do not borrow the homepage's.
   openGraph: {
-    title: siteTitle,
     siteName: 'Žilet',
     type: 'website',
-    description: siteDescription,
+    locale: ogLocale,
     images: [{ url: '/identity/social-preview.png', width: 1200, height: 630 }],
   },
   twitter: { card: 'summary_large_image', images: ['/identity/social-preview.png'] },
-  icons: { icon: '/icon.svg' },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
 };
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let isEditor = false;

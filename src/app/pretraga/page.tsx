@@ -2,7 +2,11 @@ import { findPosts } from '@/lib/data';
 import { ArchiveList, Pagination } from '@/components/archive';
 import { Arrow } from '@/components/arrow';
 import { rubrics } from '@/lib/content';
-export const metadata = { title: 'Pretraga', robots: { index: false, follow: true } };
+export const metadata = {
+  title: 'Pretraga',
+  description: 'Pretražite objavljene tekstove i autore časopisa Žilet.',
+  robots: { index: false, follow: true },
+};
 export default async function Page({
   searchParams,
 }: {

@@ -1,7 +1,11 @@
 import { AccountForm } from '@/components/account-form';
 import { mailConfigured } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Obnova lozinke', robots: { index: false, follow: false } };
+export const metadata = {
+  title: 'Obnova lozinke',
+  description: 'Zatražite vezu za novu lozinku čitalačkog naloga u časopisu Žilet.',
+  robots: { index: false, follow: false },
+};
 export default function Page() {
   return (
     <div className="wrap account-page">
