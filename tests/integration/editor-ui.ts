@@ -4,6 +4,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import poem from '../../fixtures/poem.json';
 import { pasteVerse, verseText } from './verse';
+import { browserLogin } from './login';
 assert.equal(
   process.env.ZILET_DISPOSABLE_TEST,
   'true',
@@ -26,11 +27,7 @@ page.on('pageerror', (error) => errors.push(error.message));
 const dir = process.env.ZILET_EVIDENCE_DIR || 'docs/verification/editorial-reader-2026-09-08';
 await mkdir(dir, { recursive: true });
 try {
-  await page.goto(`${base}/redakcija`);
-  await page.getByLabel('Adresa e-pošte').fill(account.email);
-  await page.getByLabel('Lozinka', { exact: true }).fill(account.password);
-  await page.getByRole('button', { name: 'Prijavi se', exact: true }).click();
-  await page.waitForURL('**/redakcija*');
+  await browserLogin(page, base, account, '/redakcija');
   await page
     .getByRole('navigation', { name: 'Redakcija', exact: true })
     .getByRole('link', { name: 'Tekstovi', exact: true })

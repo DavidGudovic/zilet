@@ -3,6 +3,7 @@ import { chromium, expect } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import sharp from 'sharp';
+import { apiLogin } from './login';
 
 assert.equal(process.env.ZILET_DISPOSABLE_TEST, 'true');
 const base = process.env.APP_URL || 'http://localhost:3000';
@@ -11,16 +12,7 @@ assert.ok(['localhost', '127.0.0.1'].includes(origin.hostname));
 const account = JSON.parse(
   await readFile(`/tmp/zilet-browser-account-${origin.port || '80'}.json`, 'utf8'),
 );
-const login = await fetch(base + '/api/auth/sign-in/email', {
-  method: 'POST',
-  headers: { Origin: base, 'Content-Type': 'application/json' },
-  body: JSON.stringify(account),
-});
-assert.equal(login.status, 200);
-const cookie = login.headers
-  .getSetCookie()
-  .map((item) => item.split(';')[0])
-  .join('; ');
+const cookie = await apiLogin(base, account);
 async function call(path: string, method = 'GET', data?: unknown) {
   const response = await fetch(base + path, {
     method,

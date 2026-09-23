@@ -3,6 +3,7 @@ import { chromium, expect } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { pasteVerse, verseText } from './verse';
+import { browserLogin } from './login';
 assert.equal(process.env.ZILET_DISPOSABLE_TEST, 'true');
 const base = process.env.APP_URL || 'http://localhost:3000';
 assert.ok(['localhost', '127.0.0.1'].includes(new URL(base).hostname));
@@ -34,11 +35,7 @@ async function start(rubric: string, title: string) {
   await page.getByRole('option', { name: 'RAZVOJNI AUTOR (TEST)', exact: true }).first().click();
 }
 try {
-  await page.goto(base + '/redakcija');
-  await page.getByLabel('Adresa e-pošte').fill(account.email);
-  await page.getByLabel('Lozinka', { exact: true }).fill(account.password);
-  await page.getByRole('button', { name: 'Prijavi se', exact: true }).click();
-  await page.waitForURL('**/redakcija*');
+  await browserLogin(page, base, account, '/redakcija');
   await page.getByRole('navigation', { name: 'Redakcija', exact: true }).waitFor();
   await start('Poezija', 'Kratka pjesma bez slike — Śutnja');
   const poem = page.getByLabel('Sadržaj pjesme', { exact: true });

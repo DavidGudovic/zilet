@@ -2,6 +2,7 @@
 import { chromium, expect } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { mkdir, readFile } from 'node:fs/promises';
+import { browserLogin } from './login';
 
 assert.equal(process.env.ZILET_DISPOSABLE_TEST, 'true');
 const base = process.env.APP_URL || 'http://localhost:3000';
@@ -16,10 +17,7 @@ const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 const errors: string[] = [];
 page.on('pageerror', (error) => errors.push(error.message));
 try {
-  await page.goto(base + '/redakcija');
-  await page.getByLabel('Adresa e-pošte').fill(account.email);
-  await page.getByLabel('Lozinka', { exact: true }).fill(account.password);
-  await page.getByRole('button', { name: 'Prijavi se', exact: true }).click();
+  await browserLogin(page, base, account, '/redakcija');
   await page.getByRole('navigation', { name: 'Redakcija', exact: true }).waitFor();
   await page.goto(base + '/redakcija/fotografije');
   await expect(page.getByRole('heading', { name: 'Fotografije', exact: true })).toBeVisible();

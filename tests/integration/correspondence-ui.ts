@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { db, sql } from '../../src/db';
 import { submissions } from '../../src/db/schema';
 import { eq } from 'drizzle-orm';
+import { browserLogin } from './login';
 
 assert.equal(process.env.ZILET_DISPOSABLE_TEST, 'true');
 const base = process.env.APP_URL || 'http://localhost:3000';
@@ -42,23 +43,7 @@ const question = `Možete li pojasniti naslov i potvrditi izvor?\n\nhttps://exam
 const reply = 'Naslov opisuje tišinu sobe. Izvor je moj rukopis. Hvala na pitanju.';
 const decision = 'Hvala na odgovoru i povjerenju. Ovog puta nijesmo izabrali rad za objavu.';
 async function login(page: Page, account: { email: string; password: string }, returnTo: string) {
-  await page.goto(`${base}/nalog?returnTo=${encodeURIComponent(returnTo)}`);
-  await page.getByLabel('Adresa e-pošte').fill(account.email);
-  await page.getByLabel('Lozinka', { exact: true }).fill(account.password);
-  const request = page.waitForResponse((r) => r.url() === `${base}/api/auth/sign-in/email`);
-  await page.getByRole('button', { name: 'Prijavi se', exact: true }).click();
-  let response = await request;
-  if (response.status() === 429) {
-    const supplied = Number(response.headers()['retry-after'] || 60);
-    const seconds = Number.isFinite(supplied) ? Math.max(1, Math.min(60, Math.ceil(supplied))) : 60;
-    console.log(`Waiting ${seconds}s for the shared disposable login rate limit before one retry.`);
-    await page.waitForTimeout(seconds * 1000);
-    const retry = page.waitForResponse((r) => r.url() === `${base}/api/auth/sign-in/email`);
-    await page.getByRole('button', { name: 'Prijavi se', exact: true }).click();
-    response = await retry;
-  }
-  assert.equal(response.status(), 200, 'Browser login succeeds using isolated credentials');
-  await page.waitForURL(base + returnTo);
+  await browserLogin(page, base, account, returnTo);
 }
 async function measure(page: Page, label: string, width: number) {
   await page.evaluate(() => document.fonts.ready);
