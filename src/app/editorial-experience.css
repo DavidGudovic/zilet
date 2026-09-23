@@ -197,3 +197,189 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* Save/publish feedback: the heading shows the draft state, the toast confirms each action. */
+.save-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.save-state svg {
+  flex: none;
+}
+.save-saved {
+  color: var(--green);
+}
+.save-saving svg {
+  color: var(--ochre);
+}
+.save-needs,
+.save-error {
+  color: #7b2529;
+}
+.save-error {
+  font-weight: 600;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .save-saving svg {
+    animation: save-pulse 1s ease-in-out infinite alternate;
+  }
+}
+@keyframes save-pulse {
+  to {
+    opacity: 0.25;
+  }
+}
+.editor-heading button[aria-busy='true'] {
+  cursor: progress;
+}
+.published-note {
+  display: grid;
+  gap: 10px;
+  padding: 14px 18px;
+  border-left: 3px solid var(--green);
+  background: #e7eadf;
+}
+.published-note p {
+  margin: 0;
+}
+.published-note.has-changes {
+  border-left-color: var(--ochre);
+  background: #f1e6cf;
+  color: var(--ink);
+}
+.toast-region {
+  position: fixed;
+  z-index: 50;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 32px));
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 16px 14px 16px 18px;
+  background: var(--green);
+  background-image: var(--grain-colored);
+  color: var(--paper);
+  box-shadow: 0 10px 30px rgb(32 37 31 / 28%);
+  font-size: 16px;
+  line-height: 1.45;
+}
+.toast-info {
+  background-color: #2f3a33;
+}
+.toast-error {
+  background-color: #6b1f23;
+}
+.toast svg {
+  margin-top: 1px;
+}
+.toast p {
+  margin: 0;
+  font-weight: 600;
+}
+.toast > div > a {
+  display: inline-block;
+  margin-top: 6px;
+  text-decoration: underline;
+}
+.toast > button {
+  min-width: 36px;
+  min-height: 36px;
+  margin: -8px -4px -8px 0;
+  font-size: 24px;
+  line-height: 1;
+  color: inherit;
+}
+.toast .share-links {
+  margin-top: 10px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .toast {
+    animation: toast-in 220ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Share links: the same row in the article rail, the editor and the publication toast. */
+.share-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 18px;
+  font-size: 15px;
+}
+.share-links a,
+.share-links button {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.share-label {
+  color: var(--muted);
+}
+.toast .share-label {
+  color: inherit;
+  opacity: 0.8;
+}
+.share-fallback {
+  flex-basis: 100%;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.share-fallback span {
+  user-select: all;
+}
+.share-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.share-toggle[aria-expanded='true'] {
+  color: var(--green);
+  font-weight: 600;
+}
+.rail-actions .share-links {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  margin-top: 4px;
+  padding-left: 12px;
+  border-left: 2px solid var(--rule);
+}
+@media (max-width: 1000px) {
+  .article-rail .rail-actions {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  /* An open menu takes its own row under the byline. */
+  .rail-actions .share-menu:has(.share-links) {
+    flex-basis: 100%;
+  }
+  .rail-actions .share-links {
+    display: flex;
+    gap: 4px 18px;
+  }
+}
+@media print {
+  .toast-region,
+  .share-links {
+    display: none;
+  }
+}

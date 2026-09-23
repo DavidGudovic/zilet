@@ -146,8 +146,35 @@ try {
           'Svjetlost ostaje na prozoru.',
         );
       await publicPage.screenshot({ path: `${dir}/${label}-${width}.png` });
+      if (label === 'prose') {
+        // Readers share the article's address; the menu must fit even the narrowest phone.
+        const share = publicPage.getByRole('button', { name: 'Podijeli', exact: false });
+        await share.click();
+        assert.equal(await share.getAttribute('aria-expanded'), 'true');
+        const address = encodeURIComponent(new URL(proseUrl!, base).href);
+        const choices = publicPage.getByRole('group', { name: 'Podijelite tekst' });
+        assert.equal(
+          await choices.getByRole('link', { name: /Facebook/ }).getAttribute('href'),
+          `https://www.facebook.com/sharer/sharer.php?u=${address}`,
+        );
+        assert.equal(
+          await choices.getByRole('link', { name: /Viber/ }).getAttribute('href'),
+          `viber://forward?text=${address}`,
+        );
+        assert.equal(
+          await publicPage.evaluate(() => document.documentElement.scrollWidth > window.innerWidth),
+          false,
+          `open share menu at ${width}`,
+        );
+        await publicPage.locator('.article-rail').screenshot({ path: `${dir}/share-${width}.png` });
+        await share.press('Escape');
+        assert.equal(await share.getAttribute('aria-expanded'), 'false');
+      }
     }
   }
+  evidence.push(
+    'Readers share an article to Facebook/Viber from one Podijeli button at 320–1440 px.',
+  );
   await publicPage.goto(base + '/rubrika/citaoci');
   await publicPage
     .locator('.reader-invitation')
@@ -167,6 +194,17 @@ try {
   evidence.push(
     'Public home, reader rubric, poem and quoted prose fit 320/390/768/1440 px; submit link works; reduced motion and print verified.',
   );
+  await page.goto(base + '/redakcija/novi');
+  await page
+    .getByLabel('Sadržaj', { exact: true })
+    .fill('Prvi red vijesti.\nDrugi red.\n\nNovi pasus.');
+  await page.getByRole('combobox', { name: 'Rubrika', exact: true }).click();
+  await page.getByRole('option', { name: 'Novosti', exact: true }).click();
+  const news = page.locator('[contenteditable=true]');
+  await expect(news.locator('p')).toHaveCount(2);
+  await expect(news.locator('p').first().locator('br')).toHaveCount(1);
+  assert.equal(await page.getByLabel('Sadržaj pjesme', { exact: true }).count(), 0);
+  evidence.push('Text pasted before choosing Novosti becomes paragraphs, not verse.');
   assert.deepEqual(errors, []);
   await writeFile(
     dir + '/checks.json',

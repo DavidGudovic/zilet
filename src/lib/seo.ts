@@ -133,11 +133,27 @@ export function articleMetadata(post: PostView): Metadata {
     articleSummary(post),
     `/tekst/${post.slug}`,
   );
-  const images = post.media.length
-    ? post.media
-        .slice(0, 3)
-        .map((m) => ({ url: m.url, width: m.width, height: m.height, alt: m.alt }))
-    : [{ url: '/identity/social-preview.png', width: 1200, height: 630, alt: 'Žilet' }];
+  // Facebook and Viber show only one preview picture: the work's first image, as a JPEG card.
+  const cover = post.media[0];
+  const images = cover
+    ? [
+        {
+          url: absoluteUrl(`/media/${cover.id}/share.jpg`),
+          width: 1200,
+          height: 630,
+          type: 'image/jpeg',
+          alt: cover.alt,
+        },
+      ]
+    : [
+        {
+          url: absoluteUrl('/identity/social-preview.png'),
+          width: 1200,
+          height: 630,
+          type: 'image/png',
+          alt: 'Žilet',
+        },
+      ];
   return {
     ...metadata,
     authors: [{ name: post.author.name, url: absoluteUrl(`/autor/${post.author.slug}`) }],

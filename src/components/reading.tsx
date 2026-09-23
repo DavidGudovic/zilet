@@ -65,24 +65,6 @@ export function Poem({ body }: { body: Extract<Body, { kind: 'poem' }> }) {
     </div>
   );
 }
-export function Share() {
-  const [label, setLabel] = useState('Kopiraj link');
-  return (
-    <button
-      className="text-button"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(location.href.split('#')[0]);
-          setLabel('Link je kopiran');
-        } catch {
-          setLabel('Kopirajte adresu iz pregledača');
-        }
-      }}
-    >
-      {label} <span aria-hidden="true">↗</span>
-    </button>
-  );
-}
 export function Artwork({ items }: { items: MediaView[] }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState(0);

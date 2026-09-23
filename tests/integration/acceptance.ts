@@ -193,6 +193,7 @@ try {
     (await request(`/media/${media.id}`, 'GET', undefined, reader.cookie)).r.status,
     404,
   );
+  assert.equal((await request(`/media/${media.id}/share.jpg`)).r.status, 404);
   ok('Image upload decoded and stored; unpublished media cannot be read anonymously or by reader');
   const withArt = {
     ...content,
@@ -228,6 +229,15 @@ try {
   assert.equal(publicPage.r.status, 200);
   assert.ok(publicPage.text.includes('Provjera: pjesma'));
   assert.equal((await request(`/media/${media.id}`)).r.status, 200);
+  const shareCard = await fetch(`${base}/media/${media.id}/share.jpg`);
+  assert.equal(shareCard.status, 200);
+  assert.equal(shareCard.headers.get('content-type'), 'image/jpeg');
+  const card = Buffer.from(await shareCard.arrayBuffer());
+  assert.deepEqual([...card.subarray(0, 3)], [0xff, 0xd8, 0xff]);
+  assert.ok(
+    publicPage.text.includes(`property="og:image" content="${base}/media/${media.id}/share.jpg"`),
+  );
+  ok('Shared links preview the first picture as a JPEG card (Facebook, Viber)');
   assert.ok((await request('/rubrika/poezija')).text.includes('Provjera: pjesma'));
   ok('Publishing with image appears in SSR article and archive without rebuild');
   assert.equal(testAuthor.data.name, 'RAZVOJNI AUTOR (TEST)');
@@ -498,6 +508,7 @@ try {
   post = { ...post, version: unpublished.data.version };
   assert.equal((await request(`/tekst/${post.slug}`)).r.status, 404);
   assert.equal((await request(`/media/${media.id}`)).r.status, 404);
+  assert.equal((await request(`/media/${media.id}/share.jpg`)).r.status, 404);
   ok('Unpublishing removes article and formerly public media without stale caches');
   assert.equal(
     (await request(`/api/posts/${post.id}`, 'DELETE', { version: post.version }, reader.cookie)).r

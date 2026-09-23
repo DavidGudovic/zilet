@@ -5,6 +5,7 @@ import { eq, asc, and } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { postingName } from '@/lib/data';
 import { Editor } from '@/components/editor';
+import { siteUrl } from '@/lib/seo';
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   await editorSession();
   const { id } = await params;
@@ -22,6 +23,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       readerSubmission={Boolean(submission)}
       postedBy={await postingName(p.createdBy)}
       post={{ id: p.id, version: p.version, slug: p.slug, status: p.status }}
+      unpublishedChanges={p.status === 'published' && p.draftRevisionId !== p.publishedRevisionId}
+      origin={siteUrl()}
       authors={await db.select().from(authors).orderBy(asc(authors.name))}
     />
   );

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { dateLabel, rubricLabel, type PostView } from '@/lib/content';
-import { Poem, Artwork, Share } from './reading';
+import { Poem, Artwork } from './reading';
+import { ShareLinks } from './share-links';
+import { absoluteUrl } from '@/lib/seo';
 import { RichText } from './rich-text';
 export function Article({
   post,
@@ -43,7 +45,9 @@ export function Article({
               </p>
             )}
             <div className="rail-actions">
-              <Share />
+              {!preview && (
+                <ShareLinks url={absoluteUrl(`/tekst/${post.slug}`)} title={post.title} collapsed />
+              )}
               <a href="#komentari">Komentari ↓</a>
             </div>
             {post.demo && (

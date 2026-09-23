@@ -12,7 +12,7 @@ export default async function Page() {
           <h2>Otvorite novi tekst</h2>
           <p>
             Izaberite <strong>+ Novi tekst</strong>, pa izaberite Rubriku. Dodajte naslov i
-            izaberite autora.
+            izaberite autora. U Poeziji stihovi ostaju red po red; ostale rubrike imaju pasuse.
           </p>
         </li>
         <li>
@@ -54,6 +54,12 @@ export default async function Page() {
           Otvorite tekst i nastavite uređivanje. Čitaoci vide izmjene tek kad pritisnete{' '}
           <strong>Objavi izmjene</strong>. U Dodatnim mogućnostima možete istaknuti tekst na
           početnoj stranici ili ga povući iz javnosti.
+        </p>
+        <h2>Podijelite na Facebooku i Viberu</h2>
+        <p>
+          Poslije objave poruka pri dnu ekrana nudi <strong>Facebook</strong>,{' '}
+          <strong>Viber</strong> i <strong>Kopiraj link</strong>. Ista dugmad su na vrhu objavljenog
+          teksta i uz tekst na sajtu. Link se prikazuje sa naslovom i prvom fotografijom iz teksta.
         </p>
         <h2>Kako će čitaoci pronaći tekst</h2>
         <p>

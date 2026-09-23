@@ -2,10 +2,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import type { RevisionContent } from '@/db/schema';
-import { rubrics, bodyText, type Author } from '@/lib/content';
+import { rubrics, rubricLabel, bodyText, type Author } from '@/lib/content';
+import { convertBody, kindForRubric } from '@/lib/body-convert';
 import { DeletePostButton } from './delete-post-button';
 import { SelectField } from './select-field';
 import { MediaPicker } from './media-picker';
+import { ShareLinks } from './share-links';
 import { remapEmphasis, toggleEmphasis } from '@/lib/verse-edit';
 import { VerseText } from './reading';
 const RichEditor = dynamic(() => import('./rich-editor').then((m) => m.RichEditor), {
@@ -27,21 +29,61 @@ const blank = (kind: RevisionContent['type'], authorId: string): RevisionContent
   commentsOpen: true,
 });
 type PostState = { id: string; version: number; status: string; slug: string };
+type Toast = {
+  tone: 'success' | 'error' | 'info';
+  text: string;
+  shareSlug?: string;
+  sticky?: boolean;
+  key: number;
+};
+type Action = 'save' | 'publish' | 'preview' | 'unpublish' | 'author' | 'history';
+const primaryRubric = (list: string[]) => {
+  const rubric = list.find((r) => r !== 'citaoci') || '';
+  return rubric === 'price' ? 'proza' : rubric;
+};
+// Error pages from the proxy are HTML; show the editor's own message instead of a parser error.
+const readJson = (res: Response) => res.json().catch(() => ({}));
+const sentence = (parts: string[]) =>
+  parts.length > 1 ? `${parts.slice(0, -1).join(', ')} i ${parts.at(-1)}` : parts[0] || '';
+// Works saved before the rubric decided their form (e.g. Novosti pasted as verse) are
+// realigned when opened, but only between verse and text, and only when no words change.
+function aligned(content: RevisionContent) {
+  const rubric = primaryRubric(content.rubrics);
+  const kind = rubric && kindForRubric(rubric);
+  if (!kind || (kind === 'poem') === (content.type === 'poem')) return content;
+  const converted = convertBody(content.body, kind);
+  return converted.lossy
+    ? content
+    : { ...content, type: converted.body.kind, body: converted.body };
+}
 export function Editor({
   authors: initialAuthors,
   postedBy,
+  origin,
   readerSubmission = false,
   initial,
   post: initialPost,
+  unpublishedChanges = false,
 }: {
   authors: Author[];
   postedBy: string;
+  origin: string;
   readerSubmission?: boolean;
   initial?: RevisionContent;
   post?: PostState;
+  unpublishedChanges?: boolean;
 }) {
   const [authors, setAuthors] = useState(initialAuthors);
-  const [content, setContent] = useState(initial || { ...blank('poem', ''), rubrics: [] });
+  const [content, setContent] = useState(() =>
+    initial ? aligned(initial) : { ...blank('poem', ''), rubrics: [] },
+  );
+  const [realigned, setRealigned] = useState(() =>
+    initial && aligned(initial) !== initial
+      ? `Tekst je prilagođen rubrici ${rubricLabel(primaryRubric(initial.rubrics))}: sada se prikazuje kao ${initial.type === 'poem' ? 'običan tekst sa pasusima, a ne kao pjesma' : 'pjesma, red po red'}. Riječi i naglašavanje su isti. Ako je tekst već objavljen, pritisnite „Objavi izmjene”.`
+      : '',
+  );
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [toastHeld, setToastHeld] = useState(false);
   const data = useRef(content);
   data.current = content;
   const [post, setPost] = useState(initialPost);
@@ -49,9 +91,12 @@ export function Editor({
   const saved = useRef(initial ? JSON.stringify(initial) : '');
   const flight = useRef<Promise<PostState | undefined> | null>(null);
   const [status, setStatus] = useState(initial ? 'Sačuvano' : 'Novi nacrt');
-  const [message, setMessage] = useState('');
-  const [blocked, setBlocked] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const problem = useRef('');
+  const [conflict, setConflict] = useState('');
+  const blocked = Boolean(conflict);
+  const [pending, setPending] = useState<Action | null>(null);
+  const busy = pending !== null;
+  const [draftAhead, setDraftAhead] = useState(unpublishedChanges);
   const [slot, setSlot] = useState('');
   const [history, setHistory] = useState<{ id: string; createdAt: string }[] | null>(null);
   const [newAuthor, setNewAuthor] = useState(false);
@@ -59,16 +104,38 @@ export function Editor({
   const verse = useRef<HTMLTextAreaElement>(null);
   const [selection, setSelection] = useState({ from: 0, to: 0 });
   const dirty = JSON.stringify(content) !== saved.current;
+  const notify = useCallback(
+    (text: string, tone: Toast['tone'] = 'success', shareSlug?: string) =>
+      // A failure already on screen is not announced twice.
+      setToast((t) =>
+        tone === 'error' && t?.tone === 'error' && t.text === text
+          ? t
+          : { text, tone, shareSlug, sticky: tone === 'error', key: Date.now() },
+      ),
+    [],
+  );
+  useEffect(() => {
+    // Errors stay until closed or resolved; confirmations wait while pointed at or focused.
+    if (!toast || toast.sticky || toastHeld) return;
+    const timer = setTimeout(() => setToast(null), toast.shareSlug ? 10000 : 5000);
+    return () => clearTimeout(timer);
+  }, [toast, toastHeld]);
   function change(update: Partial<RevisionContent>) {
     setContent((c) => ({ ...c, ...update }));
-    setMessage('');
   }
   const save = useCallback(async (): Promise<PostState | undefined> => {
     if (flight.current) await flight.current;
     if (blocked) return undefined;
     const snapshot = data.current;
-    if (!snapshot.title.trim() || !snapshot.authorId || !snapshot.rubrics.length) {
-      setStatus('Izaberite rubriku, dodajte naslov i autora');
+    const needs = [
+      !snapshot.rubrics.length && 'izaberite rubriku',
+      !snapshot.title.trim() && 'upišite naslov',
+      !snapshot.authorId && 'izaberite autora',
+    ].filter((need): need is string => Boolean(need));
+    if (needs.length) {
+      const text = sentence(needs);
+      problem.current = `Tekst još nije sačuvan: ${text}.`;
+      setStatus(text[0].toUpperCase() + text.slice(1));
       return undefined;
     }
     const serial = JSON.stringify(snapshot);
@@ -84,9 +151,10 @@ export function Editor({
             current ? { version: current.version, content: snapshot } : snapshot,
           ),
         });
-        const result = await res.json();
+        const result = await readJson(res);
         if (!res.ok) {
-          if (res.status === 409) setBlocked(true);
+          if (res.status === 409)
+            setConflict(result.error || 'Drugi urednik je sačuvao novu verziju.');
           throw new Error(result.error || 'Nacrt nije sačuvan.');
         }
         const next = {
@@ -98,14 +166,18 @@ export function Editor({
         postRef.current = next;
         setPost(next);
         saved.current = serial;
+        if (next.status === 'published') setDraftAhead(true);
         setStatus('Sačuvano');
+        setToast((t) => (t?.tone === 'error' ? null : t));
         if (!current) window.history.replaceState(null, '', `/redakcija/tekst/${result.id}`);
         return next;
       } catch (e) {
         setStatus('Nije sačuvano');
-        setMessage(
-          e instanceof Error ? e.message : 'Veza je prekinuta. Vaš tekst je ostao u ovom prozoru.',
-        );
+        problem.current =
+          e instanceof TypeError || !(e instanceof Error)
+            ? 'Veza je prekinuta. Vaš tekst je ostao u ovom prozoru; pokušajte ponovo „Sačuvaj”.'
+            : e.message;
+        notify(problem.current, 'error');
         return undefined;
       }
     })();
@@ -113,7 +185,7 @@ export function Editor({
     const result = await work;
     flight.current = null;
     return result;
-  }, [blocked]);
+  }, [blocked, notify]);
   useEffect(() => {
     if (!dirty || blocked || status === 'Nije sačuvano') return;
     const timer = setTimeout(() => void save(), 1200);
@@ -134,34 +206,97 @@ export function Editor({
     if (current && JSON.stringify(data.current) !== saved.current) current = await save();
     return current;
   }
+  async function saveNow() {
+    setPending('save');
+    const before = saved.current;
+    const current = await ensureSaved();
+    setPending(null);
+    if (!current) {
+      notify(problem.current, 'error');
+      return;
+    }
+    if (saved.current === before) notify('Sve izmjene su već sačuvane.');
+    else if (current.status === 'published')
+      notify('Izmjene su sačuvane u nacrtu. Čitaoci ih vide kada pritisnete „Objavi izmjene”.');
+    else notify('Nacrt je sačuvan.');
+  }
   async function publish() {
-    setBusy(true);
-    setMessage('');
+    setPending('publish');
     try {
       const current = await ensureSaved();
-      if (!current) return;
+      if (!current) {
+        notify(problem.current, 'error');
+        return;
+      }
       const res = await fetch(`/api/posts/${current.id}/publish`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ version: current.version, slot }),
       });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error);
+      const result = await readJson(res);
+      if (!res.ok) throw new Error(result.error || 'Objava nije uspjela. Pokušajte ponovo.');
       const next = { ...current, version: result.version, status: 'published', slug: result.slug };
       postRef.current = next;
       setPost(next);
-      setMessage('Tekst je objavljen.');
+      setDraftAhead(false);
+      setRealigned('');
+      notify(
+        current.status === 'published' ? 'Izmjene su objavljene.' : 'Tekst je objavljen.',
+        'success',
+        result.slug,
+      );
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Objava nije uspjela.');
+      notify(
+        e instanceof Error && !(e instanceof TypeError)
+          ? e.message
+          : 'Objava nije uspjela. Provjerite vezu i pokušajte ponovo.',
+        'error',
+      );
     } finally {
-      setBusy(false);
+      setPending(null);
+    }
+  }
+  async function unpublish() {
+    if (
+      !window.confirm(
+        'Povući tekst sa sajta? Čitaoci ga više neće vidjeti. Nacrt ostaje sačuvan i možete ga ponovo objaviti.',
+      )
+    )
+      return;
+    setPending('unpublish');
+    try {
+      const current = await ensureSaved();
+      if (!current) {
+        notify(problem.current, 'error');
+        return;
+      }
+      const res = await fetch(`/api/posts/${current.id}/unpublish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ version: current.version }),
+      });
+      const result = await readJson(res);
+      if (!res.ok) throw new Error(result.error || 'Tekst nije povučen. Pokušajte ponovo.');
+      const next = { ...current, status: 'unpublished', version: result.version };
+      postRef.current = next;
+      setPost(next);
+      notify('Tekst je povučen. Nacrt je sačuvan i može se ponovo objaviti.');
+    } catch (e) {
+      notify(
+        e instanceof Error && !(e instanceof TypeError)
+          ? e.message
+          : 'Tekst nije povučen. Provjerite vezu i pokušajte ponovo.',
+        'error',
+      );
+    } finally {
+      setPending(null);
     }
   }
   function mark(style: 'italic' | 'bold') {
     if (content.body.kind !== 'poem' || !verse.current) return;
     const { from, to } = selection;
     if (from === to) {
-      setMessage('Najprije označite riječi u pjesmi.');
+      notify('Najprije označite riječi u pjesmi, pa izaberite Kurziv ili Masno.', 'info');
       return;
     }
     change({
@@ -172,67 +307,106 @@ export function Editor({
       verse.current?.setSelectionRange(from, to);
     });
   }
+  // Typing shows saving at once; autosave follows a moment later.
+  const shownStatus = dirty && status === 'Sačuvano' ? 'Čuvanje…' : status;
+  const stateTone =
+    shownStatus === 'Sačuvano'
+      ? 'saved'
+      : shownStatus === 'Čuvanje…'
+        ? 'saving'
+        : shownStatus === 'Novi nacrt'
+          ? 'idle'
+          : shownStatus === 'Nije sačuvano'
+            ? 'error'
+            : 'needs';
   return (
     <div className="editing-desk">
       <h1 className="sr-only">{initial ? 'Uredi tekst' : 'Novi tekst'}</h1>
       <div className="editor-heading">
         <a href="/redakcija">← Tekstovi</a>
-        <span className={status === 'Nije sačuvano' ? 'form-error' : 'save-state'} role="status">
-          {status}
+        <span className={`save-state save-${stateTone}`} role="status">
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+            {stateTone === 'saved' ? (
+              <path d="m2.5 7.5 3 3 6-7" fill="none" stroke="currentColor" strokeWidth="1.8" />
+            ) : stateTone === 'error' ? (
+              <path d="M7 2v6M7 10.5v1.5" stroke="currentColor" strokeWidth="1.8" />
+            ) : (
+              <circle cx="7" cy="7" r="3.5" fill="currentColor" />
+            )}
+          </svg>
+          {shownStatus}
         </span>
         <div>
-          <button type="button" onClick={() => void save()} disabled={busy || blocked}>
-            Sačuvaj
+          <button type="button" onClick={saveNow} disabled={busy || blocked}>
+            {pending === 'save' ? 'Čuvanje…' : 'Sačuvaj'}
           </button>
           <button
             type="button"
             onClick={async () => {
-              setBusy(true);
+              setPending('preview');
               const current = await ensureSaved();
               if (current) window.location.assign(`/redakcija/pregled/${current.id}#radni-prostor`);
-              setBusy(false);
+              else {
+                notify(problem.current, 'error');
+                setPending(null);
+              }
             }}
             disabled={busy || blocked}
           >
-            Pregled ↗
+            {pending === 'preview' ? 'Otvaranje…' : 'Pregled ↗'}
           </button>
-          <button type="button" className="button" onClick={publish} disabled={busy || blocked}>
-            {busy ? 'Sačekajte…' : post?.status === 'published' ? 'Objavi izmjene' : 'Objavi'}
+          <button
+            type="button"
+            className="button"
+            onClick={publish}
+            disabled={busy || blocked}
+            aria-busy={pending === 'publish'}
+          >
+            {pending === 'publish'
+              ? 'Objavljivanje…'
+              : post?.status === 'published'
+                ? 'Objavi izmjene'
+                : 'Objavi'}
           </button>
         </div>
       </div>
-      {message && (
-        <p className={status === 'Nije sačuvano' ? 'notice form-error' : 'notice'} role="status">
-          {message}
-          {blocked && (
-            <a
-              href={post ? `/redakcija/tekst/${post.id}` : '/redakcija'}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {' '}
-              Otvori sačuvanu verziju u drugom prozoru ↗
-            </a>
-          )}
+      {conflict && (
+        <p className="notice form-error" role="alert">
+          {conflict}{' '}
+          <a
+            href={post ? `/redakcija/tekst/${post.id}` : '/redakcija'}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Otvori sačuvanu verziju u drugom prozoru ↗
+          </a>
+        </p>
+      )}
+      {realigned && (
+        <p className="notice" role="status">
+          {realigned}
         </p>
       )}
       {post?.status === 'published' && (
-        <p className="published-note">
-          Javna verzija se mijenja tek kada izaberete „Objavi izmjene”.{' '}
-          <a href={`/tekst/${post.slug}`} target="_blank" rel="noopener noreferrer">
-            Otvori objavljeni tekst ↗
-          </a>
-        </p>
+        <div className={`published-note${draftAhead || dirty ? ' has-changes' : ''}`}>
+          <p>
+            {draftAhead || dirty ? (
+              <strong>Imate izmjene koje čitaoci još ne vide. Pritisnite „Objavi izmjene”.</strong>
+            ) : (
+              'Tekst je objavljen. Javna verzija se mijenja tek kada izaberete „Objavi izmjene”.'
+            )}{' '}
+            <a href={`/tekst/${post.slug}`} target="_blank" rel="noopener noreferrer">
+              Otvori objavljeni tekst ↗
+            </a>
+          </p>
+          <ShareLinks url={`${origin}/tekst/${post.slug}`} title={content.title} />
+        </div>
       )}
       <div className="editor-fields">
         <div className="rubric-first" data-next-step tabIndex={-1}>
           <SelectField
             label="Rubrika"
-            value={
-              content.rubrics.find((r) => r !== 'citaoci') === 'price'
-                ? 'proza'
-                : content.rubrics.find((r) => r !== 'citaoci') || ''
-            }
+            value={primaryRubric(content.rubrics)}
             options={[
               { value: '', label: 'Izaberite rubriku' },
               ...rubrics
@@ -241,10 +415,15 @@ export function Editor({
             ]}
             onChange={(rubric) => {
               if (!rubric) return;
-              const kind =
-                rubric === 'poezija' ? 'poem' : rubric === 'slikarstvo' ? 'gallery' : 'prose';
-              // Never convert authored formatting implicitly when moving an existing work.
-              const empty = !bodyText(content.body).length;
+              // The rubric decides the form: verse for Poezija, formatted text elsewhere.
+              const converted = convertBody(content.body, kindForRubric(rubric));
+              if (
+                converted.lossy &&
+                !window.confirm(
+                  'Pjesma čuva redove, kurziv i masna slova. Podnaslovi, citati, liste i linkovi postaće običan tekst. Premjestiti tekst u Poeziju?',
+                )
+              )
+                return;
               change({
                 rubrics: [
                   ...(readerSubmission ? ['citaoci'] : []),
@@ -254,8 +433,16 @@ export function Editor({
                     .slice(1)
                     .filter((r) => r !== rubric),
                 ],
-                ...(empty ? { type: kind, body: blank(kind, content.authorId).body } : {}),
+                type: converted.body.kind,
+                body: converted.body,
               });
+              if (converted.body.kind !== content.body.kind && bodyText(content.body).trim())
+                notify(
+                  converted.body.kind === 'poem'
+                    ? 'Tekst je pretvoren u pjesmu: svaki red ostaje kako je napisan.'
+                    : 'Tekst je pretvoren u običan tekst sa pasusima. Riječi i naglašavanje su sačuvani.',
+                  'info',
+                );
               if (!content.title)
                 requestAnimationFrame(() => document.getElementById('text-title')?.focus());
             }}
@@ -311,28 +498,41 @@ export function Editor({
             <button
               className="button secondary"
               type="button"
+              disabled={pending === 'author' || !authorName.trim()}
               onClick={async () => {
-                const r = await fetch('/api/authors', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ name: authorName }),
-                });
-                if (r.ok) {
-                  const a = await r.json();
+                setPending('author');
+                try {
+                  const r = await fetch('/api/authors', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: authorName }),
+                  });
+                  const a = await readJson(r);
+                  if (!r.ok) throw new Error(a.error || 'Autor nije sačuvan. Provjerite ime.');
                   setAuthors((current) =>
                     current.some((item) => item.id === a.id) ? current : [...current, a],
                   );
                   change({ authorId: a.id });
-                  if (r.status === 200)
-                    setMessage(
-                      'Izabran je postojeći autor. Velika i mala slova ne stvaraju novi profil.',
-                    );
+                  notify(
+                    r.status === 200
+                      ? 'Izabran je postojeći autor. Velika i mala slova ne stvaraju novi profil.'
+                      : `Autor ${a.name} je dodat i izabran.`,
+                  );
                   setNewAuthor(false);
                   setAuthorName('');
-                } else setMessage('Autor nije sačuvan. Provjerite ime.');
+                } catch (e) {
+                  notify(
+                    e instanceof Error && !(e instanceof TypeError)
+                      ? e.message
+                      : 'Autor nije sačuvan. Provjerite vezu i pokušajte ponovo.',
+                    'error',
+                  );
+                } finally {
+                  setPending(null);
+                }
               }}
             >
-              Sačuvaj autora
+              {pending === 'author' ? 'Čuvanje…' : 'Sačuvaj autora'}
             </button>
             <p className="hint">Autorski potpis ne otvara korisnički nalog.</p>
           </div>
@@ -342,7 +542,24 @@ export function Editor({
         </p>
         <section className="content-field">
           <h2>Sadržaj</h2>
-          {content.body.kind === 'poem' ? (
+          {!primaryRubric(content.rubrics) && content.body.kind === 'poem' ? (
+            <>
+              <p className="hint">
+                Tekst možete nalijepiti odmah. Kada izaberete rubriku, prilagodiće joj se, a riječi
+                ostaju iste.
+              </p>
+              <textarea
+                className="verse-input"
+                aria-label="Sadržaj"
+                placeholder="Ovdje napišite ili nalijepite tekst…"
+                value={content.body.text}
+                onChange={(e) => {
+                  if (content.body.kind === 'poem')
+                    change({ body: { ...content.body, text: e.target.value, emphasis: [] } });
+                }}
+              />
+            </>
+          ) : content.body.kind === 'poem' ? (
             <>
               <p className="hint">
                 Enter započinje novi red. Prazan red odvaja strofe. Razmaci i izvorno pismo ostaju
@@ -531,12 +748,27 @@ export function Editor({
               <button
                 className="text-button"
                 type="button"
+                aria-expanded={Boolean(history)}
+                disabled={pending === 'history'}
                 onClick={async () => {
-                  const res = await fetch(`/api/posts/${post.id}`);
-                  if (res.ok) setHistory((await res.json()).history);
+                  if (history) return setHistory(null);
+                  setPending('history');
+                  try {
+                    const res = await fetch(`/api/posts/${post.id}`);
+                    if (!res.ok) throw new Error();
+                    setHistory((await res.json()).history);
+                  } catch {
+                    notify('Ranije verzije trenutno nijesu dostupne. Pokušajte ponovo.', 'error');
+                  } finally {
+                    setPending(null);
+                  }
                 }}
               >
-                Ranije sačuvane verzije ↓
+                {pending === 'history'
+                  ? 'Učitavanje…'
+                  : history
+                    ? 'Sakrij ranije verzije ↑'
+                    : 'Ranije sačuvane verzije ↓'}
               </button>
               {history && (
                 <div className="revision-list">
@@ -545,12 +777,16 @@ export function Editor({
                       key={r.id}
                       type="button"
                       onClick={async () => {
-                        const res = await fetch(`/api/posts/${post.id}?revision=${r.id}`);
-                        if (res.ok) {
-                          change((await res.json()).content);
-                          setMessage(
+                        try {
+                          const res = await fetch(`/api/posts/${post.id}?revision=${r.id}`);
+                          if (!res.ok) throw new Error();
+                          change(aligned((await res.json()).content));
+                          notify(
                             'Ranija verzija je vraćena u nacrt. Javna verzija ostaje ista do objave.',
+                            'info',
                           );
+                        } catch {
+                          notify('Ta verzija nije otvorena. Pokušajte ponovo.', 'error');
                         }
                       }}
                     >
@@ -564,29 +800,59 @@ export function Editor({
                 <button
                   type="button"
                   className="text-button danger"
-                  onClick={async () => {
-                    const current = await ensureSaved();
-                    if (!current) return;
-                    const res = await fetch(`/api/posts/${current.id}/unpublish`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ version: current.version }),
-                    });
-                    const result = await res.json();
-                    if (res.ok) {
-                      const next = { ...current, status: 'unpublished', version: result.version };
-                      postRef.current = next;
-                      setPost(next);
-                      setMessage('Tekst je povučen. Nacrt je sačuvan i može se ponovo objaviti.');
-                    } else setMessage(result.error);
-                  }}
+                  onClick={unpublish}
+                  disabled={busy || blocked}
                 >
-                  Povuci objavljeni tekst
+                  {pending === 'unpublish' ? 'Povlačenje…' : 'Povuci objavljeni tekst'}
                 </button>
               )}
             </>
           )}
         </details>
+      </div>
+      <div className="toast-region" aria-live="polite">
+        {toast && (
+          <div
+            key={toast.key}
+            className={`toast toast-${toast.tone}`}
+            role={toast.tone === 'error' ? 'alert' : undefined}
+            onPointerEnter={() => setToastHeld(true)}
+            onPointerLeave={() => setToastHeld(false)}
+            onFocus={() => setToastHeld(true)}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) setToastHeld(false);
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+              {toast.tone === 'success' ? (
+                <path d="m4 10.5 4 4 8-9" fill="none" stroke="currentColor" strokeWidth="2" />
+              ) : (
+                <path d="M10 4v8M10 14.5v2" stroke="currentColor" strokeWidth="2" />
+              )}
+            </svg>
+            <div>
+              <p>{toast.text}</p>
+              {toast.shareSlug && (
+                <>
+                  <a href={`/tekst/${toast.shareSlug}`} target="_blank" rel="noopener noreferrer">
+                    Pogledajte tekst ↗
+                  </a>
+                  <ShareLinks url={`${origin}/tekst/${toast.shareSlug}`} title={content.title} />
+                </>
+              )}
+            </div>
+            <button
+              type="button"
+              aria-label="Zatvori obavještenje"
+              onClick={() => {
+                setToast(null);
+                setToastHeld(false);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

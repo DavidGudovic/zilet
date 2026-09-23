@@ -96,3 +96,35 @@ test('publication SEO uses the work author, public dates and media without chang
   assert.deepEqual(withoutImage.image, [absoluteUrl('/identity/social-preview.png')]);
   assert.equal(authorEntity({ ...post.author, name: 'REDAKCIJA' })['@type'], 'Organization');
 });
+
+test('shared links preview the work’s first picture as a landscape JPEG', () => {
+  const picture = {
+    id: '8fceffc9-f6ca-4f02-9599-0ddafe034d9a',
+    url: '/media/8fceffc9-f6ca-4f02-9599-0ddafe034d9a',
+    width: 823,
+    height: 621,
+    alt: 'Plakat festivala',
+    caption: '',
+    credit: 'Arhiva',
+    placement: 'above' as const,
+    focalX: 50,
+    focalY: 50,
+  };
+  const metadata = articleMetadata({ ...demoPosts[0], media: [picture, { ...picture, id: 'x' }] });
+  const images = (metadata.openGraph as { images: { url: string; type: string }[] }).images;
+  assert.deepEqual(images, [
+    {
+      url: absoluteUrl(`/media/${picture.id}/share.jpg`),
+      width: 1200,
+      height: 630,
+      type: 'image/jpeg',
+      alt: 'Plakat festivala',
+    },
+  ]);
+  assert.deepEqual((metadata.twitter as { images: unknown }).images, images);
+  const fallback = articleMetadata({ ...demoPosts[0], media: [] });
+  assert.equal(
+    (fallback.openGraph as { images: { url: string }[] }).images[0].url,
+    absoluteUrl('/identity/social-preview.png'),
+  );
+});

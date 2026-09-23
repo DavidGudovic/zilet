@@ -105,8 +105,15 @@ try {
   evidence.push(
     'Image and homepage menus work with pointer/touch; exact verse, note and image placement survive save/reopen',
   );
+  await page.getByRole('button', { name: 'Sačuvaj', exact: true }).click();
+  await page.getByText('Sve izmjene su već sačuvane.', { exact: true }).waitFor();
   await page.getByRole('button', { name: 'Objavi', exact: true }).click();
   await page.getByText('Tekst je objavljen.', { exact: true }).waitFor();
+  const toastShare = page.locator('.toast').getByRole('link', { name: /Facebook/ });
+  assert.match((await toastShare.getAttribute('href')) || '', /facebook\.com\/sharer/);
+  evidence.push(
+    'Save and publish confirm themselves in a toast that offers Facebook/Viber sharing',
+  );
   const publicPath = await page
     .getByRole('link', { name: 'Otvori objavljeni tekst', exact: false })
     .getAttribute('href');
@@ -130,15 +137,21 @@ try {
   const readPage = await context.newPage();
   await readPage.goto(base + publicPath);
   assert.equal(await readPage.locator('.editorial-note-text').innerText(), note);
+  assert.match(
+    await page.locator('.published-note').innerText(),
+    /Imate izmjene koje čitaoci još ne vide/,
+  );
   await page.getByRole('button', { name: 'Objavi izmjene', exact: true }).click();
-  await page.getByText('Tekst je objavljen.', { exact: true }).waitFor();
+  await page.getByText('Izmjene su objavljene.', { exact: true }).waitFor();
   await readPage.reload();
   assert.equal(await readPage.locator('.editorial-note').count(), 0);
   assert.equal(await readPage.locator('.verse').innerText(), poem.text);
   evidence.push(
     'UI publication renders distinct author, posting account and signed note; removing a note stays private until republishing',
   );
+  await page.getByRole('button', { name: 'Zatvori obavještenje', exact: true }).click();
   await page.getByText('Dodatne mogućnosti', { exact: true }).click();
+  page.once('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: 'Povuci objavljeni tekst', exact: true }).click();
   await page
     .getByText('Tekst je povučen. Nacrt je sačuvan i može se ponovo objaviti.', { exact: true })

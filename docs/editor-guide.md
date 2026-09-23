@@ -2,7 +2,7 @@
 
 **Otvorite Redakcija pored Nalog kada ste prijavljeni kao urednik.** Prijavite se svojom adresom i lozinkom. Ako ste dobili poziv, najprije potvrdite adresu i iz poruke za obnovu izaberite lozinku. „Zaboravljena lozinka” šalje novi link.
 
-**Pripremite djelo.** Izaberite **Novi tekst**, zatim najprije izaberite **Rubriku**. Unesite naslov i izaberite autora. „Dodaj autora” pravi autorski potpis; ne otvara korisnički nalog. Za izmjenu odobrene biografije ili portreta obratite se osobi koja održava sajt.
+**Pripremite djelo.** Izaberite **Novi tekst**, zatim najprije izaberite **Rubriku**. Rubrika određuje oblik: u Poeziji svaki stih ostaje u svom redu, a u ostalim rubrikama tekst ima pasuse. Ako tekst nalijepite prije izbora rubrike, prilagodiće se kada je izaberete; riječi i naglašavanje ostaju isti. Unesite naslov i izaberite autora. „Dodaj autora” pravi autorski potpis; ne otvara korisnički nalog. Za izmjenu odobrene biografije ili portreta obratite se osobi koja održava sajt.
 
 **Sačuvajte glas autora.** Pjesmu možete nalijepiti u prostor za sadržaj. Enter pravi novi red; još jedan Enter ostavlja prazan red između strofa. Razmaci, pismo i interpunkcija ostaju onakvi kakvi su uneseni. Za kurziv ili masna slova označite riječi, pa izaberite dugme. Prozni tekst ima i podnaslov, citat i link. „↶” poništava posljednju izmjenu. Nema potrebe da birate fontove ili veličine slova.
 
@@ -10,9 +10,11 @@
 
 **Provjerite, pa objavite.** Otvorite **Pregled**. Dugme **Nazad na uređivanje** vraća vas u sačuvani nacrt. Provjerite potpis, oba dijela kritike, stihove, naglašavanje i slike. Na uskom ekranu dugi stih može vizuelno preći u sljedeći red. „Izvorni prelom” prikazuje autorske redove uz pomjeranje unutar pjesme. „Kopiraj pjesmu” kopira izvorni tekst.
 
-**Sačuvano nije isto što i objavljeno.** Nacrt se čuva tokom rada. Natpis **Sačuvano** znači da je server potvrdio čuvanje. **Objavi** prvi put otvara djelo čitaocima. Kada mijenjate već objavljeno djelo, promjene ostaju u nacrtu sve dok ne izaberete **Objavi izmjene**. „Pregled” je dostupan samo urednicima.
+**Sačuvano nije isto što i objavljeno.** Nacrt se čuva tokom rada. Natpis **Sačuvano** znači da je server potvrdio čuvanje. Svako dugme potvrđuje radnju porukom pri dnu ekrana, na primjer „Nacrt je sačuvan.” ili „Tekst je objavljen.”; ako nešto nedostaje, poruka kaže šta treba dopuniti. **Objavi** prvi put otvara djelo čitaocima. Kada mijenjate već objavljeno djelo, promjene ostaju u nacrtu sve dok ne izaberete **Objavi izmjene**. „Pregled” je dostupan samo urednicima.
 
 Ako vidite **Nije sačuvano**, ostavite prozor otvoren, provjerite vezu i pokušajte **Sačuvaj**. Ako je drugi urednik sačuvao noviju verziju, otvorite ponuđenu sačuvanu verziju u drugom prozoru i uporedite tekst. Vaše izmjene ostaju u prvom prozoru; nemojte ga zatvarati prije nego što ih prenesete. Ne čuvamo nacrte između naloga u zajedničkom pregledaču.
+
+**Podijelite na Facebooku i Viberu.** Poslije objave poruka „Tekst je objavljen.” nudi **Facebook**, **Viber** i **Kopiraj link**. Ista dugmad stoje na vrhu objavljenog teksta u Redakciji i uz svaki tekst na sajtu. Link se prikazuje sa naslovom, početkom teksta i prvom fotografijom iz teksta. Na telefonu **Ostale aplikacije…** otvara uobičajen izbor aplikacija. Ako Facebook pokazuje stariji izgled linka, otvorite https://developers.facebook.com/tools/debug/, nalijepite adresu teksta i izaberite „Scrape Again”.
 
 **Dodatne mogućnosti** sadrže kratak uvod, izbor za početnu, ranije sačuvane verzije, zatvaranje komentara i povlačenje objavljenog teksta. Vraćanje stare verzije najprije mijenja nacrt. Povučeno djelo ostaje sačuvano i može ponovo da se objavi.
 
