@@ -164,6 +164,13 @@ export function safeReturn(s: unknown) {
     return '/';
   }
 }
+// Next passes a repeated query parameter (?q=a&q=b) as an array; pages read its first value.
+export type SearchParams<K extends string> = Promise<Partial<Record<K, string | string[]>>>;
+export function firstParams<K extends string>(params: Partial<Record<K, string | string[]>>) {
+  return Object.fromEntries(
+    Object.entries(params).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value]),
+  ) as Partial<Record<K, string>>;
+}
 export function safeHref(s: string) {
   return /^(https?:\/\/|mailto:)/i.test(s) ? s : undefined;
 }

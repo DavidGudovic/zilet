@@ -8,14 +8,10 @@ import { posts, submissions, submissionMessages, user } from '@/db/schema';
 import { eq, desc, asc, inArray, and } from 'drizzle-orm';
 import { requireUser } from '@/lib/security';
 import { SubmissionForm } from '@/components/submission-form';
-import { dateLabel } from '@/lib/content';
+import { dateLabel, firstParams, type SearchParams } from '@/lib/content';
 export const metadata = { title: 'Pošaljite svoj rad', robots: { index: false, follow: false } };
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ prilog?: string }>;
-}) {
-  const { prilog } = await searchParams;
+export default async function Page({ searchParams }: { searchParams: SearchParams<'prilog'> }) {
+  const { prilog } = firstParams(await searchParams);
   const returnTo = prilog
     ? `/posalji?prilog=${encodeURIComponent(prilog)}#prilog-${encodeURIComponent(prilog)}`
     : '/posalji';
