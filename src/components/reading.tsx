@@ -66,7 +66,17 @@ export function Poem({ body }: { body: Extract<Body, { kind: 'poem' }> }) {
     </div>
   );
 }
-export function Artwork({ items }: { items: MediaView[] }) {
+// With `priority`, the first picture is usually the largest thing in view when the page opens,
+// so it loads at once and ahead of other images; the rest wait until the reader nears them.
+export function Artwork({
+  items,
+  sizes,
+  priority = false,
+}: {
+  items: MediaView[];
+  sizes: string;
+  priority?: boolean;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState(0);
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -89,11 +99,12 @@ export function Artwork({ items }: { items: MediaView[] }) {
               <img
                 src={m.url}
                 srcSet={mediaSrcSet(m)}
-                sizes="(max-width: 767px) 100vw, 780px"
+                sizes={sizes}
                 width={m.width}
                 height={m.height}
                 alt={m.alt}
-                loading="lazy"
+                loading={priority && i === 0 ? undefined : 'lazy'}
+                fetchPriority={priority && i === 0 ? 'high' : undefined}
                 decoding="async"
               />
               <span aria-hidden="true">

@@ -6,6 +6,11 @@ import { pageMetadata, siteTitle, siteDescription, absoluteUrl, publisherEntity 
 import { StructuredData } from '@/components/structured-data';
 export const metadata = pageMetadata(siteTitle, siteDescription, '/');
 export const dynamic = 'force-dynamic';
+// Picture widths as the page styles lay them out; the art feature splits into columns at 651 px.
+const leadSizes =
+  '(max-width: 767px) calc(100vw - 36px), (max-width: 1280px) 54vw, (max-width: 1599px) 690px, 737px';
+const featureSizes =
+  '(max-width: 650px) calc(100vw - 36px), (max-width: 1280px) 54vw, (max-width: 1599px) 690px, 737px';
 export default async function Home() {
   const { posts, choices: placements } = await getFrontPage();
   const placed = (slot: string) =>
@@ -70,7 +75,7 @@ export default async function Home() {
                 <img
                   src={lead.media[0].url}
                   srcSet={mediaSrcSet(lead.media[0])}
-                  sizes="(max-width: 767px) 100vw, 65vw"
+                  sizes={leadSizes}
                   decoding="async"
                   width={lead.media[0].width}
                   height={lead.media[0].height}
@@ -129,7 +134,7 @@ export default async function Home() {
                   <img
                     src={art.media[0].url}
                     srcSet={mediaSrcSet(art.media[0])}
-                    sizes="(max-width: 767px) 100vw, 65vw"
+                    sizes={featureSizes}
                     decoding="async"
                     width={art.media[0].width}
                     height={art.media[0].height}

@@ -5,6 +5,13 @@ import { ShareLinks } from './share-links';
 import { absoluteUrl } from '@/lib/seo';
 import { RichText } from './rich-text';
 import { Arrow } from './arrow';
+// Picture widths as the page styles lay them out at each breakpoint; a poem's column is wider.
+const pictureSizes = {
+  prose: '(max-width: 767px) calc(100vw - 36px), (max-width: 1000px) 544px, 780px',
+  poem: '(max-width: 767px) calc(100vw - 36px), (max-width: 1000px) 736px, 860px',
+  beside:
+    '(max-width: 767px) calc(100vw - 36px), (max-width: 1000px) 736px, (max-width: 1100px) 860px, 344px',
+};
 export function Article({
   post,
   preview = false,
@@ -14,6 +21,7 @@ export function Article({
   preview?: boolean;
   children?: React.ReactNode;
 }) {
+  const column = post.type === 'poem' ? pictureSizes.poem : pictureSizes.prose;
   return (
     <>
       <article
@@ -68,13 +76,20 @@ export function Article({
             )}
           </aside>
           <div className="reading-column">
-            <Artwork items={post.media.filter((m) => m.placement === 'above')} />
+            <Artwork
+              items={post.media.filter((m) => m.placement === 'above')}
+              sizes={column}
+              priority
+            />
             {post.body.kind === 'poem' ? (
               <div
                 className={post.media.some((m) => m.placement === 'beside') ? 'poem-with-art' : ''}
               >
                 <Poem body={post.body} />
-                <Artwork items={post.media.filter((m) => m.placement === 'beside')} />
+                <Artwork
+                  items={post.media.filter((m) => m.placement === 'beside')}
+                  sizes={pictureSizes.beside}
+                />
               </div>
             ) : (
               <div className="prose">
@@ -86,6 +101,7 @@ export function Article({
                 (m) =>
                   m.placement === 'below' || (post.type !== 'poem' && m.placement === 'beside'),
               )}
+              sizes={column}
             />
             {post.type !== 'poem' && (
               <span className="endmark" aria-hidden="true">

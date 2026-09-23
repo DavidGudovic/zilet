@@ -99,7 +99,7 @@ export default async function Page({
             <img
               src={portrait.url}
               srcSet={mediaSrcSet(portrait)}
-              sizes="(max-width: 767px) 220px, 260px"
+              sizes="240px"
               decoding="async"
               width={portrait.width}
               height={portrait.height}

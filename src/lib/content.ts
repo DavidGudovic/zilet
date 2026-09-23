@@ -221,12 +221,23 @@ export type PostView = {
   demo?: boolean;
 };
 
-// Derivatives fit inside 640 × 640; a portrait thumbnail is narrower than 640 px.
+// Derivatives fit inside 640 × 640 and 1080 × 1080, so a portrait one is narrower than its bound.
+// Each is listed only when it is smaller than the display picture.
 export function mediaSrcSet(media: Pick<MediaView, 'url' | 'width' | 'height'>) {
   const longest = Math.max(media.width, media.height);
-  if (longest <= 640) return undefined;
-  const smallWidth = Math.max(1, Math.round((media.width * 640) / longest));
-  return `${media.url}${media.url.includes('?') ? '&' : '?'}size=small ${smallWidth}w, ${media.url} ${media.width}w`;
+  const join = media.url.includes('?') ? '&' : '?';
+  const smaller = (
+    [
+      ['small', 640],
+      ['medium', 1080],
+    ] as const
+  )
+    .filter(([, bound]) => longest > bound)
+    .map(
+      ([size, bound]) =>
+        `${media.url}${join}size=${size} ${Math.max(1, Math.round((media.width * bound) / longest))}w`,
+    );
+  return smaller.length ? [...smaller, `${media.url} ${media.width}w`].join(', ') : undefined;
 }
 
 export const authorName = (name: string) => name.trim().toUpperCase();

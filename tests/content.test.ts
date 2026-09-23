@@ -7,6 +7,7 @@ import {
   excerpt,
   firstParams,
   fold,
+  mediaSrcSet,
   safeReturn,
   type Body,
 } from '../src/lib/content';
@@ -96,4 +97,20 @@ test('front-page teasers skip subtitles and stop at a word with one ellipsis', (
   const long = excerpt(prose(['paragraph', 'riječ '.repeat(100)]), 40);
   assert.ok(long.length <= 41 && long.endsWith('riječ…'), long);
   assert.equal(excerpt(prose(['paragraph', 'SVE VELIKIM SLOVIMA.'])), 'SVE VELIKIM SLOVIMA.');
+});
+test('picture srcsets list each smaller size the display picture has', () => {
+  assert.equal(mediaSrcSet({ url: '/media/a', width: 600, height: 400 }), undefined);
+  assert.equal(
+    mediaSrcSet({ url: '/media/a', width: 900, height: 600 }),
+    '/media/a?size=small 640w, /media/a 900w',
+  );
+  assert.equal(
+    mediaSrcSet({ url: '/media/a', width: 1800, height: 1200 }),
+    '/media/a?size=small 640w, /media/a?size=medium 1080w, /media/a 1800w',
+  );
+  // A portrait picture's sizes are bounded by its height, so they are narrower than the bound.
+  assert.equal(
+    mediaSrcSet({ url: '/dev-art?kind=portrait', width: 1572, height: 1800 }),
+    '/dev-art?kind=portrait&size=small 559w, /dev-art?kind=portrait&size=medium 943w, /dev-art?kind=portrait 1572w',
+  );
 });
