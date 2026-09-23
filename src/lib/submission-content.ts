@@ -3,8 +3,10 @@ import { rubrics, type Body } from './content';
 export const submissionSchema = z
   .object({
     title: z.string().trim().min(1).max(240),
+    // Browsers send form text with CRLF; store LF so paragraphs split and limits count characters.
     text: z
       .string()
+      .overwrite((s) => s.replace(/\r\n?/g, '\n'))
       .min(1)
       .max(30000)
       .refine((s) => s.trim().length > 0),
