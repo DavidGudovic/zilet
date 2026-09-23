@@ -1,6 +1,7 @@
 import { Link } from '@/components/link';
 import { getFrontPage } from '@/lib/data';
 import { Arrow } from '@/components/arrow';
+import { InkLines } from '@/components/ink-lines';
 import { bodyText, excerpt, rubricLabel, mediaSrcSet } from '@/lib/content';
 import { pageMetadata, siteTitle, siteDescription, absoluteUrl, publisherEntity } from '@/lib/seo';
 import { StructuredData } from '@/components/structured-data';
@@ -244,6 +245,7 @@ export default async function Home() {
         </section>
       )}
       <div className="browse-strip">
+        <InkLines className="browse-lines" />
         <p>Rubrike</p>
         <div>
           {[

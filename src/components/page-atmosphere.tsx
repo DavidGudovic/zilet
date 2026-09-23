@@ -10,7 +10,7 @@ export function PageAtmosphere() {
     if (preference.matches) return;
     const elements = Array.from(
       document.querySelectorAll<HTMLElement>(
-        '.lead-story > h2, .lead-excerpt, .poem-selection > h2, .poem-excerpt, .front-art-feature article, .archive-entry > div, .prose > p, .prose > h2, .editorial-note, .author-bio > p, .index-row, .group-poem, .group-prose',
+        '.lead-story > h2, .lead-excerpt, .poem-selection > h2, .poem-excerpt, .front-art-feature article, .archive-entry > div, .prose > p, .prose > h2, .editorial-note, .author-bio > p, .index-row, .group-poem, .group-prose, .ink-lines',
       ),
     );
     const observer = new IntersectionObserver(

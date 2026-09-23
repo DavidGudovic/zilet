@@ -3,6 +3,7 @@ import { Link } from './link';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { Arrow, Chevron } from './arrow';
+import { InkLines } from './ink-lines';
 import { rubrics } from '@/lib/content';
 // The full-size wordmark is 1881 px wide; these cover the masthead at up to three device pixels.
 const wordmark = '/identity/wordmark-generated-549.webp';
@@ -20,6 +21,7 @@ export function Header({ isEditor = false }: { isEditor?: boolean }) {
   return (
     <header className="site-header">
       <div className="masthead wrap">
+        <InkLines className="masthead-lines" />
         <p className="descriptor">
           Časopis za književnost,
           <br />
@@ -178,6 +180,7 @@ export function Footer() {
   return (
     <div className="footer-surface">
       <footer className="footer wrap">
+        <InkLines className="footer-lines" />
         <Link href="/" aria-label="Žilet — Početna">
           <img
             src={wordmark}

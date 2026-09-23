@@ -11,6 +11,7 @@ import { Link } from '@/components/link';
 import { rubrics, rubricLabel } from '@/lib/content';
 import { findPosts, publishedRubrics } from '@/lib/data';
 import { Arrow } from '@/components/arrow';
+import { InkLines } from '@/components/ink-lines';
 import { ArchiveList, Pagination } from '@/components/archive';
 export const dynamic = 'force-dynamic';
 export async function generateMetadata({
@@ -62,6 +63,7 @@ export default async function Page({
         ])}
       />
       <header className="archive-heading rubric-heading">
+        <InkLines className="rubric-lines" />
         <span className="eyebrow">Rubrike / Žilet</span>
         <h1>{rubricTitle(slug)}</h1>
         <p className="archive-introduction">{rubricDescriptions[slug]}</p>
