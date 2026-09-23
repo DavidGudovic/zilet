@@ -105,7 +105,7 @@ export default async function Page({
                 </span>
                 <h2>{c?.title || 'Novi tekst'}</h2>
                 <p className="desk-post-credit">
-                  Autor djela: {authorName || '—'}
+                  Autor djela: <span className="author-name">{authorName || '—'}</span>
                   <br />
                   Objavu pripremio/la:{' '}
                   {p.createdBy === 'approved-content-import'

@@ -16,6 +16,7 @@ try {
       '007_retire_criticism.sql',
       '008_published_updated_at.sql',
       '009_submission_line_endings.sql',
+      '010_natural_case_authors.sql',
     ]) {
       const exists = await tx`SELECT name FROM zilet_migrations WHERE name=${name}`;
       if (!exists.length) {

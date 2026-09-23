@@ -37,7 +37,7 @@ function Profile({ author, onDeleted }: { author: Author; onDeleted: () => void 
       }}
     >
       <div className="profile-form-heading">
-        <h2>{author.name}</h2>
+        <h2 className="author-name">{author.name}</h2>
         {author.isEditor && <span className="eyebrow">Redakcija</span>}
       </div>
       <label>

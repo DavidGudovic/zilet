@@ -95,7 +95,7 @@ try {
       };
       const first = await insertOrResolveAuthor(tx, profile);
       assert.equal(first.created, true);
-      assert.deepEqual(first.author, { ...profile, name: profile.name.toUpperCase() });
+      assert.deepEqual(first.author, profile);
       const duplicate = await insertOrResolveAuthor(tx, {
         ...profile,
         id: crypto.randomUUID(),
@@ -105,7 +105,7 @@ try {
         isEditor: false,
       });
       assert.equal(duplicate.created, false);
-      assert.deepEqual(duplicate.author, { ...profile, name: profile.name.toUpperCase() });
+      assert.deepEqual(duplicate.author, profile);
       const retry = await insertOrResolveAuthor(tx, profile);
       assert.equal(retry.created, false);
       assert.equal(retry.author.id, profile.id);
@@ -145,6 +145,8 @@ try {
   );
   assert.equal(replies.filter((r) => r.status === 201).length, 1);
   assert.equal(new Set(replies.map((r) => r.author.id)).size, 1);
+  // Whichever spelling arrived first, a name typed in capitals is stored as written.
+  assert.deepEqual(new Set(replies.map((r) => r.author.name)), new Set([name]));
   console.log('PASS Concurrent case/whitespace author creation reuses one profile');
   const author = replies[0].author;
   const oldSlug = `old-${author.slug}`;
@@ -199,7 +201,11 @@ try {
     return { status: response.status, data: await response.json() };
   }
   const unused = (await api('/api/authors', 'POST', { name: `Brisanje čćžšđ ${Date.now()}` })).data;
-  assert.equal(unused.name, unused.name.toUpperCase());
+  assert.ok(unused.name.startsWith('Brisanje čćžšđ '));
+  const shouted = (await api('/api/authors', 'POST', { name: `SAVKA PROVJERA ${Date.now()}` }))
+    .data;
+  assert.match(shouted.name, /^Savka Provjera \d+$/);
+  assert.equal((await api(`/api/authors/${shouted.id}`, 'DELETE')).status, 200);
   assert.equal(
     (
       await fetch(base + `/api/authors/${unused.id}`, {

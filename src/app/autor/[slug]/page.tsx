@@ -95,7 +95,7 @@ export default async function Page({
       />
       <header className="archive-heading">
         <span className="eyebrow">{author.isEditor ? 'Redakcija / O meni' : 'Autor'}</span>
-        <h1>{author.name}</h1>
+        <h1 className="author-name">{author.name}</h1>
         {portrait && (
           <figure className="author-portrait">
             <img

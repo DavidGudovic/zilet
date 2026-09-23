@@ -171,3 +171,18 @@ a.eyebrow:hover {
     justify-self: start;
   }
 }
+
+/* Author names are stored as written (matched regardless of case) and set in capitals wherever
+   they appear, on the site and in the desk, as the editors asked, so they read at a glance. */
+.author-name,
+.lead-byline a,
+.group-byline a,
+.index-byline a,
+.archive-byline a,
+.article-rail .byline,
+.article-colophon > span,
+.author-index > a,
+.author-field .select-trigger > span:first-child,
+.author-field [role='option'] > span:first-child {
+  text-transform: uppercase;
+}

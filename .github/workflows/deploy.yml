@@ -57,20 +57,17 @@ jobs:
         run: |
           sh scripts/setup.sh
           docker compose up -d --no-build --wait --wait-timeout 150
-          npm run test:e2e
-          node --env-file=.env --import tsx tests/integration/authors.ts
-          node --env-file=.env --import tsx tests/integration/analytics.ts
-          node --env-file=.env --import tsx tests/integration/submissions.ts
-          node --env-file=.env --import tsx tests/integration/seo.ts
+          bash tests/reported.sh acceptance npm run test:e2e
+          for suite in authors analytics submissions seo; do
+            bash tests/reported.sh "$suite" node --env-file=.env --import tsx "tests/integration/$suite.ts"
+          done
           curl --fail --silent http://localhost:3000/api/health | jq -e --arg sha "$RELEASE_SHA" '.status == "ok" and .release == $sha'
       - name: Check editor menus and signed notes in a real browser
         run: |
           npx playwright install --with-deps chromium --only-shell
-          node --env-file=.env --import tsx tests/integration/editor-ui.ts
-          node --env-file=.env --import tsx tests/integration/formatting-ui.ts
-          node --env-file=.env --import tsx tests/integration/photo-library-ui.ts
-          node --env-file=.env --import tsx tests/integration/responsive-ui.ts
-          node --env-file=.env --import tsx tests/integration/correspondence-ui.ts
+          for suite in editor-ui formatting-ui photo-library-ui responsive-ui correspondence-ui; do
+            bash tests/reported.sh "$suite" node --env-file=.env --import tsx "tests/integration/$suite.ts"
+          done
       - name: Package the tested image
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |

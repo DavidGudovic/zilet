@@ -81,6 +81,8 @@ docker compose cp ./approved-bio.txt app:/tmp/approved-bio.txt
 docker compose exec app node --import tsx scripts/author.ts --slug AUTHOR-SLUG --bio-file /tmp/approved-bio.txt
 ```
 
+Author names are stored as written and matched regardless of case; a name typed all in capitals or all in small letters is stored as "Savka Gudović", and pages set every byline in capitals with CSS. Addresses made from a half-typed first title can be realigned with the live title (old addresses keep a permanent redirect): run `docker compose exec app node --import tsx scripts/realign-slugs.ts` for a dry run, then add `--apply`.
+
 For a rights-cleared portrait, copy the file similarly and supply `--portrait-file`, `--alt`, `--credit`, and `--actor-email` (existing editor/maintainer). `--remove-portrait` withdraws it. Never use a generated or unapproved portrait of a real contributor.
 
 ## Backups and restoration

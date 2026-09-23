@@ -185,4 +185,12 @@ export function mediaSrcSet(media: Pick<MediaView, 'url' | 'width' | 'height'>) 
   return smaller.length ? [...smaller, `${media.url} ${media.width}w`].join(', ') : undefined;
 }
 
-export const authorName = (name: string) => name.trim().toUpperCase();
+// Matches the database trigger: a name typed all in capitals or all in small letters is stored
+// as a name is written (initcap), so "SAVKA" and "savka" become "Savka"; mixed case is kept.
+export function authorName(name: string) {
+  const clean = name.trim().replace(/\s+/gu, ' ');
+  if (clean !== clean.toUpperCase() && clean !== clean.toLowerCase()) return clean;
+  return clean
+    .toLowerCase()
+    .replace(/(^|[^\p{L}\p{N}])(\p{L})/gu, (_, before, letter) => before + letter.toUpperCase());
+}

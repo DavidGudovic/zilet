@@ -248,7 +248,7 @@ try {
   ok('Browsers keep published pictures and revalidate them instead of downloading again');
   assert.ok((await request('/rubrika/poezija')).text.includes('Provjera: pjesma'));
   ok('Publishing with image appears in SSR article and archive without rebuild');
-  assert.equal(testAuthor.data.name, 'RAZVOJNI AUTOR (TEST)');
+  assert.equal(testAuthor.data.name, 'Razvojni autor (test)');
   assert.ok(publicPage.text.includes(testAuthor.data.name));
   assert.ok(publicPage.text.includes('Objavu pripremio/la'));
   assert.ok(publicPage.text.includes('Provjera editor'));

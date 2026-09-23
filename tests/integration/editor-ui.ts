@@ -53,7 +53,7 @@ try {
   await page.waitForTimeout(2200);
   assert.equal(await author.getAttribute('aria-expanded'), 'true');
   await page.screenshot({ path: `${dir}/author-menu-390.png` });
-  await page.getByRole('option', { name: 'RAZVOJNI AUTOR (TEST)', exact: true }).first().tap();
+  await page.getByRole('option', { name: 'Razvojni autor (test)', exact: true }).first().tap();
   assert.equal(await author.getAttribute('aria-expanded'), 'false');
   const verse = page.getByLabel('Sadržaj pjesme', { exact: true });
   await pasteVerse(verse, poem.text);

@@ -26,7 +26,7 @@ async function call(path: string, method = 'GET', data?: unknown) {
   return r.json();
 }
 const author = await call('/api/authors', 'POST', { name: 'SEO provjera' });
-assert.equal(author.name, 'SEO PROVJERA');
+assert.equal(author.name, 'SEO provjera');
 const content = {
   title: 'Provjera mape sajta',
   intro: '',
@@ -67,7 +67,7 @@ async function sitemap() {
 assert.ok(!(await sitemap()).includes('/tekst/' + post.slug));
 let current = await call(`/api/posts/${post.id}/publish`, 'POST', { version: post.version });
 const article = await (await fetch(base + '/tekst/' + post.slug)).text();
-assert.ok(article.includes('<title>Provjera mape sajta | SEO PROVJERA | Žilet</title>'));
+assert.ok(article.includes('<title>Provjera mape sajta | SEO provjera | Žilet</title>'));
 assert.ok(article.includes('property="og:description"'));
 assert.ok(article.includes(`property="og:url" content="${base}/tekst/${post.slug}"`));
 const published = await sitemap();

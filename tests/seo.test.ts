@@ -19,9 +19,15 @@ import { revisionSchema } from '../src/lib/publishing';
 import { submissionSchema } from '../src/lib/submission-content';
 import { demoPosts } from '../src/lib/fixtures';
 
-test('uppercase author names retain Latin diacritics and Cyrillic', () => {
-  assert.equal(authorName('  Željko Đurić čćš śź  '), 'ŽELJKO ĐURIĆ ČĆŠ ŚŹ');
-  assert.equal(authorName('Милена'), 'МИЛЕНА');
+test('author names typed in one case are stored as names are written, keeping diacritics', () => {
+  assert.equal(authorName('  ŽELJKO   ĐURIĆ ČĆŠ ŚŹ  '), 'Željko Đurić Čćš Śź');
+  assert.equal(authorName('LJUBOMIR NJEGOŠ DŽAJA'), 'Ljubomir Njegoš Džaja');
+  assert.equal(authorName('savka gudović parađina'), 'Savka Gudović Parađina');
+  assert.equal(authorName('ILIJA LAKUŠIĆ /1947 -2024/'), 'Ilija Lakušić /1947 -2024/');
+  assert.equal(authorName('NEBOJŠA D. STEVIĆ'), 'Nebojša D. Stević');
+  assert.equal(authorName('МИЛЕНА'), 'Милена');
+  assert.equal(authorName('Paul McCartney'), 'Paul McCartney');
+  assert.equal(authorName('Internet izvori'), 'Internet izvori');
 });
 
 test('descriptive browser titles preserve visible labels and authored title formatting', () => {
