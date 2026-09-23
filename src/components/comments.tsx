@@ -8,31 +8,33 @@ import { isDemo } from '@/lib/data';
 import { CommentForm, CommentDelete } from './comment-form';
 import { Pagination } from './archive';
 export async function Comments({ post, page = 1 }: { post: PostView; page?: number }) {
-  const s = await auth.api.getSession({ headers: await headers() });
-  const items = isDemo()
-    ? []
-    : await db
-        .select({
-          id: comments.id,
-          body: comments.body,
-          userId: comments.userId,
-          name: user.name,
-          createdAt: comments.createdAt,
-        })
-        .from(comments)
-        .innerJoin(user, eq(user.id, comments.userId))
-        .where(and(eq(comments.postId, post.id), eq(comments.status, 'visible')))
-        .orderBy(asc(comments.createdAt))
-        .limit(20)
-        .offset((page - 1) * 20);
-  const count = isDemo()
-    ? 0
-    : (
-        await db
+  const visible = and(eq(comments.postId, post.id), eq(comments.status, 'visible'));
+  const [s, items, count] = await Promise.all([
+    headers().then((h) => auth.api.getSession({ headers: h })),
+    isDemo()
+      ? []
+      : db
+          .select({
+            id: comments.id,
+            body: comments.body,
+            userId: comments.userId,
+            name: user.name,
+            createdAt: comments.createdAt,
+          })
+          .from(comments)
+          .innerJoin(user, eq(user.id, comments.userId))
+          .where(visible)
+          .orderBy(asc(comments.createdAt))
+          .limit(20)
+          .offset((page - 1) * 20),
+    isDemo()
+      ? 0
+      : db
           .select({ count: sql<number>`count(*)::int` })
           .from(comments)
-          .where(and(eq(comments.postId, post.id), eq(comments.status, 'visible')))
-      )[0].count;
+          .where(visible)
+          .then(([row]) => row.count),
+  ]);
   return (
     <section className="comments" id="komentari">
       <h2>

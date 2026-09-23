@@ -3,7 +3,7 @@ import { StructuredData } from '@/components/structured-data';
 import type { Metadata } from 'next';
 import { Comments } from '@/components/comments';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { getPost, getRedirect, findPosts } from '@/lib/data';
+import { getPost, getRedirect, moreByAuthor } from '@/lib/data';
 import { Article } from '@/components/article';
 import { rubricLabel } from '@/lib/content';
 import Link from 'next/link';
@@ -32,9 +32,7 @@ export default async function Page({
     notFound();
   }
   const page = Math.max(1, Math.min(10000, Math.floor(Number((await searchParams).page)) || 1));
-  const more = (await findPosts({ author: p.author.id, limit: 4 })).items
-    .filter((item) => item.id !== p.id)
-    .slice(0, 3);
+  const more = await moreByAuthor(p.author.id, p.id);
   const crumbs = [
     { name: 'Žilet', path: '/' },
     { name: rubricLabel(p.rubrics[0]), path: `/rubrika/${p.rubrics[0]}` },

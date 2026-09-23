@@ -58,8 +58,10 @@ export default async function Page({
     }
     notFound();
   }
-  const portrait = await getPortrait(author.portraitId);
-  const result = await findPosts({ author: author.id, page: Number(q.page) || 1 });
+  const [portrait, result] = await Promise.all([
+    getPortrait(author.portraitId),
+    findPosts({ author: author.id, page: Number(q.page) || 1 }),
+  ]);
   if (result.page > 1 && !result.items.length) notFound();
   const entity = {
     ...authorEntity(author),

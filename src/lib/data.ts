@@ -1,17 +1,37 @@
 import { cache } from 'react';
 import { db } from '@/db';
 import { authors, posts, revisions, media, placements, redirects, user } from '@/db/schema';
-import { and, eq, desc, asc, sql as dsql, ilike, inArray } from 'drizzle-orm';
+import { and, eq, ne, desc, asc, sql as dsql, ilike, inArray, type SQL } from 'drizzle-orm';
 import { demoPosts } from './fixtures';
 import { fold, type PostView } from './content';
 import type { RevisionContent } from '@/db/schema';
 export const isDemo = () =>
   process.env.DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production';
+// What pages show of a post; search_text repeats the whole text, so it is not read.
+const postColumns = {
+  id: posts.id,
+  slug: posts.slug,
+  createdBy: posts.createdBy,
+  createdAt: posts.createdAt,
+  publishedAt: posts.publishedAt,
+  publishedUpdatedAt: posts.publishedUpdatedAt,
+  version: posts.version,
+};
 type PostRow = {
-  post: typeof posts.$inferSelect;
+  post: Pick<typeof posts.$inferSelect, keyof typeof postColumns>;
   content: RevisionContent;
   editorialNoteBy?: string | null;
 };
+const publishedRows = (where: SQL | undefined) =>
+  db
+    .select({
+      post: postColumns,
+      content: revisions.content,
+      editorialNoteBy: revisions.editorialNoteBy,
+    })
+    .from(posts)
+    .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
+    .where(where);
 async function viewPosts(rows: PostRow[]): Promise<PostView[]> {
   if (!rows.length) return [];
   const authorIds = [...new Set(rows.map((r) => r.content.authorId))];
@@ -117,29 +137,19 @@ export async function findPosts({
     );
   }
   const where = and(...conditions);
-  const [{ total }] = await db
-    .select({ total: dsql<number>`count(*)::int` })
-    .from(posts)
-    .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
-    .where(where);
-  const rows = await db
-    .select({
-      post: posts,
-      content: revisions.content,
-      editorialNoteBy: revisions.editorialNoteBy,
-    })
-    .from(posts)
-    .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
-    .where(where)
-    .orderBy(sort === 'oldest' ? asc(posts.publishedAt) : desc(posts.publishedAt), asc(posts.id))
-    .limit(limit)
-    .offset((page - 1) * limit);
-  return {
-    items: await viewPosts(rows),
-    total,
-    page,
-    limit,
-  };
+  const [[{ total }], items] = await Promise.all([
+    db
+      .select({ total: dsql<number>`count(*)::int` })
+      .from(posts)
+      .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
+      .where(where),
+    publishedRows(where)
+      .orderBy(sort === 'oldest' ? asc(posts.publishedAt) : desc(posts.publishedAt), asc(posts.id))
+      .limit(limit)
+      .offset((page - 1) * limit)
+      .then(viewPosts),
+  ]);
+  return { items, total, page, limit };
 }
 // Rubrics with at least one published text; "umjetnost" gathers painting, music and film.
 export async function publishedRubrics() {
@@ -158,38 +168,46 @@ export async function publishedRubrics() {
   if (['slikarstvo', 'muzika', 'film'].some((key) => used.has(key))) used.add('umjetnost');
   return used;
 }
-export async function getPosts() {
-  return (await findPosts({ limit: 24 })).items;
-}
+// The 24 newest texts, then placed texts older than those. The front page needs no total, and
+// the placed texts are read alongside the newest instead of after them.
 export async function getFrontPage() {
-  const [recent, choices] = await Promise.all([getPosts(), getPlacements()]);
-  if (isDemo()) return { posts: recent, choices };
-  const selected = await db
-    .select({
-      post: posts,
-      content: revisions.content,
-      editorialNoteBy: revisions.editorialNoteBy,
-    })
-    .from(placements)
-    .innerJoin(posts, eq(placements.postId, posts.id))
-    .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
-    .where(eq(posts.status, 'published'));
-  const older = await viewPosts(selected.filter((r) => !recent.some((p) => p.id === r.post.id)));
-  return { posts: [...recent, ...older], choices };
+  if (isDemo()) return { posts: (await findPosts({ limit: 24 })).items, choices: [] };
+  const published = eq(posts.status, 'published');
+  const placed = db.select({ id: placements.postId }).from(placements);
+  const [recent, selected, choices] = await Promise.all([
+    publishedRows(published).orderBy(desc(posts.publishedAt), asc(posts.id)).limit(24),
+    publishedRows(and(published, inArray(posts.id, placed))),
+    getPlacements(),
+  ]);
+  const older = selected.filter((r) => !recent.some((p) => p.post.id === r.post.id));
+  return { posts: await viewPosts([...recent, ...older]), choices };
 }
 export const getPost = cache(async (slug: string) => {
   if (isDemo()) return demoPosts.find((p) => p.slug === slug);
-  const [row] = await db
-    .select({
-      post: posts,
-      content: revisions.content,
-      editorialNoteBy: revisions.editorialNoteBy,
-    })
-    .from(posts)
-    .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
-    .where(and(eq(posts.slug, slug), eq(posts.status, 'published')));
+  const [row] = await publishedRows(and(eq(posts.slug, slug), eq(posts.status, 'published')));
   return row ? (await viewPosts([row]))[0] : undefined;
 });
+// "Još od autora" shows only titles, so it fetches no whole texts.
+export async function moreByAuthor(authorId: string, exceptId: string, limit = 3) {
+  if (isDemo())
+    return demoPosts
+      .filter((p) => p.author.id === authorId && p.id !== exceptId)
+      .slice(0, limit)
+      .map(({ id, slug, title }) => ({ id, slug, title }));
+  return db
+    .select({ id: posts.id, slug: posts.slug, title: dsql<string>`${revisions.content}->>'title'` })
+    .from(posts)
+    .innerJoin(revisions, eq(posts.publishedRevisionId, revisions.id))
+    .where(
+      and(
+        eq(posts.status, 'published'),
+        dsql`${revisions.content}->>'authorId' = ${authorId}`,
+        ne(posts.id, exceptId),
+      ),
+    )
+    .orderBy(desc(posts.publishedAt), asc(posts.id))
+    .limit(limit);
+}
 export async function getRedirect(slug: string) {
   if (isDemo()) return;
   const [row] = await db
@@ -213,7 +231,8 @@ export async function getPlacements() {
   if (isDemo()) return [];
   return db.select().from(placements);
 }
-export async function getPortrait(id?: string | null) {
+// Cached for the request: an author page reads it for its metadata and for its body.
+export const getPortrait = cache(async (id?: string | null) => {
   if (!id) return;
   const [m] = await db.select().from(media).where(eq(media.id, id));
   return m?.alt && m.credit
@@ -226,7 +245,7 @@ export async function getPortrait(id?: string | null) {
         credit: m.credit,
       }
     : undefined;
-}
+});
 
 export async function postingName(id: string) {
   const [account] = await db.select({ name: user.name }).from(user).where(eq(user.id, id));

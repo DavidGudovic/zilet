@@ -7,7 +7,9 @@ export const sql =
   postgres(process.env.DATABASE_URL || 'postgres://zilet:invalid@localhost:5433/zilet', {
     max: 10,
     prepare: false,
-    idle_timeout: 20,
+    // Idle connections stay open, so the first reader after a quiet spell does not wait for new
+    // connections and their SCRAM handshakes; postgres.js still replaces each after 30–60 min.
+    idle_timeout: 0,
     connect_timeout: 10,
   });
 if (process.env.NODE_ENV !== 'production') globalDb.ziletSql = sql;
