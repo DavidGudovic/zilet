@@ -18,6 +18,13 @@ const page = await context.newPage();
 const errors: string[] = [];
 page.on('pageerror', (e) => errors.push(e.message));
 const evidence: string[] = [];
+// The first autosave of a new text lands a moment after typing stops. On a fast runner it can
+// fall between keyboard selection steps and collapse the selection, so selecting waits for it.
+const settled = () =>
+  page
+    .getByRole('status')
+    .filter({ hasText: /^Sačuvano$/ })
+    .waitFor();
 async function save() {
   await page.getByRole('button', { name: 'Sačuvaj', exact: true }).click();
   await page
@@ -42,6 +49,7 @@ try {
   const text = '  Śutnja\n\nСоба\tса прозором\n\\ ~\u200b\n';
   await pasteVerse(poem, text);
   assert.equal(await verseText(poem), text);
+  await settled();
   await poem.press('Control+Home');
   await poem.press('ArrowRight');
   await poem.press('ArrowRight');
@@ -80,6 +88,7 @@ try {
   await prose.click();
   await prose.pressSequentially('Svjetlost ostaje na prozoru.');
   await expect(prose).toHaveText('Svjetlost ostaje na prozoru.');
+  await settled();
   for (const _ of 'Svjetlost ostaje na prozoru.') await prose.press('Shift+ArrowLeft');
   await expect
     .poll(() => page.evaluate(() => window.getSelection()?.toString()), {
