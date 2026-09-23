@@ -2469,12 +2469,34 @@ td:last-child {
   overflow-wrap: anywhere;
   margin-top: 23px;
 }
-.group-prose h3 {
-  margin-top: 15px;
-}
 .group-intro {
-  font: 20px/1.6 var(--serif);
-  margin-top: 22px;
+  font: 20px/1.65 var(--serif);
+  margin-top: 23px;
+}
+/* The prose column names each piece's rubric at the end of the byline, so titles, bylines and
+   rules sit level with the poetry column; both columns share the parent's rows. */
+.group-prose .group-byline {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+.group-byline .eyebrow {
+  flex-shrink: 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--burgundy);
+}
+@media (min-width: 768px) {
+  .reading-groups {
+    row-gap: 0;
+  }
+  .reading-groups > div {
+    display: grid;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    align-content: start;
+  }
 }
 @media (max-width: 767px) {
   .reading-groups {

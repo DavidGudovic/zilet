@@ -406,6 +406,14 @@ body {
   opacity: 0.3;
   z-index: -1;
 }
+/* On desktop the lines sit level with the descriptor and wordmark rather than on the nav rule. */
+@media (min-width: 768px) {
+  .masthead-lines {
+    top: 50%;
+    bottom: auto;
+    translate: 0 -50%;
+  }
+}
 .rubric-lines {
   position: absolute;
   width: 360px;

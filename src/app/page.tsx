@@ -207,14 +207,14 @@ export default async function Home() {
                 const teaser = p.intro || excerpt(p.body);
                 return (
                   <article className="group-prose" key={p.id}>
-                    <Link href={`/rubrika/${p.rubrics[0]}`} className="eyebrow">
-                      {rubricLabel(p.rubrics[0])}
-                    </Link>
                     <h3>
                       <Link href={`/tekst/${p.slug}`}>{p.title}</Link>
                     </h3>
                     <p className="group-byline">
                       <Link href={`/autor/${p.author.slug}`}>{p.author.name}</Link>
+                      <Link href={`/rubrika/${p.rubrics[0]}`} className="eyebrow">
+                        {rubricLabel(p.rubrics[0])}
+                      </Link>
                     </p>
                     {teaser && <p className="group-intro">{teaser}</p>}
                   </article>
