@@ -24,7 +24,14 @@ export default async function Layout({ children }: { children: React.ReactNode }
     <div className="desk">
       <header className="desk-header">
         <Link href="/" aria-label="Žilet — Početna">
-          <img src="/identity/wordmark-generated.webp" width="126" height="56" alt="Žilet" />
+          <img
+            src="/identity/wordmark-generated-279.webp"
+            srcSet="/identity/wordmark-generated-279.webp 279w, /identity/wordmark-generated-549.webp 549w"
+            sizes="126px"
+            width="126"
+            height="56"
+            alt="Žilet"
+          />
         </Link>
         <span className="desk-name">Redakcija</span>
         <div>

@@ -2,8 +2,10 @@
 
 The active masthead is `public/identity/wordmark-generated.png`, created with the
 built-in ImageGen tool. Its original transparent RGBA output is preserved unchanged
-at 1881 × 836. The public header, footer and editorial workspace use the same asset;
-`scripts/social-preview.mjs` composes the sharing card from it.
+at 1881 × 836. The public header, footer and editorial workspace draw it from the
+279, 549 and 828 px WebP copies that `scripts/wordmark.mjs` makes; the full-size WebP is
+the publisher logo in structured data. `scripts/social-preview.mjs` composes the sharing
+card from the PNG.
 
 The prior lowercase outline assets remain available as historical alternatives.
 `scripts/identity.mjs` rebuilds those vector alternatives and auxiliary marks; it

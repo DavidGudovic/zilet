@@ -4,6 +4,11 @@ import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { Arrow, Chevron } from './arrow';
 import { rubrics } from '@/lib/content';
+// The full-size wordmark is 1881 px wide; these cover the masthead at up to three device pixels.
+const wordmark = '/identity/wordmark-generated-549.webp';
+const wordmarkSet = [279, 549, 828]
+  .map((w) => `/identity/wordmark-generated-${w}.webp ${w}w`)
+  .join(', ');
 export function Header({ isEditor = false }: { isEditor?: boolean }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
@@ -21,7 +26,14 @@ export function Header({ isEditor = false }: { isEditor?: boolean }) {
           umjetnost i kulturu
         </p>
         <Link href="/" className="brand" aria-label="Žilet — Početna">
-          <img src="/identity/wordmark-generated.webp" width="1881" height="836" alt="Žilet" />
+          <img
+            src={wordmark}
+            srcSet={wordmarkSet}
+            sizes="(max-width: 359px) 140px, (max-width: 767px) 174px, 250px"
+            width="1881"
+            height="836"
+            alt="Žilet"
+          />
         </Link>
       </div>
       <div className="nav-rule">
@@ -35,7 +47,7 @@ export function Header({ isEditor = false }: { isEditor?: boolean }) {
                 </clipPath>
               </defs>
               <image
-                href="/identity/wordmark-generated.webp"
+                href="/identity/wordmark-generated-279.webp"
                 width="1881"
                 height="836"
                 clipPath="url(#nav-logo-z)"
@@ -167,7 +179,15 @@ export function Footer() {
     <div className="footer-surface">
       <footer className="footer wrap">
         <Link href="/" aria-label="Žilet — Početna">
-          <img src="/identity/wordmark-generated.webp" width="100" height="45" alt="Žilet" />
+          <img
+            src={wordmark}
+            srcSet={wordmarkSet}
+            sizes="100px"
+            width="100"
+            height="45"
+            alt="Žilet"
+            loading="lazy"
+          />
         </Link>
         <p>Časopis za književnost, umjetnost i kulturu</p>
         <div>
