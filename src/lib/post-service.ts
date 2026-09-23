@@ -142,12 +142,18 @@ export async function publishPost(id: string, version: number, slot?: string, ne
     if (slot === 'poem' && content.type !== 'poem')
       throw new HttpError(400, 'Izbor poezije je namijenjen pjesmama.');
     const [author] = await tx.select().from(authors).where(eq(authors.id, content.authorId));
-    const slug = newSlug ? slugify(newSlug) : post.slug;
+    let slug = newSlug ? slugify(newSlug) : post.slug;
+    // The address is made at the first autosave, often from a half-typed title; until readers
+    // have seen it, it follows the title the work is published with.
+    if (!newSlug && !post.publishedAt) slug = `${slugify(content.title)}-${id.slice(0, 6)}`;
     if (slug !== post.slug) {
       const occupied = await tx.select().from(posts).where(eq(posts.slug, slug));
       const old = await tx.select().from(redirects).where(eq(redirects.slug, slug));
-      if (occupied.length || old.length) throw new HttpError(409, 'Ta adresa je već korišćena.');
-      await tx.insert(redirects).values({ slug: post.slug, postId: id }).onConflictDoNothing();
+      if (occupied.length || old.length) {
+        if (newSlug) throw new HttpError(409, 'Ta adresa je već korišćena.');
+        slug = post.slug;
+      } else if (post.publishedAt)
+        await tx.insert(redirects).values({ slug: post.slug, postId: id }).onConflictDoNothing();
     }
     await tx
       .update(posts)

@@ -238,6 +238,14 @@ try {
     publicPage.text.includes(`property="og:image" content="${base}/media/${media.id}/share.jpg"`),
   );
   ok('Shared links preview the first picture as a JPEG card (Facebook, Viber)');
+  const shown = await fetch(`${base}/media/${media.id}`);
+  const etag = shown.headers.get('etag');
+  assert.ok(etag && shown.headers.get('cache-control')?.includes('no-cache'));
+  const revalidated = await fetch(`${base}/media/${media.id}`, {
+    headers: { 'If-None-Match': etag },
+  });
+  assert.equal(revalidated.status, 304);
+  ok('Browsers keep published pictures and revalidate them instead of downloading again');
   assert.ok((await request('/rubrika/poezija')).text.includes('Provjera: pjesma'));
   ok('Publishing with image appears in SSR article and archive without rebuild');
   assert.equal(testAuthor.data.name, 'RAZVOJNI AUTOR (TEST)');
@@ -497,6 +505,45 @@ try {
     403,
   );
   ok('Slug change permanently redirects old route; published comment closure is enforced');
+  // The first autosave often carries a half-typed title; the address follows the published one.
+  const early = await request('/api/posts', 'POST', { ...content, title: 'A' }, editor.cookie);
+  assert.equal(early.r.status, 201, JSON.stringify(early.data));
+  const retitled = await request(
+    `/api/posts/${early.data.id}`,
+    'PUT',
+    { version: early.data.version, content: { ...content, title: `Anegdote o piscima ${stamp}` } },
+    editor.cookie,
+  );
+  assert.equal(retitled.r.status, 200);
+  const firstPublish = await request(
+    `/api/posts/${early.data.id}/publish`,
+    'POST',
+    { version: retitled.data.version },
+    editor.cookie,
+  );
+  assert.equal(firstPublish.r.status, 200);
+  assert.equal(firstPublish.data.slug, `anegdote-o-piscima-${stamp}-${early.data.id.slice(0, 6)}`);
+  assert.equal((await request(`/tekst/${firstPublish.data.slug}`)).r.status, 200);
+  assert.equal((await request(`/tekst/${early.data.slug}`)).r.status, 404);
+  const earlyWithdrawn = await request(
+    `/api/posts/${early.data.id}/unpublish`,
+    'POST',
+    { version: firstPublish.data.version },
+    editor.cookie,
+  );
+  assert.equal(earlyWithdrawn.r.status, 200);
+  assert.equal(
+    (
+      await request(
+        `/api/posts/${early.data.id}`,
+        'DELETE',
+        { version: earlyWithdrawn.data.version },
+        editor.cookie,
+      )
+    ).r.status,
+    200,
+  );
+  ok('A first publication takes its address from the final title, not the first autosave');
 
   const unpublished = await request(
     `/api/posts/${post.id}/unpublish`,
@@ -509,6 +556,10 @@ try {
   assert.equal((await request(`/tekst/${post.slug}`)).r.status, 404);
   assert.equal((await request(`/media/${media.id}`)).r.status, 404);
   assert.equal((await request(`/media/${media.id}/share.jpg`)).r.status, 404);
+  assert.equal(
+    (await fetch(`${base}/media/${media.id}`, { headers: { 'If-None-Match': etag } })).status,
+    404,
+  );
   ok('Unpublishing removes article and formerly public media without stale caches');
   assert.equal(
     (await request(`/api/posts/${post.id}`, 'DELETE', { version: post.version }, reader.cookie)).r

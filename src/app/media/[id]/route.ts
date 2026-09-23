@@ -1,18 +1,13 @@
 import { failure } from '@/lib/security';
 import { readMedia } from '@/lib/media-store';
-import { servableMedia } from '@/lib/media-access';
+import { mediaResponse, servableMedia } from '@/lib/media-access';
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const m = await servableMedia((await params).id, req.headers);
-    const variant = new URL(req.url).searchParams.get('size');
-    const bytes = await readMedia(variant === 'small' ? m.smallPath : m.path);
-    return new Response(new Uint8Array(bytes), {
-      headers: {
-        'Content-Type': 'image/webp',
-        'Cache-Control': 'private, no-store',
-        'X-Content-Type-Options': 'nosniff',
-      },
-    });
+    const small = new URL(req.url).searchParams.get('size') === 'small';
+    return await mediaResponse(req, `${m.id}-${small ? 'small' : 'display'}`, 'image/webp', () =>
+      readMedia(small ? m.smallPath : m.path),
+    );
   } catch (e) {
     return failure(e);
   }

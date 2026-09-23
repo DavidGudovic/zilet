@@ -124,7 +124,8 @@ export function Editor({
     setContent((c) => ({ ...c, ...update }));
   }
   const save = useCallback(async (): Promise<PostState | undefined> => {
-    if (flight.current) await flight.current;
+    // Saves go one at a time; each must carry the version the previous one returned.
+    while (flight.current) await flight.current;
     if (blocked) return undefined;
     const snapshot = data.current;
     const needs = [
@@ -183,14 +184,16 @@ export function Editor({
     })();
     flight.current = work;
     const result = await work;
-    flight.current = null;
+    if (flight.current === work) flight.current = null;
     return result;
   }, [blocked, notify]);
   useEffect(() => {
+    // Publishing and withdrawing change the version; autosave waits for them.
     if (!dirty || blocked || status === 'Nije sačuvano') return;
+    if (pending === 'publish' || pending === 'unpublish') return;
     const timer = setTimeout(() => void save(), 1200);
     return () => clearTimeout(timer);
-  }, [content, dirty, blocked, save, status]);
+  }, [content, dirty, blocked, save, status, pending]);
   useEffect(() => {
     function before(e: BeforeUnloadEvent) {
       if (JSON.stringify(data.current) !== saved.current) {

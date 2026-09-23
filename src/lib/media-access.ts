@@ -41,3 +41,31 @@ export async function servableMedia(id: string, headers: Headers) {
   }
   return m;
 }
+
+// Picture files never change once written, so a browser may keep them and only ask again:
+// the access rules above run on every request, and an unchanged picture answers 304.
+export function mediaResponse(
+  req: Request,
+  tag: string,
+  type: string,
+  load: () => Promise<Buffer>,
+) {
+  const etag = `"${tag}"`;
+  const headers = {
+    'Content-Type': type,
+    'Cache-Control': 'private, no-cache',
+    ETag: etag,
+    'X-Content-Type-Options': 'nosniff',
+  };
+  const known = (req.headers.get('if-none-match') || '')
+    .split(',')
+    .map((value) => value.trim().replace(/^W\//, ''));
+  if (known.includes(etag) || known.includes('*'))
+    return Promise.resolve(new Response(null, { status: 304, headers }));
+  return load().then(
+    (bytes) =>
+      new Response(new Uint8Array(bytes), {
+        headers: { ...headers, 'Content-Length': String(bytes.length) },
+      }),
+  );
+}
